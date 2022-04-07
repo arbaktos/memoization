@@ -1,7 +1,7 @@
 package com.example.android.memoization.ui.composables
 
-import android.net.ConnectivityManager
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,22 +25,24 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
 import com.example.android.memoization.ui.theme.MemoizationTheme
 import androidx.navigation.NavController
 import com.example.android.memoization.api.WordTranslationRequest
 import com.example.android.memoization.extensions.ConnectionState
 import com.example.android.memoization.extensions.currentConnectivityState
-import com.example.android.memoization.ui.viewmodel.MemoizationViewModel
+import com.example.android.memoization.ui.viewmodel.FolderViewModel
+import com.example.android.memoization.ui.viewmodel.StackViewModel
 import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun AddNewPairScreen(navController: NavController, viewModel: MemoizationViewModel) {
-    val word1 by viewModel.word1.observeAsState()
-    val word2 by viewModel.word2.observeAsState()
+fun AddNewPairScreen(navController: NavController, viewModel: StackViewModel, editMode: Boolean) {
+    val stackState by viewModel.publicStackState.collectAsState()
+    val word1 = stackState.word1
+    val word2 = stackState.word2
     val toastMessage by viewModel.toastMessage.observeAsState()
-//    val currentStack = viewModel.currentStack.value!!
     val keyboardController = LocalSoftwareKeyboardController.current
 
     val onTranslate = {
@@ -48,12 +50,19 @@ fun AddNewPairScreen(navController: NavController, viewModel: MemoizationViewMod
         viewModel.getTranslation(request)
     }
     toastMessage?.let {
-        ShowToast(text = toastMessage!!)
+        ShowToast(text = it)
     }
 
+
     val onAdd: () -> Unit = {
-        viewModel.composeWordPairFromWords()
-        viewModel.addWordPairToDb()
+        if (editMode) {
+            viewModel.findAndUpdateWordPair()
+            viewModel.updateWordPairInDb()
+        } else {
+            viewModel.composeWordPairFromWords()
+            viewModel.addWordPairToDb()
+        }
+        viewModel.clearWordPair()
         keyboardController?.hide()
         navController.popBackStack()
         navController.navigate("stack") {
@@ -62,6 +71,11 @@ fun AddNewPairScreen(navController: NavController, viewModel: MemoizationViewMod
             }
             anim { }
         }
+    }
+
+    BackHandler(enabled = true) {
+        navController.popBackStack()
+        viewModel.clearWordPair()
     }
 
     MemoizationTheme {
@@ -86,7 +100,8 @@ fun AddNewPairScreen(navController: NavController, viewModel: MemoizationViewMod
                     modifier = Modifier
                         .weight(1f)
                         .padding(top = 35.dp),
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    editWord = word1
                 )
                 RowIcon(iconSource = Icons.Filled.Translate,
                     contentDesc = "translate the word",
@@ -98,9 +113,7 @@ fun AddNewPairScreen(navController: NavController, viewModel: MemoizationViewMod
                 BottomField(
                     modifier = Modifier.weight(1f), onAdd , viewModel, word2
                 )
-
             }
-
         }
     }
 }
@@ -117,16 +130,25 @@ fun ShowNoConnectionToast() {
 }
 
 @Composable
-fun UpperField(modifier: Modifier, viewModel: MemoizationViewModel) {
-    val (text1, onTextChange1) = rememberSaveable { mutableStateOf("") }
-    viewModel.word1.value = text1
+fun UpperField(modifier: Modifier,
+               viewModel: StackViewModel,
+               editWord: String?
+) {
+    val text1 = rememberSaveable { mutableStateOf("") }
+    editWord?.let {
+        text1.value = editWord
+    }
+
     NewPairCard(
         modifier = modifier
             .padding(bottom = 8.dp),
     ) {
         NewPairTextField(
-            text = text1,
-            onTextChange = onTextChange1,
+            text = text1.value,
+            onTextChange = {
+                text1.value = it
+                viewModel.setWord(1, it)
+            },
             label = "Word to learn"
         )
     }
@@ -136,10 +158,10 @@ fun UpperField(modifier: Modifier, viewModel: MemoizationViewModel) {
 fun BottomField(
     modifier: Modifier,
     onClick: () -> Unit,
-    viewModel: MemoizationViewModel,
+    viewModel: StackViewModel,
     translation: String?
 ) {
-    var text2 = rememberSaveable { mutableStateOf("") }
+    val text2 = rememberSaveable { mutableStateOf("") }
     translation?.let {
         text2.value = translation
     }
@@ -152,7 +174,7 @@ fun BottomField(
             text = text2.value,
             onTextChange = {
                 text2.value = it
-                viewModel.word2.value = it
+                viewModel.setWord(2, it)
                            },
             label = "Explanation",
             onClick = onClick,

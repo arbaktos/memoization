@@ -1,6 +1,5 @@
-package com.example.android.memoization.ui.composables
+package com.example.android.memoization.ui.composables.components
 
-import android.util.Log
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.*
@@ -12,21 +11,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.navigation.NavController
 import com.example.android.memoization.model.Folder
+import com.example.android.memoization.ui.composables.AddStackTextField
+import com.example.android.memoization.ui.composables.SubmitIcon
 
 
 const val TAG = "debug"
 @ExperimentalComposeUiApi
 @Composable
 fun NewFolderScreen(
-    navController: NavController,
-    onAddFolder: (Folder) -> Unit
+    navController: NavController
 ) {
     Scaffold(
-        topBar = { AppBar(name = "New folder") }
+        topBar = { com.example.android.memoization.ui.composables.screens.AppBar(name = "New folder") }
     ) {
         EtField(
             navigate = { navController.navigate("folders") },
-            onAddFolder = onAddFolder
         )
     }
 }
@@ -35,9 +34,7 @@ fun NewFolderScreen(
 @Composable
 fun EtField(
     navigate: () -> Unit,
-    onAddFolder: (Folder) -> Unit,
 ) {
-    Log.d("newfolder", "etfield")
     val (text, onTextChange) = rememberSaveable { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -56,12 +53,10 @@ fun EtField(
             modifier = Modifier.weight(1f),
             onTextChange = onTextChange,
             label = "Folder name",
-            onAddFolder = onAddFolder,
             onFinish = onDone
         )
         SubmitIcon(
             inputName = text,
-            onAddFolder = onAddFolder,
             onFinish = onDone
         )
     }

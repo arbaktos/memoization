@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Memoization</string>
+    <string name="add_folder">Add folder</string>
 </resources>

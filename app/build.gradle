@@ -60,6 +60,10 @@ dependencies {
     def room_version = "2.4.0-alpha03"
     def compose_version = "1.0.2"
     def okHttp_version = "4.8.0"
+    def core_version = "1.6.0"
+
+
+    implementation("androidx.core:core-ktx:$core_version")
 
     implementation 'androidx.core:core-ktx:1.3.2'
     implementation 'androidx.appcompat:appcompat:1.2.0'
@@ -91,8 +95,10 @@ dependencies {
     //database
     implementation("androidx.room:room-runtime:$room_version")
     annotationProcessor "androidx.room:room-compiler:$room_version"
-    kapt("androidx.room:room-compiler:$room_version")// To use Kotlin annotation processing tool (kapt)
-    implementation("androidx.room:room-ktx:$room_version") // optional - Kotlin Extensions and Coroutines support for Room
+    kapt("androidx.room:room-compiler:$room_version")
+// To use Kotlin annotation processing tool (kapt)
+    implementation("androidx.room:room-ktx:$room_version")
+    // optional - Kotlin Extensions and Coroutines support for Room
     testImplementation("androidx.room:room-testing:$room_version") // optional - Test helpers
     implementation("androidx.room:room-paging:2.4.0-alpha04") // optional - Paging 3 Integration
 

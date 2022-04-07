@@ -1,14 +1,10 @@
 package com.example.android.memoization.repository
 
-import android.net.ConnectivityManager
-import android.util.Log
-import androidx.lifecycle.LiveData
 import com.example.android.memoization.api.ApiLanguage
 import com.example.android.memoization.api.Retrofit
 import com.example.android.memoization.api.WordTranslationRequest
 import com.example.android.memoization.api.WordTranslationResponse
 import com.example.android.memoization.database.*
-import com.example.android.memoization.ui.composables.TAG
 import retrofit2.Response
 import javax.inject.Inject
 

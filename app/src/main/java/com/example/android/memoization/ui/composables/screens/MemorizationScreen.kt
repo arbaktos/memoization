@@ -1,4 +1,4 @@
-package com.example.android.memoization.ui.composables
+package com.example.android.memoization.ui.composables.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
@@ -11,13 +11,16 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.model.Stack
-import com.example.android.memoization.ui.viewmodel.MemoizationViewModel
+import com.example.android.memoization.ui.composables.FlipCard
+import com.example.android.memoization.ui.composables.MemoIcon
+import com.example.android.memoization.ui.composables.NoCardsCard
+import com.example.android.memoization.ui.viewmodel.FolderViewModel
 import java.util.*
 
 @Composable
 fun MemorizationScreen(
     navController: NavController,
-    viewModel: MemoizationViewModel
+    viewModel: FolderViewModel
 ) {
     BodyContent(viewModel.prepareStack(), navController)
 }
