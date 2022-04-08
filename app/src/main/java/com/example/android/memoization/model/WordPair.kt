@@ -1,35 +1,7 @@
 package com.example.android.memoization.model
 
-import androidx.compose.runtime.mutableStateListOf
-import com.example.android.memoization.database.FolderEntity
 import com.example.android.memoization.database.WordPairEntity
 import java.util.*
-
-data class Folder(
-    val name: String,
-    var isOpen: Boolean = false,
-    val stacks: MutableList<Stack> = mutableListOf(),
-    var folderId: Long = 0
-//    val language1: Language,
-//    val language2: Language,
-) {
-
-    fun toFolderEntity(): FolderEntity {
-        return FolderEntity(name = this.name, isOpen = this.isOpen, folderId = this.folderId)
-    }
-}
-
-data class Stack(
-    val name: String,
-    var numRep: Int = 0, //to schedule check days
-    var words: MutableList<WordPair> = mutableListOf(),
-    var stackId: Long = 0,
-    var hasWords: Boolean = false,
-    override var isVisible: Boolean = true
-//    val language1: Language,
-//    val language2: Language,
-) : ListItem
-
 
 data class WordPair (
     val stackId: Long,
@@ -86,4 +58,3 @@ data class WordPair (
 //        return "$word1 $word2"
 //    }
 }
-

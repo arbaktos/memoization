@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "6539df767d212df767205d308a701a08",
+    "identityHash": "5bca798b4937a48a5ba6eb425b7b1c23",
     "entities": [
       {
         "tableName": "folder_entity_table",
@@ -38,7 +38,7 @@
       },
       {
         "tableName": "stack_entity_table",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `numRep` INTEGER NOT NULL, `stackId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `parentFolderId` INTEGER NOT NULL, `hasWords` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `numRep` INTEGER NOT NULL, `stackId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `parentFolderId` INTEGER NOT NULL, `hasWords` INTEGER NOT NULL, `isVisible` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "name",
@@ -67,6 +67,12 @@
           {
             "fieldPath": "hasWords",
             "columnName": "hasWords",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isVisible",
+            "columnName": "isVisible",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -146,7 +152,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6539df767d212df767205d308a701a08')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '5bca798b4937a48a5ba6eb425b7b1c23')"
     ]
   }
 }

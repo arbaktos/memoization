@@ -38,8 +38,8 @@ class MemoRepository @Inject constructor(
         return memoDao.getStacksWithWords()
     }
 
-    suspend fun deleteStackFomDb(stackEntity: StackEntity) {
-        memoDao.deleteStackFomDb(stackEntity)
+    suspend fun deleteStackFomDb(stackId: Long) {
+        val a = memoDao.deleteStackFomDb(stackId)
     }
 
     suspend fun updateStack(stackEntity: StackEntity) {

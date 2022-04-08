@@ -27,6 +27,9 @@ interface MemoDao {
     @Insert(entity = StackEntity::class, onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertStack(stackEntity: StackEntity): Long
 
+    @Query("SELECT * FROM STACK_ENTITY_TABLE WHERE stackId= :stackId")
+    suspend fun getStackById(stackId: Long): StackEntity
+
     @Transaction
     @Query("SELECT * FROM stack_entity_table")
     suspend fun getStacksWithWords(): List<StackWithWords>
@@ -34,8 +37,8 @@ interface MemoDao {
     @Update
     suspend fun updateStack(stackEntity: StackEntity)
 
-    @Delete
-    suspend fun deleteStackFomDb(stackEntity: StackEntity)
+    @Query("DELETE FROM stack_entity_table WHERE stackId = :stackId")
+    suspend fun deleteStackFomDb(stackId: Long)
 
     //words
     @Insert

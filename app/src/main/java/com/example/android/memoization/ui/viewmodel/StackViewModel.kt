@@ -1,6 +1,7 @@
 package com.example.android.memoization.ui.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,6 +14,7 @@ import com.example.android.memoization.database.WordPairEntity
 import com.example.android.memoization.model.Stack
 import com.example.android.memoization.model.WordPair
 import com.example.android.memoization.repository.MemoRepository
+import com.example.android.memoization.ui.composables.screens.TDEBUG
 import com.example.android.memoization.utils.ID_NO_FOLDER
 import com.example.android.memoization.utils.WP_ID
 import com.example.android.memoization.utils.workers.WordPairInvisibleWorker
@@ -51,7 +53,6 @@ class StackViewModel @Inject constructor(
             1 -> updateState { it.copy(word1 = word) }
             2 -> updateState { it.copy(word2 = word) }
         }
-
     }
 
     private fun getStacksWithWords() {
@@ -62,7 +63,7 @@ class StackViewModel @Inject constructor(
             stackNeeded?.let { stack ->
                 val words = stack.words.map { it.toWordPair() }.toMutableList()
                 updateState { it.copy(
-                    words = words
+                    stack = stackState.stack?.copy(words = words)
                 ) }
             }
         }
@@ -75,12 +76,12 @@ class StackViewModel @Inject constructor(
     fun delayDeletionWordPair(wordPair: WordPair) {
         val inputData = Data.Builder()
             .putLong(WP_ID, wordPair.wordPairId).build()
-        val workDealyDeleteRequest = OneTimeWorkRequestBuilder<WordPairInvisibleWorker>()
+        val workDelayDeleteRequest = OneTimeWorkRequestBuilder<WordPairInvisibleWorker>()
             .addTag("${wordPair.wordPairId}")
             .setInputData(inputData)
             .setInitialDelay(3, TimeUnit.SECONDS)
             .build()
-        workManager.enqueue(workDealyDeleteRequest)
+        workManager.enqueue(workDelayDeleteRequest)
     }
 
     fun updateStackInDb() {
@@ -144,7 +145,7 @@ class StackViewModel @Inject constructor(
 
     fun findAndUpdateWordPair() {
         stackState.stack?.let {
-            it.words.forEachIndexed() { ind, wordPair ->
+            it.words.forEachIndexed { ind, wordPair ->
                 if (wordPair == stackState.wordPair) {
                     it.words[ind] =
                         wordPair.copy(word1 = stackState.word1 ?: "", word2 = stackState.word2)

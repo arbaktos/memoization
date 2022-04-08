@@ -23,7 +23,8 @@ data class StackEntity(
     @PrimaryKey(autoGenerate = true)
     val stackId: Long = 0,
     val parentFolderId: Long = 0,
-    var hasWords: Boolean = false
+    var hasWords: Boolean = false,
+    var isVisible: Boolean = true
 )
 
 data class FolderwithStacks(

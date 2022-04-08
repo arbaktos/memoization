@@ -1,6 +1,7 @@
 package com.example.android.memoization.ui.viewmodel
 
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.*
 import androidx.work.*
 import com.example.android.memoization.MemoizationApp
@@ -13,7 +14,9 @@ import com.example.android.memoization.model.Stack
 import com.example.android.memoization.model.WordPair
 import com.example.android.memoization.repository.MemoRepository
 import com.example.android.memoization.utils.ID_NO_FOLDER
+import com.example.android.memoization.utils.STACK_ID
 import com.example.android.memoization.utils.WP_ID
+import com.example.android.memoization.utils.workers.StackDeletionWorker
 import com.example.android.memoization.utils.workers.WordPairInvisibleWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,11 +37,14 @@ class FolderViewModel @Inject constructor(
     private val appState: AppState
         get() = _appState.value
 
+    private val workManager = WorkManager.getInstance(application)
+
     //    var languages: ApiLanguage? = null
     val toastMessage = MutableLiveData<String>()
 
 
     init {
+        addFolder()
         getFoldersWithStackFromDb()
     }
 
@@ -61,7 +67,6 @@ class FolderViewModel @Inject constructor(
             }
             updateState { it.copy(folders = folders) }
         }
-//        addFolder() //adding noFolder to the database
     }
 
     fun deleteFolderFromDb(folder: Folder) {
@@ -74,13 +79,23 @@ class FolderViewModel @Inject constructor(
         }
     }
 
+    fun deleteStackWithDelay(stack: Stack) {
+        val inputData = Data.Builder()
+            .putLong(STACK_ID, stack.stackId).build()
+        val workDelayDeleteRequest = OneTimeWorkRequestBuilder<StackDeletionWorker>()
+            .addTag("${stack.stackId}")
+            .setInputData(inputData)
+            .setInitialDelay(1, TimeUnit.SECONDS)
+            .build()
+        workManager.enqueue(workDelayDeleteRequest)
+    }
+
     fun deleteStackFromDb(stack: Stack) {
-        val stackEntity = StackEntity(stack.name, stack.numRep, stack.stackId)
         viewModelScope.launch(Dispatchers.IO) {
             stack.words.forEach {
                 deleteWordPairFromDb(it)
             }
-            repository.deleteStackFomDb(stackEntity)
+            repository.deleteStackFomDb(stack.stackId)
         }
     }
 
@@ -118,14 +133,14 @@ class FolderViewModel @Inject constructor(
         }
     }
 
-//    fun addFolder(folder: Folder? = appState.currentFolder) {
-//        viewModelScope.launch {
-//            folder?.let {
-//                repository.insertFolder(it.toFolderEntity())
-//                getFoldersWithStackFromDb()
-//            }
-//        }
-//    }
+    fun addFolder(folder: Folder? = appState.currentFolder) {
+        viewModelScope.launch {
+            folder?.let {
+                repository.insertFolder(it.toFolderEntity())
+                getFoldersWithStackFromDb()
+            }
+        }
+    }
 
     fun addStackToFolder(folder: Folder, stack: Stack) {
         folder.stacks.add(stack)
@@ -143,6 +158,10 @@ class FolderViewModel @Inject constructor(
             repository.insertStack(stackToInsert)
             getFoldersWithStackFromDb()
         }
+    }
+
+    fun cancelDelayDeletionWork(wordPair: WordPair) {
+        workManager.cancelAllWorkByTag("${wordPair.wordPairId}")
     }
 
     fun prepareStack(): Stack {

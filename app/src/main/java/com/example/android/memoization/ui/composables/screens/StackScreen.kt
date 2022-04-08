@@ -33,7 +33,7 @@ fun StackScreen(
     val currentStack = appState.stack
     val scaffoldState = rememberScaffoldState()
 
-    BackHandler() {
+    BackHandler {
         navContoller.navigate(NavScreens.Folders.route)
     }
     Scaffold(
@@ -95,7 +95,6 @@ fun WordList(
     LazyColumn(
         reverseLayout = true
     ) {
-
         items(wordList) { wordPair ->
             SwipeToDismiss(
                 item = wordPair,
