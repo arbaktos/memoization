@@ -1,7 +1,6 @@
 package com.example.android.memoization.ui.viewmodel
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,7 +13,6 @@ import com.example.android.memoization.database.WordPairEntity
 import com.example.android.memoization.model.Stack
 import com.example.android.memoization.model.WordPair
 import com.example.android.memoization.repository.MemoRepository
-import com.example.android.memoization.ui.composables.screens.TDEBUG
 import com.example.android.memoization.utils.ID_NO_FOLDER
 import com.example.android.memoization.utils.WP_ID
 import com.example.android.memoization.utils.workers.WordPairInvisibleWorker
@@ -100,6 +98,12 @@ class StackViewModel @Inject constructor(
         }
     }
 
+    fun updateWordPairDateInDb() {
+        viewModelScope.launch {
+            stackState.wordPair?.toWordPairEntity()?.let { repository.updateWordPairInDb(it) }
+        }
+    }
+
     fun updateWordPairInDb() {
         val newWordPair =
             stackState.wordPair?.copy(word1 = stackState.word1 ?: "", word2 = stackState.word2)
@@ -117,7 +121,7 @@ class StackViewModel @Inject constructor(
                     wordPair.word1,
                     wordPair.word2,
                     wordPair.lastRep,
-                    wordPair.toShow,
+                    wordPair.toLearn,
                     wordPair.levelOfKnowledge,
                     wordPairId = wordPair.wordPairId,
                     wordPair.isVisible

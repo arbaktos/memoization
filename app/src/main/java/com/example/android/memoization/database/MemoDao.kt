@@ -34,6 +34,10 @@ interface MemoDao {
     @Query("SELECT * FROM stack_entity_table")
     suspend fun getStacksWithWords(): List<StackWithWords>
 
+    @Transaction
+    @Query("SELECT * FROM stack_entity_table WHERE stackId = :stackId")
+    suspend fun getStackWithWordsById(stackId: Long): StackWithWords
+
     @Update
     suspend fun updateStack(stackEntity: StackEntity)
 

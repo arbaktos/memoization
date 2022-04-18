@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.core.view.WindowCompat
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,6 +15,7 @@ import com.example.android.memoization.ui.composables.*
 import com.example.android.memoization.ui.composables.components.NewFolderScreen
 import com.example.android.memoization.ui.composables.screens.FoldersScreen
 import com.example.android.memoization.ui.composables.screens.MemorizationScreen
+import com.example.android.memoization.ui.theme.MemoizationTheme
 import com.example.android.memoization.ui.viewmodel.FolderViewModel
 import com.example.android.memoization.ui.viewmodel.StackViewModel
 import com.example.android.memoization.utils.IS_EDIT_MODE
@@ -30,51 +32,69 @@ class MainActivity : ComponentActivity() {
     @ExperimentalComposeUiApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        folderViewModel.getFoldersWithStackFromDb()
+//        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
             val navControllerObj = rememberNavController()
-            NavHost(
-                navController = navControllerObj,
-                startDestination = NavScreens.Folders.route)
-            {
-                composable(NavScreens.Folders.route) {
-                    FoldersScreen(
-                        navController = navControllerObj,
-                        folderViewModel = folderViewModel,
-                        stackViewModel = stackViewModel
-                    ) }
 
-                composable(NavScreens.NewFolder.route) {
-                    NewFolderScreen(
-                        navController = navControllerObj) }
+            MemoizationTheme {
+//                ProvideWindowInsets(
+//                    windowInsetsAnimationsEnabled = true,
+//                    consumeWindowInsets = false,
+//                ) {
+//                    // your content
+//                }
+                NavHost(
+                    navController = navControllerObj,
+                    startDestination = NavScreens.Folders.route
+                ) {
+                    composable(NavScreens.Folders.route) {
+                        FoldersScreen(
+                            navController = navControllerObj,
+                            folderViewModel = folderViewModel,
+                            stackViewModel = stackViewModel
+                        )
+                    }
 
-                composable(NavScreens.Stack.route) {
-                    StackScreen(
-                        navContoller = navControllerObj,
-                        viewModel = stackViewModel) }
+                    composable(NavScreens.NewFolder.route) {
+                        NewFolderScreen(
+                            navController = navControllerObj
+                        )
+                    }
 
-                composable(NavScreens.NewPair.route,
-                arguments = listOf(navArgument(IS_EDIT_MODE) {
-                    type = NavType.BoolType
-                    defaultValue = false
-                })) {
-                    AddNewPairScreen(
-                        navController = navControllerObj,
-                        viewModel = stackViewModel,
-                        editMode = it.arguments?.getBoolean(IS_EDIT_MODE) ?: false
-                    ) }
+                    composable(NavScreens.Stack.route) {
+                        StackScreen(
+                            navContoller = navControllerObj,
+                            viewModel = stackViewModel
+                        )
+                    }
 
-                composable(NavScreens.Memorization.route) {
-                    MemorizationScreen(
-                        navController = navControllerObj,
-                        viewModel = folderViewModel
-                    )
+                    composable(NavScreens.NewPair.route,
+                        arguments = listOf(navArgument(IS_EDIT_MODE) {
+                            type = NavType.BoolType
+                            defaultValue = false
+                        })
+                    ) {
+                        AddNewPairScreen(
+                            navController = navControllerObj,
+                            viewModel = stackViewModel,
+                            editMode = it.arguments?.getBoolean(IS_EDIT_MODE) ?: false
+                        )
+                    }
+
+                    composable(NavScreens.Memorization.route) {
+                        MemorizationScreen(
+                            navController = navControllerObj,
+                            viewModel = folderViewModel,
+                            stackViewModel = stackViewModel
+                        )
+                    }
+
+                    composable(NavScreens.StartLearning.route) {
+                        StartLearning(navController = navControllerObj)
+                    }
                 }
 
-                composable(NavScreens.StartLearning.route) {
-                    StartLearning(navController = navControllerObj)
-                }
             }
         }
     }

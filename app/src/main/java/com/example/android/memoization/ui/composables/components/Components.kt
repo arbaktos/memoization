@@ -1,5 +1,7 @@
 package com.example.android.memoization.ui.composables
 
+import android.content.res.Resources
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -10,14 +12,16 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Done
+import androidx.compose.material.icons.outlined.DoneOutline
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -29,6 +33,7 @@ import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.model.Folder
 import com.example.android.memoization.ui.composables.screens.ShowStack
+import com.example.android.memoization.ui.composables.screens.TDEBUG
 import com.example.android.memoization.ui.viewmodel.FolderViewModel
 import com.example.android.memoization.ui.viewmodel.StackViewModel
 
@@ -77,15 +82,15 @@ fun SubmitIcon(
     onFinish: () -> Unit
 ) {
     Icon(
-        Icons.Filled.Done, "Add a folder",
+        Icons.Outlined.Done, "Add a folder",
         tint = MaterialTheme.colors.surface,
         modifier = Modifier
             .padding(8.dp)
-            .size(40.dp)
+            .size(30.dp)
             .padding(4.dp)
             .background(
-                color = MaterialTheme.colors.secondary,
-                shape = RoundedCornerShape(8.dp)
+                color = MaterialTheme.colors.primary,
+                shape = RoundedCornerShape(15.dp)
             )
             .clickable(enabled = true) {
                 onAddFolder(Folder(inputName))
@@ -104,9 +109,9 @@ fun H5TextBox(text: String, modifier: Modifier) {
 }
 
 @Composable
-fun H6TextBox(text: String, modifier: Modifier) {
+fun H6TextBox(text: String) {
     Text(
-        modifier = modifier.padding(4.dp),
+        modifier = Modifier.padding(4.dp),
         text = text,
         style = MaterialTheme.typography.h6,
         color = MaterialTheme.colors.primaryVariant
@@ -120,17 +125,18 @@ fun AddStackTextField(
     onTextChange: (String) -> Unit,
     label: String,
     onAddFolder: (Folder) -> Unit = {},
-    onFinish: () -> Unit
+    onFinish: () -> Unit,
+    showTrailingIcon: Boolean
 ) {
-    TextField(
+
+    OutlinedTextField(
         value = text,
         onValueChange = onTextChange,
         modifier = modifier,
-        colors = TextFieldDefaults.textFieldColors(
+        colors = TextFieldDefaults.outlinedTextFieldColors(
             backgroundColor = Color.White,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent
+            focusedBorderColor = MaterialTheme.colors.primary,
+            unfocusedBorderColor = Color.Transparent
         ),
         textStyle = MaterialTheme.typography.h5,
         keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
@@ -139,7 +145,6 @@ fun AddStackTextField(
                 onAddFolder(Folder(text))
                 onFinish()
             }),
-//        label = { Label(label) },
         placeholder = { Label(label) },
         leadingIcon = {
             Icon(
@@ -147,6 +152,12 @@ fun AddStackTextField(
                 contentDescription = "Add a stack",
                 tint = MaterialTheme.colors.onSurface
             )
+        },
+        trailingIcon = {
+            if (showTrailingIcon) {
+                Log.d(TDEBUG, "showTrailingIcon % $showTrailingIcon")
+                SubmitIcon(inputName = text, onFinish = onFinish)
+            }
         }
     )
 }
@@ -217,10 +228,6 @@ fun NoCardsCard(visible: Boolean, onClick: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             AlertDialog(
-//                modifier = Modifier
-//                    .weight(1f)
-//                    .fillMaxWidth(0.75f)
-//                    .fillMaxHeight(0.7f),
                 buttons = {
                     Button(
                         modifier = Modifier.padding(16.dp),

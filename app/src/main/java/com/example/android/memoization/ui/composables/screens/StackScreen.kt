@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.android.memoization.ui.viewmodel.FolderViewModel
@@ -32,12 +33,13 @@ fun StackScreen(
     val appState by viewModel.publicStackState.collectAsState()
     val currentStack = appState.stack
     val scaffoldState = rememberScaffoldState()
+    val scrollState = rememberScrollState()
 
     BackHandler {
         navContoller.navigate(NavScreens.Folders.route)
     }
     Scaffold(
-        topBar = { com.example.android.memoization.ui.composables.screens.AppBar(currentStack!!.name) },
+        topBar = { com.example.android.memoization.ui.composables.screens.AppBar(name = currentStack!!.name) },
         floatingActionButton = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 currentStack?.let {

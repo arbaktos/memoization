@@ -33,6 +33,7 @@ import com.example.android.memoization.extensions.ConnectionState
 import com.example.android.memoization.extensions.currentConnectivityState
 import com.example.android.memoization.ui.viewmodel.FolderViewModel
 import com.example.android.memoization.ui.viewmodel.StackViewModel
+import com.example.android.memoization.utils.NavScreens
 import kotlinx.coroutines.launch
 
 
@@ -65,8 +66,8 @@ fun AddNewPairScreen(navController: NavController, viewModel: StackViewModel, ed
         viewModel.clearWordPair()
         keyboardController?.hide()
         navController.popBackStack()
-        navController.navigate("stack") {
-            popUpTo("stack") {
+        navController.navigate(NavScreens.Stack.route) {
+            popUpTo(NavScreens.Stack.route) {
                 inclusive = true
             }
             anim { }

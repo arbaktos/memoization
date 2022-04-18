@@ -9,16 +9,16 @@ sealed class WordStatus {
     class Level1: WordStatus() {
         override val frequency: Int = 1
     }
-    class Level2:WordStatus() {
+    class Level2: WordStatus() {
         override val frequency: Int = 2
     }
-    class Level3:WordStatus() {
+    class Level3: WordStatus() {
         override val frequency: Int = 7
     }
-    class Level4:WordStatus() {
+    class Level4: WordStatus() {
         override val frequency: Int = 14
     }
-    class Learned:WordStatus() {
+    class Learned: WordStatus() {
         override val frequency: Int = 30
     }
 
