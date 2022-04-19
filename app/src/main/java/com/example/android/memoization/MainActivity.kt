@@ -10,7 +10,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navArgument
 import androidx.navigation.compose.rememberNavController
-import com.example.android.memoization.notifications.StartLearning
 import com.example.android.memoization.ui.composables.*
 import com.example.android.memoization.ui.composables.components.NewFolderScreen
 import com.example.android.memoization.ui.composables.screens.FoldersScreen
@@ -88,10 +87,6 @@ class MainActivity : ComponentActivity() {
                             viewModel = folderViewModel,
                             stackViewModel = stackViewModel
                         )
-                    }
-
-                    composable(NavScreens.StartLearning.route) {
-                        StartLearning(navController = navControllerObj)
                     }
                 }
 

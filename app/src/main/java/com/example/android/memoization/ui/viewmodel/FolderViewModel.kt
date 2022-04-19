@@ -11,6 +11,7 @@ import com.example.android.memoization.model.Folder
 import com.example.android.memoization.model.Stack
 import com.example.android.memoization.model.WordPair
 import com.example.android.memoization.repository.MemoRepository
+import com.example.android.memoization.ui.composables.screens.TDEBUG
 import com.example.android.memoization.utils.ID_NO_FOLDER
 import com.example.android.memoization.utils.STACK_ID
 import com.example.android.memoization.utils.workers.StackDeletionWorker
@@ -79,14 +80,21 @@ class FolderViewModel @Inject constructor(
     }
 
     fun deleteStackWithDelay(stack: Stack) {
+        Log.d(TDEBUG, "initiate stack deletion $stack")
         val inputData = Data.Builder()
             .putLong(STACK_ID, stack.stackId).build()
         val workDelayDeleteRequest = OneTimeWorkRequestBuilder<StackDeletionWorker>()
             .addTag("${stack.stackId}")
             .setInputData(inputData)
-            .setInitialDelay(1, TimeUnit.SECONDS)
+            .setInitialDelay(3, TimeUnit.SECONDS)
             .build()
+//        val continuation = workManager.beginWith(workDelayDeleteRequest)
         workManager.enqueue(workDelayDeleteRequest)
+    }
+
+    fun cancelStackDeletion(stack: Stack) {
+        Log.d(TDEBUG, "cancelled deletion $stack")
+        workManager.cancelAllWorkByTag(stack.stackId.toString())
     }
 
     private fun deleteStackFromDb(stack: Stack) {
@@ -168,10 +176,6 @@ class FolderViewModel @Inject constructor(
     fun prepareStack(stack: Stack = appState.currentStack!!): Stack {
         val currentDate = Date()
         stack.words.forEach { wordPair ->
-//            val timeWithoutRepetion = currentDate.time - wordPair.lastRep.time
-//            val daysWithoutRepetition = longToDays(timeWithoutRepetion)
-//
-//            if (daysWithoutRepetition > wordPair.levelOfKnowledge.frequency) wordPair.toShow = true
             wordPair.checkIfShow(currentDate = currentDate)
         }
         return stack
@@ -212,6 +216,8 @@ class FolderViewModel @Inject constructor(
             }
         }
     }
+
+
 }
 
 data class AppState(

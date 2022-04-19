@@ -8,14 +8,12 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 import com.example.android.memoization.utils.NavScreens
 
-class LearnBroadcastReceiver:BroadcastReceiver() {
+class LearnBroadcastReceiver: BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         Log.d("LearnBroadcastReceiver", "Start")
+        val pm = context?.packageManager
+        val launchIntent = pm?.getLaunchIntentForPackage(context?.packageName)
+        context?.startActivity(launchIntent)
     }
 
-}
-
-@Composable
-fun StartLearning(navController: NavController) {
-    navController.navigate(NavScreens.Memorization.route)
 }

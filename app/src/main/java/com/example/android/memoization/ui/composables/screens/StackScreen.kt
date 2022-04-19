@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -108,8 +109,9 @@ fun WordList(
                     )
                 },
                 onDismiss = {
-                    val snackBarResult = scaffoldState.snackbarHostState.showOnDeleteSnackBar(wordPair)
-                    when(snackBarResult) {
+                    val snackBarResult =
+                        scaffoldState.snackbarHostState.showOnDeleteSnackBar(wordPair)
+                    when (snackBarResult) {
                         SnackbarResult.ActionPerformed -> {
                             viewModel.cancelDelayDeletionWork(wordPair)
                             wordPair.isVisible = true
@@ -130,7 +132,7 @@ fun SwipeToDismiss(
     item: ListItem,
     dismissContent: @Composable () -> Unit,
     onDismiss: suspend () -> Unit
-    ) {
+) {
     val scope = rememberCoroutineScope()
     val dismissState = rememberDismissState(
         confirmStateChange = {
@@ -153,13 +155,15 @@ fun SwipeToDismiss(
             Box(
                 Modifier
                     .fillMaxSize()
-//                            .background(Color.Red)
+                    .background(Color.Red)
                     .padding(horizontal = 20.dp),
+
                 contentAlignment = Alignment.CenterEnd
             ) {
                 Icon(
                     Icons.Default.Delete,
                     contentDescription = "Localized description",
+                    tint = Color.White
                 )
             }
         },

@@ -25,6 +25,7 @@ fun AddStackAlerDialog(viewModel: FolderViewModel, onClick: () -> Unit) {
                         stack = Stack(text)
                     )
                 },
+                enabled = text.isNotEmpty(),
                 content = { Text(stringResource(R.string.ok)) },
                 colors = MemoButtonColors(),
                 elevation = null

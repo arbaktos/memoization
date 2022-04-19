@@ -19,6 +19,8 @@ fun MemoTextFieldColors(): TextFieldColors {
 fun MemoButtonColors(): ButtonColors {
     return buttonColors(
         backgroundColor = Color.Transparent,
-        contentColor = MaterialTheme.colors.primary
+        contentColor = MaterialTheme.colors.primary,
+        disabledBackgroundColor = Color.Transparent,
+        disabledContentColor = Color.Gray
     )
 }

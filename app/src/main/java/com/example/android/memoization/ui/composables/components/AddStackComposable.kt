@@ -31,16 +31,8 @@ fun AddStack(
     folder: Folder,
     viewModel: FolderViewModel,
     listState: LazyListState,
-    scrollState: ScrollState,
     position: Int,
-    modifier: Modifier = Modifier.onGloballyPositioned {
-        val offset = it.size
-        Log.d(TDEBUG, "Add stack modifier y: $it")
-        val y = offset.height
-    }
 ) {
-
-    var y = 0
 
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
@@ -76,7 +68,7 @@ fun AddStack(
                 if (focusState.isFocused) {
                     scope.launch {
 //                        Log.d(TDEBUG, "Add stack y: $y")
-                        scrollState.animateScrollTo(y)
+                        listState.animateScrollToItem(position)
 //                        listState.animateScrollToItem(position)
                     }
                 }

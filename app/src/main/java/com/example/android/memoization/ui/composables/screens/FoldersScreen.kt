@@ -1,8 +1,14 @@
 package com.example.android.memoization.ui.composables.screens
 
+import android.util.Log
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -10,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -18,10 +25,14 @@ import com.example.android.memoization.R
 import com.example.android.memoization.ui.theme.MemoizationTheme
 import com.example.android.memoization.ui.viewmodel.FolderViewModel
 import com.example.android.memoization.model.Stack
+import com.example.android.memoization.notifications.Notification
 import com.example.android.memoization.ui.composables.*
+import com.example.android.memoization.ui.composables.components.AddStack
 import com.example.android.memoization.ui.composables.components.AddStackAlerDialog
 import com.example.android.memoization.ui.viewmodel.StackViewModel
 import com.example.android.memoization.utils.NavScreens
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 const val TDEBUG = "memoization_debug"
 
@@ -34,15 +45,22 @@ fun FoldersScreen(
 ) {
     val scaffoldState = rememberScaffoldState()
     var showAddStackDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     MemoizationTheme {
         Scaffold(
             scaffoldState = scaffoldState,
             floatingActionButton = {
                 Fab(
-                    Icons.Filled.Add,
-                    stringResource(R.string.add_new_stack),
-                    { showAddStackDialog = true })
+                    icon = Icons.Filled.Add,
+                    contentDesc = stringResource(R.string.add_new_stack),
+                    onclick = {
+                        showAddStackDialog = true
+                        Notification(context).shortReminderNotification(
+                            "Notification",
+                            "My test notification"
+                        )
+                    })
             },
             topBar = { AppBar(name = "Memoization") }
         ) {
@@ -54,7 +72,9 @@ fun FoldersScreen(
                 update = { navController.navigate(NavScreens.Folders.route) },
             )
             if (showAddStackDialog)
-                AddStackAlerDialog(viewModel = folderViewModel, onClick = { showAddStackDialog = false })
+                AddStackAlerDialog(
+                    viewModel = folderViewModel,
+                    onClick = { showAddStackDialog = false })
         }
     }
 }
@@ -71,14 +91,16 @@ fun BodyContent(
 ) {
     val appState by viewModel.publicAppState.collectAsState()
     val currentFolder = appState.folders[0]
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
 
-    Column(
+    LazyColumn(
+        state = listState,
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth()
-
     ) {
-        currentFolder.stacks.forEach { stack ->
+        items(currentFolder.stacks) { stack ->
             SwipeToDismiss(
                 item = stack,
                 dismissContent = {
@@ -90,18 +112,19 @@ fun BodyContent(
                     )
                 },
                 onDismiss = {
-                    val snackBarResult =
-                        scaffoldState.snackbarHostState.showOnStackDeleteSnackBar(stack)
-                    when (snackBarResult) {
-                        SnackbarResult.ActionPerformed -> {
-                            //Undo action performed
-                            viewModel.getFoldersWithStackFromDb()
-                            update()
-                        }
-                        SnackbarResult.Dismissed -> {
-                            //nothing is done so proceed to deletion
-                            viewModel.deleteStackWithDelay(stack)
-                            update()
+                    scope.launch {
+                        val snackBarResult =
+                            scaffoldState.snackbarHostState.showOnStackDeleteSnackBar(stack)
+                        viewModel.deleteStackWithDelay(stack)
+
+                        when (snackBarResult) {
+                            SnackbarResult.ActionPerformed -> {
+                                //Undo action performed
+                                viewModel.cancelStackDeletion(stack)
+                                viewModel.getFoldersWithStackFromDb()
+                                update()
+                            }
+                            SnackbarResult.Dismissed -> { }
                         }
                     }
                 }
@@ -194,7 +217,7 @@ suspend fun SnackbarHostState.showOnStackDeleteSnackBar(stack: Stack): SnackbarR
     return showSnackbar(
         message = "Deletion of ${stack.name} with all the words",
         actionLabel = "Undo",
-        duration = SnackbarDuration.Long
+        duration = SnackbarDuration.Short
     )
 }
 
