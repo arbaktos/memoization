@@ -1,5 +1,6 @@
 package com.example.android.memoization.ui.composables.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -51,7 +52,6 @@ fun BodyContent(
     wordsToLearn.forEachIndexed { index, wordPair ->
         stackViewModel.updateCurrentWordPair(wordPair)
 
-
         if (openFinishDialog){
             StackCompleteDialog(viewModel = viewModel,
                 navController = navController,
@@ -64,6 +64,7 @@ fun BodyContent(
                 wordPair.copy(lastRep = Date())
             )
             stackViewModel.updateWordPairDateInDb()
+            Log.d(TDEBUG, "$index")
             if(index == wordsToLearn.lastIndex) openFinishDialog = true
         }
 
