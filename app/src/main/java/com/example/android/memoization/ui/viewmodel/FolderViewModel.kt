@@ -1,11 +1,9 @@
 package com.example.android.memoization.ui.viewmodel
 
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.*
 import androidx.work.*
 import com.example.android.memoization.MemoizationApp
-import com.example.android.memoization.api.WordTranslationRequest
 import com.example.android.memoization.database.FolderEntity
 import com.example.android.memoization.database.StackEntity
 import com.example.android.memoization.database.WordPairEntity
@@ -13,16 +11,15 @@ import com.example.android.memoization.model.Folder
 import com.example.android.memoization.model.Stack
 import com.example.android.memoization.model.WordPair
 import com.example.android.memoization.repository.MemoRepository
+import com.example.android.memoization.ui.composables.screens.TDEBUG
 import com.example.android.memoization.utils.ID_NO_FOLDER
 import com.example.android.memoization.utils.STACK_ID
-import com.example.android.memoization.utils.WP_ID
 import com.example.android.memoization.utils.workers.StackDeletionWorker
-import com.example.android.memoization.utils.workers.WordPairInvisibleWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.lang.Exception
+import kotlinx.coroutines.withContext
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -54,14 +51,17 @@ class FolderViewModel @Inject constructor(
                 Folder(
                     folderwithStacks.folderEntity.name,
                     folderwithStacks.folderEntity.isOpen,
-                    folderwithStacks.stacks.map { stackEntity ->
-                        Stack(
-                            name = stackEntity.name,
-                            numRep = stackEntity.numRep,
-                            stackId = stackEntity.stackId,
-                            hasWords = stackEntity.hasWords
-                        )
-                    }.toMutableList(),
+                    folderwithStacks.stacks
+                        .map { stackEntity ->
+                            Stack(
+                                name = stackEntity.name,
+                                numRep = stackEntity.numRep,
+                                stackId = stackEntity.stackId,
+                                hasWords = stackEntity.hasWords
+                            )
+                        }
+                        .map { it.getWords() }
+                        .map { prepareStack(it) }.toMutableList(),
                     folderwithStacks.folderEntity.folderId
                 )
             }
@@ -80,17 +80,24 @@ class FolderViewModel @Inject constructor(
     }
 
     fun deleteStackWithDelay(stack: Stack) {
+        Log.d(TDEBUG, "initiate stack deletion $stack")
         val inputData = Data.Builder()
             .putLong(STACK_ID, stack.stackId).build()
         val workDelayDeleteRequest = OneTimeWorkRequestBuilder<StackDeletionWorker>()
             .addTag("${stack.stackId}")
             .setInputData(inputData)
-            .setInitialDelay(1, TimeUnit.SECONDS)
+            .setInitialDelay(3, TimeUnit.SECONDS)
             .build()
+//        val continuation = workManager.beginWith(workDelayDeleteRequest)
         workManager.enqueue(workDelayDeleteRequest)
     }
 
-    fun deleteStackFromDb(stack: Stack) {
+    fun cancelStackDeletion(stack: Stack) {
+        Log.d(TDEBUG, "cancelled deletion $stack")
+        workManager.cancelAllWorkByTag(stack.stackId.toString())
+    }
+
+    private fun deleteStackFromDb(stack: Stack) {
         viewModelScope.launch(Dispatchers.IO) {
             stack.words.forEach {
                 deleteWordPairFromDb(it)
@@ -107,7 +114,7 @@ class FolderViewModel @Inject constructor(
                     wordPair.word1,
                     wordPair.word2,
                     wordPair.lastRep,
-                    wordPair.toShow,
+                    wordPair.toLearn,
                     wordPair.levelOfKnowledge,
                     wordPairId = wordPair.wordPairId,
                     wordPair.isVisible
@@ -133,7 +140,7 @@ class FolderViewModel @Inject constructor(
         }
     }
 
-    fun addFolder(folder: Folder? = appState.currentFolder) {
+    private fun addFolder(folder: Folder? = appState.currentFolder) {
         viewModelScope.launch {
             folder?.let {
                 repository.insertFolder(it.toFolderEntity())
@@ -151,9 +158,11 @@ class FolderViewModel @Inject constructor(
             folder.folderId,
             hasWords = stack.words.isNotEmpty()
         )
-        updateState { it.copy(
-            currentFolder =  folder
-        ) }
+        updateState {
+            it.copy(
+                currentFolder = folder
+            )
+        }
         viewModelScope.launch {
             repository.insertStack(stackToInsert)
             getFoldersWithStackFromDb()
@@ -164,24 +173,22 @@ class FolderViewModel @Inject constructor(
         workManager.cancelAllWorkByTag("${wordPair.wordPairId}")
     }
 
-    fun prepareStack(): Stack {
+    fun prepareStack(stack: Stack = appState.currentStack!!): Stack {
         val currentDate = Date()
-        appState.currentStack!!.words.forEach { wordPair ->
-            val timeWithoutRepetion = currentDate.time - wordPair.lastRep.time
-            val daysWithoutRepetition = longToDays(timeWithoutRepetion)
-
-            if (daysWithoutRepetition > wordPair.levelOfKnowledge.frequency) wordPair.toShow = true
+        stack.words.forEach { wordPair ->
+            wordPair.checkIfShow(currentDate = currentDate)
         }
-        return appState.currentStack!!
+        return stack
     }
 
-    private fun longToDays(timeSpace: Long): Int {
-        val seconds = timeSpace / 1000
-        val minutes = seconds / 60
-        val hours = minutes / 60
-        val days = (hours / 24).toInt()
-        return days
+
+    private suspend fun Stack.getWords(): Stack = withContext(Dispatchers.IO) {
+        val stackNeeded = repository.getStackWithWordsById(this@getWords.stackId)
+        this@getWords.words = stackNeeded.words.map { it.toWordPair() }.toMutableList()
+        this@getWords
     }
+
+
 
     fun changeCurrentStack(stack: Stack) {
         updateState { it.copy(currentStack = stack) }
@@ -191,6 +198,8 @@ class FolderViewModel @Inject constructor(
         val updatedState = update(appState)
         _appState.value = updatedState
     }
+
+
 
     fun getLanguages() {
         viewModelScope.launch {
@@ -208,6 +217,7 @@ class FolderViewModel @Inject constructor(
         }
     }
 
+
 }
 
 data class AppState(
@@ -215,8 +225,3 @@ data class AppState(
     var currentStack: Stack? = null,
     var currentFolder: Folder = Folder(name = "NoFolder", folderId = ID_NO_FOLDER),
 )
-
-
-
-
-

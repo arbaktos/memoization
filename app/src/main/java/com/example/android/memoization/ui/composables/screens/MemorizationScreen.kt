@@ -1,48 +1,72 @@
 package com.example.android.memoization.ui.composables.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.android.memoization.R
-import com.example.android.memoization.model.Stack
+import com.example.android.memoization.model.WordPair
 import com.example.android.memoization.ui.composables.FlipCard
 import com.example.android.memoization.ui.composables.MemoIcon
 import com.example.android.memoization.ui.composables.NoCardsCard
+import com.example.android.memoization.ui.composables.components.StackCompleteDialog
 import com.example.android.memoization.ui.viewmodel.FolderViewModel
+import com.example.android.memoization.ui.viewmodel.StackViewModel
 import java.util.*
 
 @Composable
 fun MemorizationScreen(
     navController: NavController,
-    viewModel: FolderViewModel
+    viewModel: FolderViewModel,
+    stackViewModel: StackViewModel
 ) {
-    BodyContent(viewModel.prepareStack(), navController)
-}
+    val wordListToLearn = viewModel.prepareStack().words.filter { it.toLearn }
 
-@Composable
-fun BodyContent(stack: Stack, navController: NavController) {
-    val wordList = stack.words.filter { it.toShow }
-    if (wordList.isEmpty()) {
+    if (wordListToLearn.isNotEmpty()) {
+        BodyContent(
+            wordsToLearn = wordListToLearn,
+            navController = navController,
+            viewModel = viewModel,
+            stackViewModel
+        )
+    } else {
         NoCardsCard(
             visible = true,
             onClick = { navController.popBackStack() })
     }
-    else {
-        val x = remember { mutableStateOf(0) }
-        if (x.value == wordList.size) x.value = 0
+}
 
-        val wordPair = wordList[x.value]
+@Composable
+fun BodyContent(
+    wordsToLearn: List<WordPair>,
+    navController: NavController,
+    viewModel: FolderViewModel,
+    stackViewModel: StackViewModel
+) {
+    var openFinishDialog by remember { mutableStateOf(false)}
 
-        val onClick = {
-            wordPair.lastRep = Date()
-            x.value++
+    wordsToLearn.forEachIndexed { index, wordPair ->
+        stackViewModel.updateCurrentWordPair(wordPair)
+
+
+        if (openFinishDialog){
+            StackCompleteDialog(viewModel = viewModel,
+                navController = navController,
+                onClick = { openFinishDialog = false}
+            )
         }
+
+        val onBottomButtonClick = {
+            stackViewModel.updateCurrentWordPair(
+                wordPair.copy(lastRep = Date())
+            )
+            stackViewModel.updateWordPairDateInDb()
+            if(index == wordsToLearn.lastIndex) openFinishDialog = true
+        }
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -68,7 +92,7 @@ fun BodyContent(stack: Stack, navController: NavController) {
                     contentDesc = "Easy",
                     tint = colorResource(R.color.teal_700),
                     onClick = {
-                        onClick()
+                        onBottomButtonClick()
                         wordPair.harderLevel()
                     }
                 )
@@ -76,7 +100,7 @@ fun BodyContent(stack: Stack, navController: NavController) {
                     contentDesc = "Hard",
                     tint = colorResource(R.color.yellow),
                     onClick = {
-                        onClick()
+                        onBottomButtonClick()
                         wordPair.easierLevel()
                     }
                 )
@@ -84,7 +108,7 @@ fun BodyContent(stack: Stack, navController: NavController) {
                     contentDesc = "Wrong",
                     tint = colorResource(R.color.red),
                     onClick = {
-                        onClick()
+                        onBottomButtonClick()
                         wordPair.toLevel1()
                     }
                 )

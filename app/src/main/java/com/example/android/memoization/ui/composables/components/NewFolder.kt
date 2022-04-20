@@ -22,7 +22,7 @@ fun NewFolderScreen(
     navController: NavController
 ) {
     Scaffold(
-        topBar = { com.example.android.memoization.ui.composables.screens.AppBar(name = "New folder") }
+//        topBar = { com.example.android.memoization.ui.composables.screens.AppBar(name = "New folder") }
     ) {
         EtField(
             navigate = { navController.navigate("folders") },
@@ -48,13 +48,13 @@ fun EtField(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
     ) {
-        AddStackTextField(
-            text = text,
-            modifier = Modifier.weight(1f),
-            onTextChange = onTextChange,
-            label = "Folder name",
-            onFinish = onDone
-        )
+//        AddStackTextField(
+//            text = text,
+//            modifier = Modifier.weight(1f),
+//            onTextChange = onTextChange,
+//            label = "Folder name",
+//            onFinish = onDone
+//        )
         SubmitIcon(
             inputName = text,
             onFinish = onDone

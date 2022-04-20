@@ -1,20 +1,23 @@
 package com.example.android.memoization.model
 
 import com.example.android.memoization.database.WordPairEntity
+import com.example.android.memoization.utils.longToDays
 import java.util.*
 
-data class WordPair (
+data class WordPair(
     val stackId: Long,
     var word1: String,
     var word2: String?,
     var lastRep: Date = Date(),
-    var toShow: Boolean = false,
     var wordPairId: Long = 0,
     var levelOfKnowledge: WordStatus = WordStatus.Level1(),
     override var isVisible: Boolean = true
 //    val language1: Language,
 //    val language2: Language,
-): ListItem {
+) : ListItem {
+    var toLearn: Boolean = false
+        get() = checkIfShow()
+
     // to get the period of the card reps
     fun harderLevel() {
         this.levelOfKnowledge = when (this.levelOfKnowledge) {
@@ -46,15 +49,17 @@ data class WordPair (
             this.word1 ?: "",
             this.word2 ?: "",
             this.lastRep,
-            this.toShow,
+            this.toLearn,
             this.levelOfKnowledge,
             this.wordPairId,
             this.isVisible
         )
     }
 
+    fun checkIfShow(currentDate: Date = Date()): Boolean {
+        val timeWithoutRepetion = currentDate.time - this.lastRep.time
+        val daysWithoutRepetition = longToDays(timeWithoutRepetion)
+        return daysWithoutRepetition > this.levelOfKnowledge.frequency
+    }
 
-//    override fun toString(): String {
-//        return "$word1 $word2"
-//    }
 }

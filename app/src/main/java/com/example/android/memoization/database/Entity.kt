@@ -64,7 +64,6 @@ data class WordPairEntity(
             this.word1,
             this.word2,
             this.lastRep,
-            this.toShow,
             this.wordPairId,
             this.level,
             this.isVisible
