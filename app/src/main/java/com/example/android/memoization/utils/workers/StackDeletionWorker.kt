@@ -16,7 +16,6 @@ class StackDeletionWorker(context: Context, params: WorkerParameters): Coroutine
         return try {
             val stackId = inputData.getLong(STACK_ID, 0)
             memoDao.deleteStackFomDb(stackId)
-            Log.d(TDEBUG, "deleted $stackId")
             Result.success()
         } catch(throwable: Throwable) {
             throwable.printStackTrace()

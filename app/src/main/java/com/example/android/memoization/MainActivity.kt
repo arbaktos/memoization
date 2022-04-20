@@ -1,6 +1,10 @@
 package com.example.android.memoization
 
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.Intent
 import android.os.Bundle
+import android.os.SystemClock
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -10,6 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navArgument
 import androidx.navigation.compose.rememberNavController
+import com.example.android.memoization.notifications.AlarmReceiver
 import com.example.android.memoization.ui.composables.*
 import com.example.android.memoization.ui.composables.components.NewFolderScreen
 import com.example.android.memoization.ui.composables.screens.FoldersScreen
@@ -20,29 +25,52 @@ import com.example.android.memoization.ui.viewmodel.StackViewModel
 import com.example.android.memoization.utils.IS_EDIT_MODE
 import com.example.android.memoization.utils.NavScreens
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.*
 import javax.inject.Inject
 
+
+const val day_in_millis: Long = 24 * 60 * 60 * 1000
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    @Inject lateinit var folderViewModel: FolderViewModel
-    @Inject lateinit var stackViewModel: StackViewModel
+    @Inject
+    lateinit var folderViewModel: FolderViewModel
+    @Inject
+    lateinit var stackViewModel: StackViewModel
 
     @ExperimentalComposeUiApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+
+
+        val alarmMgr: AlarmManager? = this.getSystemService(ALARM_SERVICE) as? AlarmManager?
+
+        val requestCode = Date().time
+        val alarmIntent = Intent(this, AlarmReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            this,
+            requestCode.toInt(),
+            alarmIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+
+        alarmMgr?.setInexactRepeating(
+            AlarmManager.ELAPSED_REALTIME_WAKEUP,
+            SystemClock.elapsedRealtime() + 60 * 1000,
+            day_in_millis,
+            pendingIntent
+        )
+
+//        pendingIntent?.let { _pendingIntent->
+//            alarmMgr?.cancel(_pendingIntent)
+//        }
 
         setContent {
             val navControllerObj = rememberNavController()
 
             MemoizationTheme {
-//                ProvideWindowInsets(
-//                    windowInsetsAnimationsEnabled = true,
-//                    consumeWindowInsets = false,
-//                ) {
-//                    // your content
-//                }
                 NavHost(
                     navController = navControllerObj,
                     startDestination = NavScreens.Folders.route
@@ -68,7 +96,8 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    composable(NavScreens.NewPair.route,
+                    composable(
+                        NavScreens.NewPair.route,
                         arguments = listOf(navArgument(IS_EDIT_MODE) {
                             type = NavType.BoolType
                             defaultValue = false

@@ -41,7 +41,7 @@ class Notification (val context: Context) {
     fun shortReminderNotification(title: String, content: String) {
         val tapIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        } // TODO how to go directly to learning mode? Navigate to memoization compose fun
+        }
         val tapPendingIntent: PendingIntent = PendingIntent.getActivity(context, 0, tapIntent, 0)
 
         val notificationId = 0 // should it be unique?
