@@ -26,18 +26,12 @@ fun MemorizationScreen(
 ) {
     val wordListToLearn = viewModel.prepareStack().words.filter { it.toLearn }
 
-    if (wordListToLearn.isNotEmpty()) {
-        BodyContent(
-            wordsToLearn = wordListToLearn,
-            navController = navController,
-            viewModel = viewModel,
-            stackViewModel
-        )
-    } else {
-        NoCardsCard(
-            visible = true,
-            onClick = { navController.popBackStack() })
-    }
+    BodyContent(
+        wordsToLearn = wordListToLearn,
+        navController = navController,
+        viewModel = viewModel,
+        stackViewModel
+    )
 }
 
 @Composable
@@ -47,15 +41,15 @@ fun BodyContent(
     viewModel: FolderViewModel,
     stackViewModel: StackViewModel
 ) {
-    var openFinishDialog by remember { mutableStateOf(false)}
+    var openFinishDialog by remember { mutableStateOf(false) }
 
     wordsToLearn.forEachIndexed { index, wordPair ->
         stackViewModel.updateCurrentWordPair(wordPair)
 
-        if (openFinishDialog){
+        if (openFinishDialog) {
             StackCompleteDialog(viewModel = viewModel,
                 navController = navController,
-                onClick = { openFinishDialog = false}
+                onClick = { openFinishDialog = false }
             )
         }
 
@@ -65,7 +59,7 @@ fun BodyContent(
             )
             stackViewModel.updateWordPairDateInDb()
             Log.d(TDEBUG, "$index")
-            if(index == wordsToLearn.lastIndex) openFinishDialog = true
+            if (index == wordsToLearn.lastIndex) openFinishDialog = true
         }
 
         Column(
