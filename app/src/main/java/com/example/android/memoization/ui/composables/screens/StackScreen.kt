@@ -43,8 +43,8 @@ fun StackScreen(
         topBar = { com.example.android.memoization.ui.composables.screens.AppBar(name = currentStack!!.name) },
         floatingActionButton = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                currentStack?.let {
-                    if (!it.words.isEmpty()) {
+                currentStack?.let { stack ->
+                    if (stack.words.any { it.toLearn }) {
                         ExtendedFloatingActionButton(
                             text = {
                                 Text(
