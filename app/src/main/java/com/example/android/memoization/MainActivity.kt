@@ -2,6 +2,7 @@ package com.example.android.memoization
 
 import android.app.AlarmManager
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
@@ -38,30 +39,11 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var stackViewModel: StackViewModel
 
-    @ExperimentalComposeUiApi
+    @OptIn(ExperimentalComposeUiApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
-
-        val alarmMgr: AlarmManager? = this.getSystemService(ALARM_SERVICE) as? AlarmManager?
-
-        val requestCode = Date().time
-        val alarmIntent = Intent(this, AlarmReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            this,
-            requestCode.toInt(),
-            alarmIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
-
-        alarmMgr?.setInexactRepeating(
-            AlarmManager.ELAPSED_REALTIME_WAKEUP,
-            SystemClock.elapsedRealtime() + 60 * 1000,
-            day_in_millis,
-            pendingIntent
-        )
+        setUpNotifications()
 
 //        pendingIntent?.let { _pendingIntent->
 //            alarmMgr?.cancel(_pendingIntent)
@@ -121,6 +103,26 @@ class MainActivity : ComponentActivity() {
 
             }
         }
+    }
+
+    private fun setUpNotifications() {
+        val alarmMgr: AlarmManager? = this.getSystemService(ALARM_SERVICE) as? AlarmManager?
+
+        val requestCode = Date().time
+        val alarmIntent = Intent(this, AlarmReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            this,
+            requestCode.toInt(),
+            alarmIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        alarmMgr?.setInexactRepeating(
+            AlarmManager.ELAPSED_REALTIME_WAKEUP,
+            SystemClock.elapsedRealtime() + 60 * 1000,
+            day_in_millis,
+            pendingIntent
+        )
     }
 }
 
