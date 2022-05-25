@@ -1,5 +1,6 @@
 package com.example.android.memoization.ui.composables.screens
 
+import android.content.res.Resources
 import android.util.Log
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.Orientation
@@ -16,6 +17,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -29,6 +32,7 @@ import com.example.android.memoization.notifications.Notification
 import com.example.android.memoization.ui.composables.*
 import com.example.android.memoization.ui.composables.components.AddStack
 import com.example.android.memoization.ui.composables.components.AddStackAlerDialog
+import com.example.android.memoization.ui.theme.PlayColors
 import com.example.android.memoization.ui.viewmodel.StackViewModel
 import com.example.android.memoization.utils.NavScreens
 import kotlinx.coroutines.coroutineScope
@@ -167,14 +171,20 @@ fun StackRow(
             .fillMaxWidth()
     ) {
         val wordsToLearn = stack.words.filter { it.toLearn }
+        val unRepeatedPercent =  remember {
+            wordsToLearn.size.toFloat() /stack.words.size.toFloat() * 100
+        }
+
         if (wordsToLearn.isNotEmpty()) {
             Icon(
+                tint = getPlayIconColor(unRepeatedPercent),
                 painter = painterResource(id = R.drawable.ic_noun_play_1423160),
                 contentDescription = "Start stack memorization",
                 modifier = Modifier
                     .clickable { onClickPlay() }
                     .size(50.dp)
                     .padding(top = 15.dp)
+
             )
         } else {
             Icon(
@@ -195,6 +205,16 @@ fun StackRow(
         if (wordsToLearn.isNotEmpty()) {
             H6TextBox(text = wordsToLearn.size.toString())
         }
+    }
+}
+
+fun getPlayIconColor(unRepeatedPercent: Float): Color {
+    return when(unRepeatedPercent.toInt()) {
+        in 1..20 -> PlayColors.itsok.getColor()
+        in 21..40 -> PlayColors.itsstillok.getColor()
+        in 41..60 -> PlayColors.shoulddosomework.getColor()
+        in 61..80 -> PlayColors.actionneeded.getColor()
+        else  -> PlayColors.timetolearn.getColor()
     }
 }
 

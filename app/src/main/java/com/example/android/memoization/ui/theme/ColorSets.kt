@@ -24,3 +24,14 @@ fun MemoButtonColors(): ButtonColors {
         disabledContentColor = Color.Gray
     )
 }
+enum class PlayColors(val hex: String) {
+    itsok("#a4a2a8"),
+    itsstillok("#df8879"),
+    shoulddosomework("#c86558"),
+    actionneeded("#b04238"),
+    timetolearn("#991f17");
+
+    fun getColor(): Color {
+        return Color(android.graphics.Color.parseColor(hex))
+    }
+}
