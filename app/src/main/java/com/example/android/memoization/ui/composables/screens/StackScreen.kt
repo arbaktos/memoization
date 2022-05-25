@@ -155,7 +155,7 @@ fun SwipeToDismiss(
             Box(
                 Modifier
                     .fillMaxSize()
-                    .background(Color.Red)
+                    .background(Color.Transparent)
                     .padding(horizontal = 20.dp),
 
                 contentAlignment = Alignment.CenterEnd
@@ -163,7 +163,7 @@ fun SwipeToDismiss(
                 Icon(
                     Icons.Default.Delete,
                     contentDescription = "Localized description",
-                    tint = Color.White
+                    tint = Color.Red
                 )
             }
         },

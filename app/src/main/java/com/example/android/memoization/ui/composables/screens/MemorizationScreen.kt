@@ -42,9 +42,12 @@ fun BodyContent(
     stackViewModel: StackViewModel
 ) {
     var openFinishDialog by remember { mutableStateOf(false) }
+//    Log.d(TDEBUG, openFinishDialog.toString())
 
     wordsToLearn.forEachIndexed { index, wordPair ->
         stackViewModel.updateCurrentWordPair(wordPair)
+        Log.d(TDEBUG, "index: " + index.toString())
+        Log.d(TDEBUG, "lastIndex: " + wordsToLearn.lastIndex.toString())
 
         if (openFinishDialog) {
             StackCompleteDialog(viewModel = viewModel,
@@ -58,8 +61,7 @@ fun BodyContent(
                 wordPair.copy(lastRep = Date())
             )
             stackViewModel.updateWordPairDateInDb()
-            Log.d(TDEBUG, "$index")
-            if (index == wordsToLearn.lastIndex) openFinishDialog = true
+//            if (index == wordsToLearn.lastIndex) openFinishDialog = true
         }
 
         Column(

@@ -188,8 +188,6 @@ class FolderViewModel @Inject constructor(
         this@getWords
     }
 
-
-
     fun changeCurrentStack(stack: Stack) {
         updateState { it.copy(currentStack = stack) }
     }
