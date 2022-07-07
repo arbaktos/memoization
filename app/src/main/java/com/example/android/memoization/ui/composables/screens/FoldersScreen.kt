@@ -1,9 +1,6 @@
 package com.example.android.memoization.ui.composables.screens
 
-import android.util.Log
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,13 +22,11 @@ import com.example.android.memoization.R
 import com.example.android.memoization.ui.theme.MemoizationTheme
 import com.example.android.memoization.ui.viewmodel.FolderViewModel
 import com.example.android.memoization.model.Stack
-import com.example.android.memoization.notifications.Notification
+import com.example.android.memoization.notifications.NotificationReceiver
 import com.example.android.memoization.ui.composables.*
-import com.example.android.memoization.ui.composables.components.AddStack
 import com.example.android.memoization.ui.composables.components.AddStackAlerDialog
 import com.example.android.memoization.ui.viewmodel.StackViewModel
 import com.example.android.memoization.utils.NavScreens
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 const val TDEBUG = "memoization_debug"
@@ -56,10 +51,7 @@ fun FoldersScreen(
                     contentDesc = stringResource(R.string.add_new_stack),
                     onclick = {
                         showAddStackDialog = true
-                        Notification(context).shortReminderNotification(
-                            "Notification",
-                            "My test notification"
-                        )
+
                     })
             },
             topBar = { AppBar(name = "Memoization") }

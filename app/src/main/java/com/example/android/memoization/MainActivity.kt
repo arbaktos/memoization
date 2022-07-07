@@ -9,13 +9,12 @@ import android.os.SystemClock
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.core.view.WindowCompat
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navArgument
 import androidx.navigation.compose.rememberNavController
-import com.example.android.memoization.notifications.AlarmReceiver
+import com.example.android.memoization.notifications.NotificationReceiver
 import com.example.android.memoization.ui.composables.*
 import com.example.android.memoization.ui.composables.components.NewFolderScreen
 import com.example.android.memoization.ui.composables.screens.FoldersScreen
@@ -23,14 +22,14 @@ import com.example.android.memoization.ui.composables.screens.MemorizationScreen
 import com.example.android.memoization.ui.theme.MemoizationTheme
 import com.example.android.memoization.ui.viewmodel.FolderViewModel
 import com.example.android.memoization.ui.viewmodel.StackViewModel
-import com.example.android.memoization.utils.IS_EDIT_MODE
-import com.example.android.memoization.utils.NavScreens
+import com.example.android.memoization.utils.*
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
 
-
-const val day_in_millis: Long = 24 * 60 * 60 * 1000
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
@@ -43,11 +42,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setUpNotifications()
-
-//        pendingIntent?.let { _pendingIntent->
-//            alarmMgr?.cancel(_pendingIntent)
-//        }
+        val job = SupervisorJob()
+        val scope = CoroutineScope(job)
+        scope.launch {
+            val prefs = this@MainActivity.getPreferences(Context.MODE_PRIVATE)
+            val timeToTrigger = prefs.getLong(TRIGGER_AT_LABEL, SystemClock.elapsedRealtime()) // TODO how to set to 12 pm by default
+            val repeatInterval = prefs.getLong(REPEAT_INTERVAl_LABEL, day_in_millis)
+            setUpNotifications(timeToTrigger, repeatInterval)
+        }
 
         setContent {
             val navControllerObj = rememberNavController()
@@ -100,16 +102,15 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
-
             }
         }
     }
 
-    private fun setUpNotifications() {
+    private suspend fun setUpNotifications(timeToTrigger: Long, repeatInterval: Long) {
         val alarmMgr: AlarmManager? = this.getSystemService(ALARM_SERVICE) as? AlarmManager?
 
         val requestCode = Date().time
-        val alarmIntent = Intent(this, AlarmReceiver::class.java)
+        val alarmIntent = Intent(this, NotificationReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
             this,
             requestCode.toInt(),
@@ -119,8 +120,8 @@ class MainActivity : ComponentActivity() {
 
         alarmMgr?.setInexactRepeating(
             AlarmManager.ELAPSED_REALTIME_WAKEUP,
-            SystemClock.elapsedRealtime() + 60 * 1000,
-            day_in_millis,
+            timeToTrigger,
+            repeatInterval,
             pendingIntent
         )
     }

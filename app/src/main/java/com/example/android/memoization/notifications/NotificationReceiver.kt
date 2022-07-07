@@ -3,26 +3,34 @@ package com.example.android.memoization.notifications
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.android.memoization.MainActivity
 import com.example.android.memoization.R
+import com.example.android.memoization.ui.composables.screens.TDEBUG
+import com.example.android.memoization.utils.NOTIFICATION_ID
+import com.example.android.memoization.utils.NOTIFICATION_ID_LABEL
 
-class Notification (val context: Context) {
-
-    //TODO implement timed notification
+class NotificationReceiver: BroadcastReceiver() {
+    override fun onReceive(context: Context?, intent: Intent?) {
+        context?.let {
+            shortReminderNotification(
+                context,
+                context.getString(R.string.notif_title),
+                context.getString(R.string.notif_content)
+            )
+        }
+    }
 
     private val REMINDER_CHANNEL_ID = "reminder_channel"
 
-    init {
-        createReminderChannel()
-    }
-
-    private fun createReminderChannel() {
+    private fun createReminderChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // Create the NotificationChannel
             val name = "channel_name"
@@ -38,23 +46,19 @@ class Notification (val context: Context) {
     }
 
 
-    fun shortReminderNotification(title: String, content: String) {
+    private fun shortReminderNotification(context: Context, title: String, content: String) {
+        createReminderChannel(context)
         val tapIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         val tapPendingIntent: PendingIntent = PendingIntent.getActivity(context, 0, tapIntent, 0)
 
-        val notificationId = 0 // should it be unique?
-
-        val postponeIntent = Intent(context, PostponeBroadcastReceiver::class.java)
-        val postponePendingIntent = PendingIntent.getBroadcast(context, 0, postponeIntent, 0)
-
         val cancelIntent = Intent(context, CancelBroadcastReceiver::class.java)
+        cancelIntent.putExtra(NOTIFICATION_ID_LABEL, NOTIFICATION_ID)
         val cancelPendingIntent = PendingIntent.getBroadcast(context, 0, cancelIntent, 0)
 
         val startIntent = Intent(context, LearnBroadcastReceiver::class.java)
         val startPendingIntent = PendingIntent.getBroadcast(context, 0, startIntent, 0)
-
 
         val ntfBuilder = NotificationCompat.Builder(context, REMINDER_CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
@@ -62,14 +66,14 @@ class Notification (val context: Context) {
             .setContentText(content)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(tapPendingIntent)
-            .setAutoCancel(true)
             .addAction(R.drawable.ic_play_arrow_24, "Start", startPendingIntent)
-            .addAction(R.drawable.ic_more_time_24, "Postpone", postponePendingIntent)
             .addAction(R.drawable.ic_cancel, "Cancel", cancelPendingIntent)
-
+            .setAutoCancel(true)
 
         with(NotificationManagerCompat.from(context)) {
-            notify(notificationId, ntfBuilder.build())
+            notify(NOTIFICATION_ID, ntfBuilder.build())
         }
     }
+
+
 }
