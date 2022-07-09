@@ -9,4 +9,5 @@
     <string name="stack_complete">Stack complete!</string>
     <string name="notif_title">It\'s time to memo some words</string>
     <string name="notif_content">"10 minutes that help you make progress"</string>
+    <string name="navigation">Navigation</string>
 </resources>

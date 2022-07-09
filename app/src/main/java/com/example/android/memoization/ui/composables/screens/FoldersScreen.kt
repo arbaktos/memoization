@@ -197,11 +197,9 @@ fun AppBar(
 ) {
     TopAppBar(
         title = { Text(name) },
-        actions = {
-            IconButton(onClick = { /*TODO*/ }) {
-                Icon(Icons.Filled.Settings, null)
-            }
-        }
+        navigationIcon = {
+            Icon(Icons.Filled.Menu, contentDescription = stringResource(R.string.navigation),
+            modifier = Modifier.padding(start = 8.dp).fillMaxSize(0.6f))}
     )
 }
 
