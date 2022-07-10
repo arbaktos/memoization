@@ -7,4 +7,7 @@
     <string name="cancel">Cancel</string>
     <string name="new_stack_name">Name of the new stack</string>
     <string name="stack_complete">Stack complete!</string>
+    <string name="pin_stack">Pin this stack</string>
+    <string name="add_wordpair">Add new wordpair</string>
+    <string name="wrods_to_learn">Words to repeat: </string>
 </resources>

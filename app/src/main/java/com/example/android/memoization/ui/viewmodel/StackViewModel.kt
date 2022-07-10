@@ -82,15 +82,21 @@ class StackViewModel @Inject constructor(
         workManager.enqueue(workDelayDeleteRequest)
     }
 
+    fun onPin() {
+        updateState { it.copy(stack = it.stack?.copy(pinned = !(stackState.stack?.pinned ?: true))) }
+        updateStackInDb()
+    }
+
     fun updateStackInDb() {
         val stack = stackState.stack
         stack?.let {
             val stackEntity = StackEntity(
-                stack.name,
-                stack.numRep,
-                stack.stackId,
-                ID_NO_FOLDER,//appState.currentFolder.folderId ?: ID_NO_FOLDER,
-                stack.hasWords
+                name = stack.name,
+                numRep = stack.numRep,
+                stackId = stack.stackId,
+                parentFolderId = ID_NO_FOLDER,//appState.currentFolder.folderId ?: ID_NO_FOLDER,
+                hasWords = stack.hasWords,
+                pinned = stack.pinned
             )
             viewModelScope.launch {
                 repository.updateStack(stackEntity)
