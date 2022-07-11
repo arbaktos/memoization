@@ -109,7 +109,8 @@ fun AddIconBtn(onAdd: () -> Unit) {
         colors = MemoButtonColors(),
     ) {
         Icon(Icons.Outlined.Add, stringResource(R.string.add_wordpair), tint = Color.Gray)
-        Text("Add new card", color = Color.Gray)
+       Spacer(modifier = Modifier.width(5.dp))
+        Text(stringResource(R.string.add), color = Color.Gray)
 
     }
 }

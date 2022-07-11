@@ -55,7 +55,7 @@ fun AddStack(
             onTextChange(it)
             isChosen = true
         },
-        label = stringResource(R.string.add_stack),
+        label = stringResource(R.string.add_new_stack),
         onFinish = {
             onClick()
         },

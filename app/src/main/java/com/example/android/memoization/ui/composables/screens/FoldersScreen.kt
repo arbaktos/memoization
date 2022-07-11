@@ -1,10 +1,12 @@
 package com.example.android.memoization.ui.composables.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
+import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -14,7 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.ui.theme.MemoizationTheme
@@ -58,7 +65,7 @@ fun FoldersScreen(
                         )
                     })
             },
-            topBar = { AppBar(name = "Memoization") }
+            topBar = { AppBar(name = stringResource(id = R.string.app_name), { /* TODO*/}) }
         ) {
             BodyContent(
                 viewModel = folderViewModel,
@@ -120,7 +127,7 @@ fun BodyContent(
                                 viewModel.getFoldersWithStackFromDb()
                                 update()
                             }
-                            SnackbarResult.Dismissed -> { }
+                            SnackbarResult.Dismissed -> {}
                         }
                     }
                 }
@@ -168,29 +175,42 @@ fun animateToTop() {
 
 
 fun getPlayIconColor(unRepeatedPercent: Float): Color {
-    return when(unRepeatedPercent.toInt()) {
+    return when (unRepeatedPercent.toInt()) {
         in 1..20 -> PlayColors.itsok.getColor()
         in 21..40 -> PlayColors.itsstillok.getColor()
         in 41..60 -> PlayColors.shoulddosomework.getColor()
         in 61..80 -> PlayColors.actionneeded.getColor()
-        else  -> PlayColors.timetolearn.getColor()
+        else -> PlayColors.timetolearn.getColor()
     }
 }
 
 
 @Composable
 fun AppBar(
-    name: String
+    name: String,
+    onClick: () -> Unit
 ) {
-    TopAppBar(
-        title = { Text(name) },
-        actions = {
-            IconButton(onClick = { /*TODO*/ }) {
-                Icon(Icons.Filled.Settings, null)
-            }
-        }
-    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            name,
+            fontWeight = FontWeight.Bold,
+            fontSize = 28.sp,
+            color = colors.primaryVariant,
+            modifier = Modifier.padding(12.dp))
+        Icon(Icons.Filled.Menu,
+            stringResource(R.string.app_menu),
+            modifier = Modifier
+                .padding(end = 16.dp, bottom = 14.dp)
+                .clickable { onClick() })
+    }
 }
+
 
 suspend fun SnackbarHostState.showOnStackDeleteSnackBar(stack: Stack): SnackbarResult {
     return showSnackbar(

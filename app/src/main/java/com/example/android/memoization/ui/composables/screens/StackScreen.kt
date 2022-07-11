@@ -1,5 +1,6 @@
 package com.example.android.memoization.ui.composables
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -25,6 +26,8 @@ import com.example.android.memoization.ui.composables.components.MotionAppBar
 import com.example.android.memoization.ui.viewmodel.StackViewModel
 import com.example.android.memoization.utils.NavScreens
 import com.example.android.memoization.ui.composables.components.SwipeToDismiss
+import com.example.android.memoization.ui.composables.components.TAG
+import kotlinx.coroutines.launch
 
 @Composable
 fun StackScreen(
@@ -34,14 +37,14 @@ fun StackScreen(
     val appState by viewModel.publicStackState.collectAsState()
     val currentStack = appState.stack
     val scaffoldState = rememberScaffoldState()
-    val scrollState = rememberScrollState()
+    val state = rememberLazyListState()
 
     BackHandler {
         navContoller.navigate(NavScreens.Folders.route)
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text(currentStack?.name ?: "") }) },
+        topBar = { MotionAppBar(lazyScrollState = state, stackName = currentStack?.name ?: "") },
         floatingActionButton = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 currentStack?.let { stack ->
@@ -69,7 +72,7 @@ fun StackScreen(
 
                 Fab(
                     icon = Icons.Filled.Add,
-                    contentDesc = stringResource(R.string.add_new_wordpair),
+                    contentDesc = stringResource(R.string.add_new_card),
                     onclick = { navContoller.navigate(NavScreens.NewPair.route) }
                 )
             }
@@ -83,6 +86,7 @@ fun StackScreen(
                     onEditNavigate = { navContoller.navigate("new_pair?editMode=true") },
                     onDelete = { navContoller.navigate(NavScreens.Stack.route) },
                     scaffoldState = scaffoldState,
+                    listState = state
                 )
             }
 
@@ -97,14 +101,14 @@ fun WordList(
     onEditNavigate: () -> Unit,
     onDelete: () -> Unit,
     scaffoldState: ScaffoldState,
-
+    listState: LazyListState
 ) {
     LazyColumn(
-        reverseLayout = true,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        state = listState
     ) {
-        items(wordList) { wordPair ->
+        items(wordList.reversed()) { wordPair ->
             SwipeToDismiss(
                 item = wordPair,
                 dismissContent = {
@@ -152,7 +156,7 @@ fun WordPairListItem(
         elevation = 8.dp,
         modifier = Modifier
             .fillMaxWidth(0.9f)
-            .padding(start = 5.dp, end = 10.dp, top = 5.dp)
+            .padding(top = 4.dp, bottom = 4.dp)
             .clickable {
                 onEdit()
             }

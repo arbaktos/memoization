@@ -1,7 +1,9 @@
 package com.example.android.memoization.ui.composables.components
 
+import android.util.Log
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material.SnackbarDefaults.backgroundColor
 import androidx.compose.material.Text
@@ -25,6 +28,9 @@ import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -36,7 +42,7 @@ import com.example.android.memoization.R
 
 @OptIn(ExperimentalMotionApi::class)
 @Composable
-fun MotionAppBar(lazyScrollState: LazyListState) {
+fun MotionAppBar(lazyScrollState: LazyListState, stackName: String) {
 
     val context = LocalContext.current
     val motionScene = remember {
@@ -44,11 +50,16 @@ fun MotionAppBar(lazyScrollState: LazyListState) {
     }
 
     val progress by animateFloatAsState(
-        targetValue = if (lazyScrollState.firstVisibleItemIndex in 0..8) 1f else 0f,
+        targetValue = if (lazyScrollState.firstVisibleItemIndex == 0) 0f else 1f,
         tween(500)
     )
     val motionHeight by animateDpAsState(
-        targetValue = if (lazyScrollState.firstVisibleItemIndex in 0..8) 56.dp else 250.dp,
+        targetValue = if (lazyScrollState.firstVisibleItemIndex == 0) 130.dp else 56.dp,
+        tween(500)
+    )
+
+    val motionTextSize by animateIntAsState(
+        targetValue = if (lazyScrollState.firstVisibleItemIndex == 0) 36 else 20,
         tween(500)
     )
 
@@ -67,38 +78,18 @@ fun MotionAppBar(lazyScrollState: LazyListState) {
                 .height(motionHeight)
         ) {
 
-            val boxProperties = motionProperties(id = "box")
-            val roundedShape = RoundedCornerShape(
-                bottomStart = boxProperties.value.int("roundValue").dp,
-                bottomEnd = boxProperties.value.int("roundValue").dp
-            )
-
             Box(
                 modifier = Modifier
                     .layoutId("box")
-                    .clip(roundedShape)
-                    .background(
-                        brush = Brush.verticalGradient(
-                            listOf(Color.White, Color.Black),
-                            endY = 250f
-                        )
-                    )
+                    .background(colors.onPrimary)
             )
 
             Text(
-                text = "Astro",
-                fontSize = 24.sp,
+                text = stackName,
+                fontSize = motionTextSize.sp,
                 fontWeight = if (progress == 1f) FontWeight.Light else FontWeight.Bold,
-                color = Color.White,
-                modifier = Modifier.layoutId("user_name")
-            )
-
-            Image(
-                painter = painterResource(id = R.drawable.ic_baseline_keyboard_arrow_down_24),
-                contentDescription = null,
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .layoutId("user_image")
+                color = colors.onSecondary,
+                modifier = Modifier.layoutId("user_name").padding(start = 30.dp),
             )
         }
     }
