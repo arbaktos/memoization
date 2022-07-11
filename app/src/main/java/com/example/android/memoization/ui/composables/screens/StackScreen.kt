@@ -1,30 +1,30 @@
 package com.example.android.memoization.ui.composables
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.example.android.memoization.ui.viewmodel.FolderViewModel
 import androidx.navigation.NavController
+import com.example.android.memoization.R
 import com.example.android.memoization.extensions.checkLength
-import com.example.android.memoization.model.ListItem
 import com.example.android.memoization.model.WordPair
+import com.example.android.memoization.ui.composables.components.MotionAppBar
 import com.example.android.memoization.ui.viewmodel.StackViewModel
 import com.example.android.memoization.utils.NavScreens
-import kotlinx.coroutines.launch
+import com.example.android.memoization.ui.composables.components.SwipeToDismiss
 
 @Composable
 fun StackScreen(
@@ -39,8 +39,9 @@ fun StackScreen(
     BackHandler {
         navContoller.navigate(NavScreens.Folders.route)
     }
+
     Scaffold(
-        topBar = { com.example.android.memoization.ui.composables.screens.AppBar(name = currentStack!!.name) },
+        topBar = { TopAppBar(title = { Text(currentStack?.name ?: "") }) },
         floatingActionButton = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 currentStack?.let { stack ->
@@ -48,7 +49,7 @@ fun StackScreen(
                         ExtendedFloatingActionButton(
                             text = {
                                 Text(
-                                    text = "Learn",
+                                    text = stringResource(R.string.learn),
                                     color = MaterialTheme.colors.surface
                                 )
                             },
@@ -56,7 +57,7 @@ fun StackScreen(
                             icon = {
                                 Icon(
                                     imageVector = Icons.Filled.PlayArrow,
-                                    contentDescription = "Learn this stack",
+                                    contentDescription = stringResource(R.string.learn_this_stack),
                                     tint = MaterialTheme.colors.surface
                                 )
                             },
@@ -68,35 +69,40 @@ fun StackScreen(
 
                 Fab(
                     icon = Icons.Filled.Add,
-                    contentDesc = "Add new word pair",
+                    contentDesc = stringResource(R.string.add_new_wordpair),
                     onclick = { navContoller.navigate(NavScreens.NewPair.route) }
                 )
             }
         },
-        scaffoldState = scaffoldState
-    ) {
-        WordList(
-            currentStack!!.words,
-            viewModel = viewModel,
-            onEditNavigate = { navContoller.navigate("new_pair?editMode=true") },
-            onDelete = { navContoller.navigate(NavScreens.Stack.route) },
-            scaffoldState = scaffoldState
-        )
+        scaffoldState = scaffoldState,
+        content = { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding)){
+                WordList(
+                    currentStack?.words ?: emptyList(),
+                    viewModel = viewModel,
+                    onEditNavigate = { navContoller.navigate("new_pair?editMode=true") },
+                    onDelete = { navContoller.navigate(NavScreens.Stack.route) },
+                    scaffoldState = scaffoldState,
+                )
+            }
+
+        }
+    )
     }
 
-}
-
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun WordList(
     wordList: List<WordPair>,
     viewModel: StackViewModel,
     onEditNavigate: () -> Unit,
     onDelete: () -> Unit,
-    scaffoldState: ScaffoldState
+    scaffoldState: ScaffoldState,
+
 ) {
     LazyColumn(
-        reverseLayout = true
+        reverseLayout = true,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth()
     ) {
         items(wordList) { wordPair ->
             SwipeToDismiss(
@@ -126,60 +132,7 @@ fun WordList(
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun SwipeToDismiss(
-    item: ListItem,
-    dismissContent: @Composable () -> Unit,
-    onDismiss: suspend () -> Unit
-) {
-    val scope = rememberCoroutineScope()
-    val dismissState = rememberDismissState(
-        confirmStateChange = {
-            if (it == DismissValue.DismissedToStart) {
-                item.isVisible = false
-                scope.launch {
-                    onDismiss()
-                }
-            }
-            true
-        })
 
-    SwipeToDismiss(
-        directions = setOf(DismissDirection.EndToStart),
-        state = dismissState,
-        dismissThresholds = { direction ->
-            FractionalThreshold(0.5f)
-        },
-        background = {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .background(Color.Transparent)
-                    .padding(horizontal = 20.dp),
-
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Localized description",
-                    tint = Color.Red
-                )
-            }
-        },
-        dismissContent = {
-            Card(
-                elevation = animateDpAsState(
-                    if (dismissState.dismissDirection != null) 4.dp else 0.dp
-                ).value
-            ) {
-                if (item.isVisible) {
-                    dismissContent()
-                }
-
-            }
-        })
-}
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -195,34 +148,27 @@ fun WordPairListItem(
         onEditNavigate()
     }
     Card(
-        border = BorderStroke(color = Color.Black, width = Dp.Hairline),
+        shape = RoundedCornerShape(16.dp),
+        elevation = 8.dp,
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 0.dp, end = 10.dp, top = 5.dp)
+            .fillMaxWidth(0.9f)
+            .padding(start = 5.dp, end = 10.dp, top = 5.dp)
             .clickable {
                 onEdit()
             }
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(8.dp)) {
 
             RowIcon(
                 iconSource = Icons.Filled.Circle,
-                contentDesc = "Indicator how well do you know the word",
+                contentDesc = stringResource(R.string.word_indicator),
                 modifier = Modifier.padding(start = 10.dp)
             )
             ListItem(
-                text = { Text(wordPair.word1.checkLength()) },
-                secondaryText = { wordPair.word2?.checkLength()?.let { Text(it) } }
+                text = { Text(wordPair.word1.checkLength(), maxLines = 2, overflow = TextOverflow.Ellipsis) },
+                secondaryText = { wordPair.word2?.checkLength()?.let { Text(it, maxLines = 2, overflow = TextOverflow.Ellipsis) } }
             )
-//
-//            Row {
-//                RowIcon(
-//                    iconSource = Icons.Filled.Edit,
-//                    contentDesc = "Edit wordpair",
-//                    onClick = onEdit,
-//                    modifier = Modifier.padding(end = 8.dp)
-//                )
-//            }
         }
     }
 }

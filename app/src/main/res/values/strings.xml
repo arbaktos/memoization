@@ -10,4 +10,8 @@
     <string name="pin_stack">Pin this stack</string>
     <string name="add_wordpair">Add new wordpair</string>
     <string name="wrods_to_learn">Words to repeat: </string>
+    <string name="learn">Learn</string>
+    <string name="learn_this_stack">Learn this stack</string>
+    <string name="add_new_wordpair">Add new word pair</string>
+    <string name="word_indicator">Indicator how well do you know the word</string>
 </resources>
