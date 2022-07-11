@@ -215,7 +215,6 @@ class FolderViewModel @Inject constructor(
         }
     }
 
-
 }
 
 data class AppState(
