@@ -24,7 +24,8 @@ data class StackEntity(
     val stackId: Long = 0,
     val parentFolderId: Long = 0,
     var hasWords: Boolean = false,
-    var isVisible: Boolean = true
+    var isVisible: Boolean = true,
+    var pinned: Boolean = false
 )
 
 data class FolderwithStacks(

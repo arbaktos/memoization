@@ -1,0 +1,32 @@
+{
+  ConstraintSets: {
+    start: {
+      box: {
+        width: 'spread',
+        height: 130,
+        start: ['parent', 'start'],
+        end: ['parent', 'end'],
+        top: ['parent', 'top'],
+      },
+      user_name: {
+        start: ['user_image', 'start'],
+        top: ['box', 'top'],
+        bottom: ['box', 'bottom']
+      }
+    },
+    end: {
+      box: {
+        width: 'spread',
+        height: 56,
+        start: ['parent', 'start'],
+        end: ['parent', 'end'],
+        top: ['parent', 'top'],
+      },
+      user_name: {
+        start: ['user_image', 'start'],
+        top: ['box', 'top'],
+        bottom: ['box', 'bottom']
+      }
+    }
+  }
+}

@@ -1,5 +1,6 @@
 package com.example.android.memoization.ui.composables.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,18 +26,12 @@ fun MemorizationScreen(
 ) {
     val wordListToLearn = viewModel.prepareStack().words.filter { it.toLearn }
 
-    if (wordListToLearn.isNotEmpty()) {
-        BodyContent(
-            wordsToLearn = wordListToLearn,
-            navController = navController,
-            viewModel = viewModel,
-            stackViewModel
-        )
-    } else {
-        NoCardsCard(
-            visible = true,
-            onClick = { navController.popBackStack() })
-    }
+    BodyContent(
+        wordsToLearn = wordListToLearn,
+        navController = navController,
+        viewModel = viewModel,
+        stackViewModel
+    )
 }
 
 @Composable
@@ -46,16 +41,16 @@ fun BodyContent(
     viewModel: FolderViewModel,
     stackViewModel: StackViewModel
 ) {
-    var openFinishDialog by remember { mutableStateOf(false)}
+    var openFinishDialog by remember { mutableStateOf(false) }
+    var wordPairNum by remember { mutableStateOf(0) }
+    val wordPair = wordsToLearn.get(wordPairNum)
 
-    wordsToLearn.forEachIndexed { index, wordPair ->
         stackViewModel.updateCurrentWordPair(wordPair)
 
-
-        if (openFinishDialog){
+        if (openFinishDialog) {
             StackCompleteDialog(viewModel = viewModel,
                 navController = navController,
-                onClick = { openFinishDialog = false}
+                onClick = { openFinishDialog = false }
             )
         }
 
@@ -64,7 +59,8 @@ fun BodyContent(
                 wordPair.copy(lastRep = Date())
             )
             stackViewModel.updateWordPairDateInDb()
-            if(index == wordsToLearn.lastIndex) openFinishDialog = true
+            if (wordPairNum == wordsToLearn.lastIndex) openFinishDialog = true
+            else wordPairNum++
         }
 
         Column(
@@ -116,6 +112,6 @@ fun BodyContent(
         }
     }
 
-}
+
 
 

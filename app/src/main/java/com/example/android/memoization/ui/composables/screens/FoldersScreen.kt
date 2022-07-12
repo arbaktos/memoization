@@ -2,21 +2,26 @@ package com.example.android.memoization.ui.composables.screens
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
+import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.ui.theme.MemoizationTheme
@@ -26,9 +31,12 @@ import com.example.android.memoization.notifications.NotificationReceiver
 import com.example.android.memoization.ui.composables.*
 import com.example.android.memoization.ui.composables.components.AddStackAlerDialog
 import com.example.android.memoization.ui.composables.components.MenuDrawer
+import com.example.android.memoization.ui.composables.components.StackListItem
+import com.example.android.memoization.ui.theme.PlayColors
 import com.example.android.memoization.ui.viewmodel.StackViewModel
 import com.example.android.memoization.utils.NavScreens
 import kotlinx.coroutines.launch
+import com.example.android.memoization.ui.composables.components.SwipeToDismiss
 
 const val TDEBUG = "memoization_debug"
 
@@ -58,13 +66,7 @@ fun FoldersScreen(
                     })
             },
             drawerContent = { MenuDrawer(state = drawerState) },
-            topBar = {
-                AppBar(name = "Memoization", onMenuClick = {
-                    scope.launch {
-                        drawerState.open()
-                    }
-                })
-            }
+            topBar = { AppBar(name = stringResource(id = R.string.app_name), { /* TODO*/}) }
         ) {
             BodyContent(
                 viewModel = folderViewModel,
@@ -81,7 +83,6 @@ fun FoldersScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @ExperimentalComposeUiApi
 @Composable
 fun BodyContent(
@@ -98,6 +99,7 @@ fun BodyContent(
 
     LazyColumn(
         state = listState,
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth()
@@ -142,12 +144,23 @@ fun ShowStack(
     navController: NavController,
     stackViewModel: StackViewModel
 ) {
-    StackRow(
+    StackListItem(
         stack = stack,
-        onClickPlay = {
+        onPlay = {
             viewModel.changeCurrentStack(stack)
             stackViewModel.setCurrentStack(stack)
             navController.navigate(NavScreens.Memorization.route)
+        },
+        onAdd = {
+            viewModel.changeCurrentStack(stack)
+            stackViewModel.setCurrentStack(stack)
+            navController.navigate(NavScreens.NewPair.route)
+        },
+        onPin = {
+            viewModel.changeCurrentStack(stack)
+            stackViewModel.setCurrentStack(stack)
+            stackViewModel.onPin()
+            animateToTop()
         },
         onClickRow = {
             viewModel.changeCurrentStack(stack)
@@ -157,46 +170,18 @@ fun ShowStack(
     )
 }
 
-@Composable
-fun StackRow(
-    stack: Stack,
-    onClickRow: () -> Unit,
-    onClickPlay: () -> Unit,
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-    ) {
-        val wordsToLearn = stack.words.filter { it.toLearn }
-        if (wordsToLearn.isNotEmpty()) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_noun_play_1423160),
-                contentDescription = "Start stack memorization",
-                modifier = Modifier
-                    .clickable { onClickPlay() }
-                    .size(50.dp)
-                    .padding(top = 15.dp)
-            )
-        } else {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_stack),
-                contentDescription = "stack symbol",
-                modifier = Modifier
-                    .size(50.dp)
-                    .padding(top = 15.dp)
-            )
-        }
+fun animateToTop() {
+    TODO("Not yet implemented")
+}
 
-        H5TextBox(
-            text = stack.name,
-            modifier = Modifier
-                .weight(1f)
-                .clickable { onClickRow() })
 
-        if (wordsToLearn.isNotEmpty()) {
-            H6TextBox(text = wordsToLearn.size.toString())
-        }
+fun getPlayIconColor(unRepeatedPercent: Float): Color {
+    return when (unRepeatedPercent.toInt()) {
+        in 1..20 -> PlayColors.itsok.getColor()
+        in 21..40 -> PlayColors.itsstillok.getColor()
+        in 41..60 -> PlayColors.shoulddosomework.getColor()
+        in 61..80 -> PlayColors.actionneeded.getColor()
+        else -> PlayColors.timetolearn.getColor()
     }
 }
 
@@ -204,22 +189,30 @@ fun StackRow(
 @Composable
 fun AppBar(
     name: String,
-    onMenuClick: () -> Unit
+    onClick: () -> Unit
 ) {
-    TopAppBar(
-        title = { Text(name) },
-        navigationIcon = {
-            Icon(Icons.Filled.Menu, contentDescription = stringResource(R.string.navigation),
-                modifier = Modifier
-                    .padding(start = 8.dp)
-                    .fillMaxSize(0.6f)
-                    .clickable {
-                        onMenuClick()
-                    }
-            )
-        }
-    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            name,
+            fontWeight = FontWeight.Bold,
+            fontSize = 28.sp,
+            color = colors.primaryVariant,
+            modifier = Modifier.padding(12.dp))
+        Icon(Icons.Filled.Menu,
+            stringResource(R.string.app_menu),
+            modifier = Modifier
+                .padding(end = 16.dp, bottom = 14.dp)
+                .clickable { onClick() })
+    }
+
 }
+
 
 suspend fun SnackbarHostState.showOnStackDeleteSnackBar(stack: Stack): SnackbarResult {
     return showSnackbar(
