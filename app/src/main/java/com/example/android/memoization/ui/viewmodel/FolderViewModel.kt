@@ -80,7 +80,6 @@ class FolderViewModel @Inject constructor(
     }
 
     fun deleteStackWithDelay(stack: Stack) {
-        Log.d(TDEBUG, "initiate stack deletion $stack")
         val inputData = Data.Builder()
             .putLong(STACK_ID, stack.stackId).build()
         val workDelayDeleteRequest = OneTimeWorkRequestBuilder<StackDeletionWorker>()
@@ -88,7 +87,6 @@ class FolderViewModel @Inject constructor(
             .setInputData(inputData)
             .setInitialDelay(3, TimeUnit.SECONDS)
             .build()
-//        val continuation = workManager.beginWith(workDelayDeleteRequest)
         workManager.enqueue(workDelayDeleteRequest)
     }
 

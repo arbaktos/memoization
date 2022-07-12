@@ -1,6 +1,6 @@
 package com.example.android.memoization.ui.composables.screens
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -27,9 +27,10 @@ import com.example.android.memoization.R
 import com.example.android.memoization.ui.theme.MemoizationTheme
 import com.example.android.memoization.ui.viewmodel.FolderViewModel
 import com.example.android.memoization.model.Stack
-import com.example.android.memoization.notifications.Notification
+import com.example.android.memoization.notifications.NotificationReceiver
 import com.example.android.memoization.ui.composables.*
 import com.example.android.memoization.ui.composables.components.AddStackAlerDialog
+import com.example.android.memoization.ui.composables.components.MenuDrawer
 import com.example.android.memoization.ui.composables.components.StackListItem
 import com.example.android.memoization.ui.theme.PlayColors
 import com.example.android.memoization.ui.viewmodel.StackViewModel
@@ -49,6 +50,8 @@ fun FoldersScreen(
     val scaffoldState = rememberScaffoldState()
     var showAddStackDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
     MemoizationTheme {
         Scaffold(
@@ -59,12 +62,10 @@ fun FoldersScreen(
                     contentDesc = stringResource(R.string.add_new_stack),
                     onclick = {
                         showAddStackDialog = true
-                        Notification(context).shortReminderNotification(
-                            "Notification",
-                            "My test notification"
-                        )
+
                     })
             },
+            drawerContent = { MenuDrawer(state = drawerState) },
             topBar = { AppBar(name = stringResource(id = R.string.app_name), { /* TODO*/}) }
         ) {
             BodyContent(
@@ -209,6 +210,7 @@ fun AppBar(
                 .padding(end = 16.dp, bottom = 14.dp)
                 .clickable { onClick() })
     }
+
 }
 
 

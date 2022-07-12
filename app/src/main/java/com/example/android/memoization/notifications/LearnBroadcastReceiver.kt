@@ -12,7 +12,7 @@ class LearnBroadcastReceiver: BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         Log.d("LearnBroadcastReceiver", "Start")
         val pm = context?.packageManager
-        val launchIntent = pm?.getLaunchIntentForPackage(context?.packageName)
+        val launchIntent = pm?.getLaunchIntentForPackage(context.packageName)
         context?.startActivity(launchIntent)
     }
 
