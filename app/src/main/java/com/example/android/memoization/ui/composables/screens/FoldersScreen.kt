@@ -43,6 +43,7 @@ fun FoldersScreen(
     var showAddStackDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
     MemoizationTheme {
         Scaffold(
@@ -56,8 +57,14 @@ fun FoldersScreen(
 
                     })
             },
-            drawerContent = { MenuDrawer(state = drawerState)},
-            topBar = { AppBar(name = "Memoization") }
+            drawerContent = { MenuDrawer(state = drawerState) },
+            topBar = {
+                AppBar(name = "Memoization", onMenuClick = {
+                    scope.launch {
+                        drawerState.open()
+                    }
+                })
+            }
         ) {
             BodyContent(
                 viewModel = folderViewModel,
@@ -119,7 +126,7 @@ fun BodyContent(
                                 viewModel.getFoldersWithStackFromDb()
                                 update()
                             }
-                            SnackbarResult.Dismissed -> { }
+                            SnackbarResult.Dismissed -> {}
                         }
                     }
                 }
@@ -196,15 +203,21 @@ fun StackRow(
 
 @Composable
 fun AppBar(
-    name: String
+    name: String,
+    onMenuClick: () -> Unit
 ) {
     TopAppBar(
         title = { Text(name) },
         navigationIcon = {
             Icon(Icons.Filled.Menu, contentDescription = stringResource(R.string.navigation),
-            modifier = Modifier
-                .padding(start = 8.dp)
-                .fillMaxSize(0.6f))}
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .fillMaxSize(0.6f)
+                    .clickable {
+                        onMenuClick()
+                    }
+            )
+        }
     )
 }
 

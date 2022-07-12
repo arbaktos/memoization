@@ -40,7 +40,7 @@ fun StackScreen(
         navContoller.navigate(NavScreens.Folders.route)
     }
     Scaffold(
-        topBar = { com.example.android.memoization.ui.composables.screens.AppBar(name = currentStack!!.name) },
+        topBar = { com.example.android.memoization.ui.composables.screens.AppBar(name = currentStack!!.name, {}) },
         floatingActionButton = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 currentStack?.let {
