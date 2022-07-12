@@ -36,12 +36,10 @@
         <entry key="../../../../layout/compose-model-1631562258180.xml" value="0.6566998892580288" />
         <entry key="../../../../layout/compose-model-1631739385980.xml" value="0.24259259259259258" />
         <entry key="../../../../layout/compose-model-1631742838491.xml" value="0.24259259259259258" />
-        <entry key="app/src/main/res/drawable/ic_baseline_add_24.xml" value="0.143" />
-        <entry key="app/src/main/res/drawable/ic_more_time_24.xml" value="0.174" />
-        <entry key="app/src/main/res/drawable/ic_noun_play_1423160.xml" value="0.1" />
-        <entry key="app/src/main/res/drawable/ic_play_arrow_24.xml" value="0.1" />
-        <entry key="app/src/main/res/drawable/ic_play_circle_24.xml" value="0.1" />
-        <entry key="app/src/main/res/drawable/ic_stack.xml" value="0.1" />
+        <entry key="app/src/main/java/com/example/android/memoization/ui/composables/components/StackListItem.kt" value="0.4810126582278481" />
+        <entry key="app/src/main/res/drawable/ic_noun_play_1423160.xml" value="0.149" />
+        <entry key="app/src/main/res/drawable/ic_play_arrow_24.xml" value="0.149" />
+        <entry key="app/src/main/res/drawable/ic_play_circle_24.xml" value="0.149" />
       </map>
     </option>
   </component>

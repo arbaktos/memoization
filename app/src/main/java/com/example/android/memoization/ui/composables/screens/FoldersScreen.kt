@@ -25,6 +25,7 @@ import com.example.android.memoization.model.Stack
 import com.example.android.memoization.notifications.NotificationReceiver
 import com.example.android.memoization.ui.composables.*
 import com.example.android.memoization.ui.composables.components.AddStackAlerDialog
+import com.example.android.memoization.ui.composables.components.MenuDrawer
 import com.example.android.memoization.ui.viewmodel.StackViewModel
 import com.example.android.memoization.utils.NavScreens
 import kotlinx.coroutines.launch
@@ -41,6 +42,7 @@ fun FoldersScreen(
     val scaffoldState = rememberScaffoldState()
     var showAddStackDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     MemoizationTheme {
         Scaffold(
@@ -54,6 +56,7 @@ fun FoldersScreen(
 
                     })
             },
+            drawerContent = { MenuDrawer(state = drawerState)},
             topBar = { AppBar(name = "Memoization") }
         ) {
             BodyContent(
@@ -199,7 +202,9 @@ fun AppBar(
         title = { Text(name) },
         navigationIcon = {
             Icon(Icons.Filled.Menu, contentDescription = stringResource(R.string.navigation),
-            modifier = Modifier.padding(start = 8.dp).fillMaxSize(0.6f))}
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .fillMaxSize(0.6f))}
     )
 }
 
