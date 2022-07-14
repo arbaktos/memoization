@@ -195,7 +195,7 @@ class StackViewModel @Inject constructor(
                 it.copy(
                     wordPair = WordPair(
                         stackState.stack?.stackId ?: 0,
-                        stackState.word1!!,
+                        stackState.word1 ?: "",
                         stackState.word2
                     )
                 )

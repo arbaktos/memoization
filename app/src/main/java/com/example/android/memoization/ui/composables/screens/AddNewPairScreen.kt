@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -28,9 +29,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import com.example.android.memoization.ui.theme.MemoizationTheme
 import androidx.navigation.NavController
+import com.example.android.memoization.R
 import com.example.android.memoization.api.WordTranslationRequest
 import com.example.android.memoization.extensions.ConnectionState
 import com.example.android.memoization.extensions.currentConnectivityState
+import com.example.android.memoization.ui.theme.AddTextFieldColors
 import com.example.android.memoization.ui.viewmodel.FolderViewModel
 import com.example.android.memoization.ui.viewmodel.StackViewModel
 import com.example.android.memoization.utils.NavScreens
@@ -84,7 +87,7 @@ fun AddNewPairScreen(navController: NavController, viewModel: StackViewModel, ed
             floatingActionButton = {
                 Fab(
                     icon = Icons.Filled.Done,
-                    contentDesc = "Done adding word pair",
+                    contentDesc = stringResource(R.string.finish_add_card_descrption),
                     onclick = onAdd
                 )
             }
@@ -105,7 +108,7 @@ fun AddNewPairScreen(navController: NavController, viewModel: StackViewModel, ed
                     editWord = word1
                 )
                 RowIcon(iconSource = Icons.Filled.Translate,
-                    contentDesc = "translate the word",
+                    contentDesc = stringResource(R.string.translate_btn_description),
                     onClick = {
                         coroutineScope.launch {
                             onTranslate()
@@ -123,7 +126,7 @@ fun AddNewPairScreen(navController: NavController, viewModel: StackViewModel, ed
 fun ShowNoConnectionToast() {
     val context = LocalContext.current
     val toast = {
-        Toast.makeText(context, "No Internet connection", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "No Internet connection", Toast.LENGTH_SHORT).show() //TODO extract resourse
     }
     when (context.currentConnectivityState) {
         is ConnectionState.Unavailable -> toast()
@@ -150,7 +153,7 @@ fun UpperField(modifier: Modifier,
                 text1.value = it
                 viewModel.setWord(1, it)
             },
-            label = "Word to learn"
+            label = stringResource(R.string.word_to_learn)
         )
     }
 }
@@ -177,13 +180,12 @@ fun BottomField(
                 text2.value = it
                 viewModel.setWord(2, it)
                            },
-            label = "Explanation",
+            label = stringResource(R.string.explanation),
             onClick = onClick,
             imeAction = ImeAction.Done
         )
     }
 }
-
 
 @Composable
 fun NewPairCard(
@@ -211,12 +213,7 @@ fun NewPairTextField(
         value = text,
         onValueChange = onTextChange,
         label = { Text(label) },
-        colors = TextFieldDefaults.textFieldColors(
-            backgroundColor = Color.White,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent
-        ),
+        colors = AddTextFieldColors(),
         keyboardOptions = KeyboardOptions.Default.copy(
             capitalization = KeyboardCapitalization.None,
             keyboardType = KeyboardType.Text,
