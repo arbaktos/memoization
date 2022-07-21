@@ -45,72 +45,72 @@ fun BodyContent(
     var wordPairNum by remember { mutableStateOf(0) }
     val wordPair = wordsToLearn.get(wordPairNum)
 
-        stackViewModel.updateCurrentWordPair(wordPair)
+    stackViewModel.updateCurrentWordPair(wordPair)
 
-        if (openFinishDialog) {
-            StackCompleteDialog(viewModel = viewModel,
-                navController = navController,
-                onClick = { openFinishDialog = false }
-            )
-        }
+    if (openFinishDialog) {
+        StackCompleteDialog(viewModel = viewModel,
+            navController = navController,
+            onClick = { openFinishDialog = false }
+        )
+    }
 
-        val onBottomButtonClick = {
-            stackViewModel.updateCurrentWordPair(
-                wordPair.copy(lastRep = Date())
-            )
-            stackViewModel.updateWordPairDateInDb()
-            if (wordPairNum == wordsToLearn.lastIndex) openFinishDialog = true
-            else wordPairNum++
-        }
+    val onBottomButtonClick = {
+        stackViewModel.updateCurrentWordPair(
+            wordPair.copy(lastRep = Date())
+        )
+        stackViewModel.updateWordPairDateInDb()
+        if (wordPairNum == wordsToLearn.lastIndex) openFinishDialog = true
+        else wordPairNum++
+    }
 
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(Modifier.height(60.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
-            Spacer(Modifier.height(60.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
 
-                FlipCard(wordPair)
+            FlipCard(wordPair)
 
-            }
-            Spacer(Modifier.height(100.dp))
-            Row(
-                modifier = Modifier
-                    .weight(0.3f)
+        }
+        Spacer(Modifier.height(100.dp))
+        Row(
+            modifier = Modifier
+                .weight(0.3f)
 
-            ) {
-                MemoIcon(
-                    contentDesc = "Easy",
-                    tint = colorResource(R.color.teal_700),
-                    onClick = {
-                        onBottomButtonClick()
-                        wordPair.harderLevel()
-                    }
-                )
-                MemoIcon(
-                    contentDesc = "Hard",
-                    tint = colorResource(R.color.yellow),
-                    onClick = {
-                        onBottomButtonClick()
-                        wordPair.easierLevel()
-                    }
-                )
-                MemoIcon(
-                    contentDesc = "Wrong",
-                    tint = colorResource(R.color.red),
-                    onClick = {
-                        onBottomButtonClick()
-                        wordPair.toLevel1()
-                    }
-                )
-            }
+        ) {
+            MemoIcon(
+                contentDesc = "Easy",
+                tint = colorResource(R.color.teal_700),
+                onClick = {
+                    onBottomButtonClick()
+                    wordPair.harderLevel()
+                }
+            )
+            MemoIcon(
+                contentDesc = "Hard",
+                tint = colorResource(R.color.yellow),
+                onClick = {
+                    onBottomButtonClick()
+                    wordPair.easierLevel()
+                }
+            )
+            MemoIcon(
+                contentDesc = "Wrong",
+                tint = colorResource(R.color.red),
+                onClick = {
+                    onBottomButtonClick()
+                    wordPair.toLevel1()
+                }
+            )
         }
     }
+}
 
 
 

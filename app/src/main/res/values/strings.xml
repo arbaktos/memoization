@@ -17,4 +17,6 @@
     <string name="app_menu">App menu</string>
     <string name="notif_title">It\'s time to memo some words</string>
     <string name="notif_content">"10 minutes that help you make progress"</string>
+    <string name="notif_switch_desc">Switch to turn notifications on or off</string>
+    <string name="notifications">Notifications</string>
 </resources>

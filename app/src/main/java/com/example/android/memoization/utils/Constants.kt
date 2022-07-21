@@ -10,3 +10,5 @@ const val NOTIFICATION_ID_LABEL = "notificationId"
 const val TRIGGER_AT_LABEL = "trigger_at"
 const val REPEAT_INTERVAl_LABEL = "repeat_interval"
 const val day_in_millis: Long = 24 * 60 * 60 * 1000
+const val to_show_notifications: String = "to_show_notifications"
+const val Db_name = "memo_database"
