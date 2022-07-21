@@ -17,11 +17,13 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -64,11 +66,11 @@ fun FoldersScreen(
 
                     })
             },
-            drawerContent = { MenuDrawer(state = drawerState) },
+            drawerContent = { MenuDrawer(scaffoldState) }
+                                                                                             ,
 
             topBar = { AppBar(name = stringResource(id = R.string.app_name)) {
-                Log.d(TAG, "FoldersScreen: menuOpen")
-                scope.launch { drawerState.open() }
+                scope.launch { scaffoldState.drawerState.open() }
             }
             }
         ) {
