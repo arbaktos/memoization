@@ -1,4 +1,6 @@
-package com.example.android.memoization.model
+package com.example.android.memoization.domain.model
+
+import java.util.*
 
 data class Stack(
     val name: String,
@@ -10,4 +12,14 @@ data class Stack(
     var pinned: Boolean = false
 //    val language1: Language,
 //    val language2: Language,
-) : ListItem
+) : ListItem {
+
+    fun prepareStack(): Stack {
+        val currentDate = Date()
+        return this.apply {
+            words.forEach { wordPair ->
+                wordPair.checkIfShow(currentDate = currentDate)
+            }
+        }
+    }
+}

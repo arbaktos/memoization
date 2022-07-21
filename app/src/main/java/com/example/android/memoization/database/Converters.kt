@@ -1,7 +1,7 @@
 package com.example.android.memoization.database
 
 import androidx.room.TypeConverter
-import com.example.android.memoization.model.WordStatus
+import com.example.android.memoization.domain.model.WordStatus
 import java.util.*
 
 class Converters {

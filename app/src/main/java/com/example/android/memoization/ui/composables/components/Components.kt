@@ -1,6 +1,5 @@
 package com.example.android.memoization.ui.composables
 
-import android.content.res.Resources
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -13,7 +12,6 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Done
-import androidx.compose.material.icons.outlined.DoneOutline
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -21,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -31,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.android.memoization.R
-import com.example.android.memoization.model.Folder
+import com.example.android.memoization.domain.model.Folder
 import com.example.android.memoization.ui.composables.screens.ShowStack
 import com.example.android.memoization.ui.composables.screens.TDEBUG
 import com.example.android.memoization.ui.viewmodel.FolderViewModel

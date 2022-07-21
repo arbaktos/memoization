@@ -1,8 +1,8 @@
 package com.example.android.memoization.database
 
 import androidx.room.*
-import com.example.android.memoization.model.WordPair
-import com.example.android.memoization.model.WordStatus
+import com.example.android.memoization.domain.model.WordPair
+import com.example.android.memoization.domain.model.WordStatus
 import java.util.*
 
 const val FOLDER_TABLE = "folder_entity_table"

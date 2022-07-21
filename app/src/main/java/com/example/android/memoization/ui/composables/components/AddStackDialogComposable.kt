@@ -3,9 +3,8 @@ package com.example.android.memoization.ui.composables.components
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.example.android.memoization.R
-import com.example.android.memoization.model.Stack
+import com.example.android.memoization.domain.model.Stack
 import com.example.android.memoization.ui.theme.MemoButtonColors
 import com.example.android.memoization.ui.theme.MemoTextFieldColors
 import com.example.android.memoization.ui.viewmodel.FolderViewModel

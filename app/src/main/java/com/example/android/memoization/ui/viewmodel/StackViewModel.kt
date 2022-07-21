@@ -10,8 +10,8 @@ import androidx.work.WorkManager
 import com.example.android.memoization.api.WordTranslationRequest
 import com.example.android.memoization.database.StackEntity
 import com.example.android.memoization.database.WordPairEntity
-import com.example.android.memoization.model.Stack
-import com.example.android.memoization.model.WordPair
+import com.example.android.memoization.domain.model.Stack
+import com.example.android.memoization.domain.model.WordPair
 import com.example.android.memoization.repository.MemoRepository
 import com.example.android.memoization.utils.ID_NO_FOLDER
 import com.example.android.memoization.utils.WP_ID

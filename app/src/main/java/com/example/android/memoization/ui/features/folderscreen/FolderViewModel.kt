@@ -7,9 +7,10 @@ import com.example.android.memoization.MemoizationApp
 import com.example.android.memoization.database.FolderEntity
 import com.example.android.memoization.database.StackEntity
 import com.example.android.memoization.database.WordPairEntity
-import com.example.android.memoization.model.Folder
-import com.example.android.memoization.model.Stack
-import com.example.android.memoization.model.WordPair
+import com.example.android.memoization.domain.model.Folder
+import com.example.android.memoization.domain.model.Stack
+import com.example.android.memoization.domain.model.WordPair
+import com.example.android.memoization.domain.usecases.GetFoldersWithStackFromDbUseCase
 import com.example.android.memoization.repository.MemoRepository
 import com.example.android.memoization.ui.composables.screens.TDEBUG
 import com.example.android.memoization.utils.ID_NO_FOLDER
@@ -20,13 +21,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 
 class FolderViewModel @Inject constructor(
-    private val repository: MemoRepository, application: MemoizationApp
+    private val repository: MemoRepository,
+    application: MemoizationApp,
+    private val getFoldersWithWords: GetFoldersWithStackFromDbUseCase
 ) : ViewModel() {
 
     private val _appState = MutableStateFlow(AppState())
@@ -47,24 +49,25 @@ class FolderViewModel @Inject constructor(
 
     fun getFoldersWithStackFromDb() {
         viewModelScope.launch(Dispatchers.IO) {
-            val folders = repository.getFoldersWithStacks().map { folderwithStacks ->
-                Folder(
-                    folderwithStacks.folderEntity.name,
-                    folderwithStacks.folderEntity.isOpen,
-                    folderwithStacks.stacks
-                        .map { stackEntity ->
-                            Stack(
-                                name = stackEntity.name,
-                                numRep = stackEntity.numRep,
-                                stackId = stackEntity.stackId,
-                                hasWords = stackEntity.hasWords
-                            )
-                        }
-                        .map { it.getWords() }
-                        .map { prepareStack(it) }.toMutableList(),
-                    folderwithStacks.folderEntity.folderId
-                )
-            }
+//            val folders = repository.getFoldersWithStacks().map { folderWithStacks ->
+//                Folder(
+//                    folderWithStacks.folderEntity.name,
+//                    folderWithStacks.folderEntity.isOpen,
+//                    folderWithStacks.stacks
+//                        .map { stackEntity ->
+//                            Stack(
+//                                name = stackEntity.name,
+//                                numRep = stackEntity.numRep,
+//                                stackId = stackEntity.stackId,
+//                                hasWords = stackEntity.hasWords
+//                            )
+//                        }
+//                        .map { it.getWords() }
+//                        .map { it.prepareStack() }.toMutableList(),
+//                    folderWithStacks.folderEntity.folderId
+//                )
+//            }
+            val folders = getFoldersWithWords()
             updateState { it.copy(folders = folders) }
         }
     }
@@ -171,20 +174,10 @@ class FolderViewModel @Inject constructor(
         workManager.cancelAllWorkByTag("${wordPair.wordPairId}")
     }
 
-    fun prepareStack(stack: Stack = appState.currentStack!!): Stack {
-        val currentDate = Date()
-        stack.words.forEach { wordPair ->
-            wordPair.checkIfShow(currentDate = currentDate)
-        }
-        return stack
-    }
 
 
-    private suspend fun Stack.getWords(): Stack = withContext(Dispatchers.IO) {
-        val stackNeeded = repository.getStackWithWordsById(this@getWords.stackId)
-        this@getWords.words = stackNeeded.words.map { it.toWordPair() }.toMutableList()
-        this@getWords
-    }
+
+
 
     fun changeCurrentStack(stack: Stack) {
         updateState { it.copy(currentStack = stack) }

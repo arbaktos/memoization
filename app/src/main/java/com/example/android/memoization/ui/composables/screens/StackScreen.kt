@@ -1,6 +1,5 @@
 package com.example.android.memoization.ui.composables
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -21,13 +20,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.extensions.checkLength
-import com.example.android.memoization.model.WordPair
+import com.example.android.memoization.domain.model.WordPair
 import com.example.android.memoization.ui.composables.components.MotionAppBar
 import com.example.android.memoization.ui.viewmodel.StackViewModel
 import com.example.android.memoization.utils.NavScreens
 import com.example.android.memoization.ui.composables.components.SwipeToDismiss
-import com.example.android.memoization.ui.composables.components.TAG
-import kotlinx.coroutines.launch
 
 @Composable
 fun StackScreen(

@@ -1,7 +1,5 @@
 package com.example.android.memoization.ui.composables.screens
 
-import android.graphics.drawable.shapes.Shape
-import android.util.Log
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,22 +14,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.ui.theme.MemoizationTheme
 import com.example.android.memoization.ui.viewmodel.FolderViewModel
-import com.example.android.memoization.model.Stack
-import com.example.android.memoization.notifications.NotificationReceiver
+import com.example.android.memoization.domain.model.Stack
 import com.example.android.memoization.ui.composables.*
 import com.example.android.memoization.ui.composables.components.*
 import com.example.android.memoization.ui.theme.PlayColors
@@ -49,9 +40,8 @@ fun FoldersScreen(
     stackViewModel: StackViewModel,
 ) {
     val scaffoldState = rememberScaffoldState()
-    var showAddStackDialog by remember { mutableStateOf(false) }
+    var showAddStackDialog by remember { mutableStateOf(false) } //TODO move to viewmodel
 //    val context = LocalContext.current
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Open)
     val scope = rememberCoroutineScope()
 
     MemoizationTheme {

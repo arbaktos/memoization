@@ -1,9 +1,6 @@
-package com.example.android.memoization.model
+package com.example.android.memoization.domain.model
 
-import androidx.compose.runtime.mutableStateListOf
 import com.example.android.memoization.database.FolderEntity
-import com.example.android.memoization.database.WordPairEntity
-import java.util.*
 
 data class Folder(
     val name: String,

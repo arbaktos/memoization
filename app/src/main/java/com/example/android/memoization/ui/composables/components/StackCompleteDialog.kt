@@ -5,9 +5,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import com.example.android.memoization.R
-import com.example.android.memoization.model.Stack
 import com.example.android.memoization.ui.theme.MemoButtonColors
-import com.example.android.memoization.ui.theme.MemoTextFieldColors
 import com.example.android.memoization.ui.viewmodel.FolderViewModel
 import com.example.android.memoization.utils.NavScreens
 

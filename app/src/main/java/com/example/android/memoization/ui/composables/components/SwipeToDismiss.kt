@@ -1,6 +1,5 @@
 package com.example.android.memoization.ui.composables.components
 
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,7 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.android.memoization.model.ListItem
+import com.example.android.memoization.domain.model.ListItem
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)

@@ -87,7 +87,7 @@ fun AddNewPairScreen(navController: NavController, viewModel: StackViewModel, ed
             floatingActionButton = {
                 Fab(
                     icon = Icons.Filled.Done,
-                    contentDesc = stringResource(R.string.finish_add_card_descrption),
+                    contentDesc = stringResource(R.string.fab_transformation_scrim_behavior),
                     onclick = onAdd
                 )
             }
@@ -108,7 +108,7 @@ fun AddNewPairScreen(navController: NavController, viewModel: StackViewModel, ed
                     editWord = word1
                 )
                 RowIcon(iconSource = Icons.Filled.Translate,
-                    contentDesc = stringResource(R.string.translate_btn_description),
+                    contentDesc = stringResource(R.string.translate_btn_desc),
                     onClick = {
                         coroutineScope.launch {
                             onTranslate()
@@ -180,7 +180,7 @@ fun BottomField(
                 text2.value = it
                 viewModel.setWord(2, it)
                            },
-            label = stringResource(R.string.explanation),
+            label = stringResource(R.string.word2_label),
             onClick = onClick,
             imeAction = ImeAction.Done
         )

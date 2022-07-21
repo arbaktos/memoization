@@ -1,4 +1,4 @@
-package com.example.android.memoization.model
+package com.example.android.memoization.domain.model
 
 sealed class WordStatus {
     abstract val frequency: Int

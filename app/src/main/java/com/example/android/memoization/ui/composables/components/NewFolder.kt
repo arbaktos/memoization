@@ -10,8 +10,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.navigation.NavController
-import com.example.android.memoization.model.Folder
-import com.example.android.memoization.ui.composables.AddStackTextField
 import com.example.android.memoization.ui.composables.SubmitIcon
 
 

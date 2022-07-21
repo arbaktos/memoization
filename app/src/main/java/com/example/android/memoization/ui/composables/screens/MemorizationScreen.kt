@@ -1,6 +1,5 @@
 package com.example.android.memoization.ui.composables.screens
 
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -9,10 +8,9 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.android.memoization.R
-import com.example.android.memoization.model.WordPair
+import com.example.android.memoization.domain.model.WordPair
 import com.example.android.memoization.ui.composables.FlipCard
 import com.example.android.memoization.ui.composables.MemoIcon
-import com.example.android.memoization.ui.composables.NoCardsCard
 import com.example.android.memoization.ui.composables.components.StackCompleteDialog
 import com.example.android.memoization.ui.viewmodel.FolderViewModel
 import com.example.android.memoization.ui.viewmodel.StackViewModel
@@ -24,7 +22,8 @@ fun MemorizationScreen(
     viewModel: FolderViewModel,
     stackViewModel: StackViewModel
 ) {
-    val wordListToLearn = viewModel.prepareStack().words.filter { it.toLearn }
+    val appState = viewModel.publicAppState.collectAsState()
+    val wordListToLearn = appState.value.currentStack?.prepareStack()?.words?.filter { it.toLearn } ?: emptyList()
 
     BodyContent(
         wordsToLearn = wordListToLearn,

@@ -1,4 +1,4 @@
-package com.example.android.memoization.model
+package com.example.android.memoization.domain.model
 
 import com.example.android.memoization.database.WordPairEntity
 import com.example.android.memoization.utils.longToDays
