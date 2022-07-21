@@ -5,6 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.example.android.memoization.utils.Db_name
 
 @Database(
     entities = [FolderEntity::class, StackEntity::class, WordPairEntity::class],
@@ -26,18 +27,10 @@ abstract class MemoDatabase : RoomDatabase() {
                 instance = Room.databaseBuilder(
                     context,
                     MemoDatabase::class.java,
-                    "memo_dataabase"
+                    Db_name
                 ).build()
             }
             return instance as MemoDatabase
-//            return instance ?: synchronized(this) {
-//                instance ?: buildDatabase(context).also { instance = it }
-//            }
         }
-
-//        private fun buildDatabase(context: Context) =
-//            Room.databaseBuilder(context, MemoDatabase::class.java, "userdb")
-//                .build()
-//    }
     }
 }

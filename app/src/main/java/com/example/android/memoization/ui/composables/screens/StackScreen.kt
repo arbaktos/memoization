@@ -45,6 +45,7 @@ fun StackScreen(
 
     Scaffold(
         topBar = { MotionAppBar(lazyScrollState = state, stackName = currentStack?.name ?: "") },
+        isFloatingActionButtonDocked = false,
         floatingActionButton = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 currentStack?.let { stack ->
