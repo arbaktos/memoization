@@ -15,4 +15,6 @@
     <string name="add_new_card">Add new card</string>
     <string name="add">Add</string>
     <string name="app_menu">App menu</string>
+    <string name="notif_title">It\'s time to memo some words</string>
+    <string name="notif_content">"10 minutes that help you make progress"</string>
 </resources>

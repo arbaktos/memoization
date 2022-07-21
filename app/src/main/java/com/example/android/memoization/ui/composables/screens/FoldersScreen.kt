@@ -1,5 +1,7 @@
 package com.example.android.memoization.ui.composables.screens
 
+import android.graphics.drawable.shapes.Shape
+import android.util.Log
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -29,14 +31,11 @@ import com.example.android.memoization.ui.viewmodel.FolderViewModel
 import com.example.android.memoization.model.Stack
 import com.example.android.memoization.notifications.NotificationReceiver
 import com.example.android.memoization.ui.composables.*
-import com.example.android.memoization.ui.composables.components.AddStackAlerDialog
-import com.example.android.memoization.ui.composables.components.MenuDrawer
-import com.example.android.memoization.ui.composables.components.StackListItem
+import com.example.android.memoization.ui.composables.components.*
 import com.example.android.memoization.ui.theme.PlayColors
 import com.example.android.memoization.ui.viewmodel.StackViewModel
 import com.example.android.memoization.utils.NavScreens
 import kotlinx.coroutines.launch
-import com.example.android.memoization.ui.composables.components.SwipeToDismiss
 
 const val TDEBUG = "memoization_debug"
 
@@ -49,8 +48,8 @@ fun FoldersScreen(
 ) {
     val scaffoldState = rememberScaffoldState()
     var showAddStackDialog by remember { mutableStateOf(false) }
-    val context = LocalContext.current
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+//    val context = LocalContext.current
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Open)
     val scope = rememberCoroutineScope()
 
     MemoizationTheme {
@@ -66,7 +65,12 @@ fun FoldersScreen(
                     })
             },
             drawerContent = { MenuDrawer(state = drawerState) },
-            topBar = { AppBar(name = stringResource(id = R.string.app_name), { /* TODO*/}) }
+
+            topBar = { AppBar(name = stringResource(id = R.string.app_name)) {
+                Log.d(TAG, "FoldersScreen: menuOpen")
+                scope.launch { drawerState.open() }
+            }
+            }
         ) {
             BodyContent(
                 viewModel = folderViewModel,
