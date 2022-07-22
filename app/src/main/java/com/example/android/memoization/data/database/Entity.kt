@@ -1,12 +1,11 @@
-package com.example.android.memoization.database
+package com.example.android.memoization.data.database
 
 import androidx.room.*
 import com.example.android.memoization.domain.model.WordPair
 import com.example.android.memoization.domain.model.WordStatus
+import com.example.android.memoization.utils.FOLDER_TABLE
+import com.example.android.memoization.utils.STACK_TABLE
 import java.util.*
-
-const val FOLDER_TABLE = "folder_entity_table"
-const val STACK_TABLE = "stack_entity_table"
 
 @Entity(tableName = FOLDER_TABLE)
 data class FolderEntity(

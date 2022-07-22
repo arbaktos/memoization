@@ -13,7 +13,7 @@ import androidx.navigation.NavController
 import com.example.android.memoization.ui.composables.SubmitIcon
 
 
-const val TAG = "debug"
+
 @ExperimentalComposeUiApi
 @Composable
 fun NewFolderScreen(

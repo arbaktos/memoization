@@ -1,20 +1,23 @@
 package com.example.android.memoization.domain.usecases
 
 import com.example.android.memoization.domain.model.Folder
-import com.example.android.memoization.repository.MemoRepository
+import com.example.android.memoization.data.repository.MemoRepository
+import com.example.android.memoization.data.repository.StackRepository
 import com.example.android.memoization.domain.model.Stack
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-interface GetFoldersWithStackFromDbUseCase {
+interface GetFoldersWithStackUseCase {
     suspend operator fun invoke(): List<Folder>
 }
 
-class GetFoldersWithStackFromDbUseCaseImpl @Inject constructor(
-    private val repository: MemoRepository
+//TODO make it a LiveData so state could subscribe on it?
+class GetFoldersWithStackUseCaseImpl @Inject constructor(
+    private val repository: MemoRepository,
+    private val stackRepo: StackRepository
 ) :
-    GetFoldersWithStackFromDbUseCase {
+    GetFoldersWithStackUseCase {
     override suspend fun invoke(): List<Folder> {
         return repository.getFoldersWithStacks().map { folderWithStacks ->
             Folder(
@@ -37,7 +40,7 @@ class GetFoldersWithStackFromDbUseCaseImpl @Inject constructor(
     }
 
     private suspend fun Stack.getWords(): Stack = withContext(Dispatchers.IO) {
-        val stackNeeded = repository.getStackWithWordsById(this@getWords.stackId)
+        val stackNeeded = stackRepo.getStackWithWordsById(this@getWords.stackId)
         this@getWords.words = stackNeeded.words.map { it.toWordPair() }.toMutableList()
         this@getWords
     }

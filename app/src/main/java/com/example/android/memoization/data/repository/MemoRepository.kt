@@ -1,10 +1,10 @@
-package com.example.android.memoization.repository
+package com.example.android.memoization.data.repository
 
-import com.example.android.memoization.api.ApiLanguage
-import com.example.android.memoization.api.Retrofit
-import com.example.android.memoization.api.WordTranslationRequest
-import com.example.android.memoization.api.WordTranslationResponse
-import com.example.android.memoization.database.*
+import com.example.android.memoization.data.api.ApiLanguage
+import com.example.android.memoization.data.api.Retrofit
+import com.example.android.memoization.data.api.WordTranslationRequest
+import com.example.android.memoization.data.api.WordTranslationResponse
+import com.example.android.memoization.data.database.*
 import retrofit2.Response
 import javax.inject.Inject
 
@@ -34,21 +34,21 @@ class MemoRepository @Inject constructor(
         memoDao.insertStack(stackEntity)
     }
 
-    suspend fun getStacksWithWords(): List<StackWithWords> {
-        return memoDao.getStacksWithWords()
-    }
-
-    suspend fun getStackWithWordsById(stackId: Long): StackWithWords {
-        return memoDao.getStackWithWordsById(stackId)
-    }
-
-    suspend fun deleteStackFomDb(stackId: Long) {
-        val a = memoDao.deleteStackFomDb(stackId)
-    }
-
-    suspend fun updateStack(stackEntity: StackEntity) {
-        memoDao.updateStack(stackEntity)
-    }
+//    suspend fun getStacksWithWords(): List<StackWithWords> {
+//        return memoDao.getStacksWithWords()
+//    }
+//
+//    suspend fun getStackWithWordsById(stackId: Long): StackWithWords {
+//        return memoDao.getStackWithWordsById(stackId)
+//    }
+//
+//    suspend fun deleteStackFomDb(stackId: Long) {
+//        val a = memoDao.deleteStackFomDb(stackId)
+//    }
+//
+//    suspend fun updateStack(stackEntity: StackEntity) {
+//        memoDao.updateStack(stackEntity)
+//    }
 
     //wordPairs
     suspend fun insertWordPair(wordPairEntity: WordPairEntity) {
@@ -67,7 +67,7 @@ class MemoRepository @Inject constructor(
         return memoDao.getWordsFromStack(stackId)
     }
 
-    suspend fun findWordPairInDb(id:Long):WordPairEntity {
+    suspend fun findWordPairInDb(id:Long): WordPairEntity {
         return memoDao.findWordPairById(id)
     }
 

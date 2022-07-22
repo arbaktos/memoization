@@ -26,15 +26,13 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
 import com.example.android.memoization.ui.theme.MemoizationTheme
 import androidx.navigation.NavController
 import com.example.android.memoization.R
-import com.example.android.memoization.api.WordTranslationRequest
+import com.example.android.memoization.data.api.WordTranslationRequest
 import com.example.android.memoization.extensions.ConnectionState
 import com.example.android.memoization.extensions.currentConnectivityState
 import com.example.android.memoization.ui.theme.AddTextFieldColors
-import com.example.android.memoization.ui.viewmodel.FolderViewModel
 import com.example.android.memoization.ui.viewmodel.StackViewModel
 import com.example.android.memoization.utils.NavScreens
 import kotlinx.coroutines.launch

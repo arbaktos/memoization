@@ -4,23 +4,22 @@ import android.util.Log
 import androidx.lifecycle.*
 import androidx.work.*
 import com.example.android.memoization.MemoizationApp
-import com.example.android.memoization.database.FolderEntity
-import com.example.android.memoization.database.StackEntity
-import com.example.android.memoization.database.WordPairEntity
+import com.example.android.memoization.data.database.StackEntity
 import com.example.android.memoization.domain.model.Folder
 import com.example.android.memoization.domain.model.Stack
 import com.example.android.memoization.domain.model.WordPair
-import com.example.android.memoization.domain.usecases.GetFoldersWithStackFromDbUseCase
-import com.example.android.memoization.repository.MemoRepository
+import com.example.android.memoization.domain.usecases.GetFoldersWithStackUseCase
+import com.example.android.memoization.data.repository.MemoRepository
+import com.example.android.memoization.domain.usecases.DeleteStackUseCase
 import com.example.android.memoization.ui.composables.screens.TDEBUG
 import com.example.android.memoization.utils.ID_NO_FOLDER
 import com.example.android.memoization.utils.STACK_ID
+import com.example.android.memoization.utils.TAG
 import com.example.android.memoization.utils.workers.StackDeletionWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -28,7 +27,7 @@ import javax.inject.Inject
 class FolderViewModel @Inject constructor(
     private val repository: MemoRepository,
     application: MemoizationApp,
-    private val getFoldersWithWords: GetFoldersWithStackFromDbUseCase
+    private val getFoldersWithWords: GetFoldersWithStackUseCase,
 ) : ViewModel() {
 
     private val _appState = MutableStateFlow(AppState())
@@ -43,42 +42,14 @@ class FolderViewModel @Inject constructor(
 
 
     init {
-        addFolder()
+//        addFolder()
         getFoldersWithStackFromDb()
     }
 
     fun getFoldersWithStackFromDb() {
         viewModelScope.launch(Dispatchers.IO) {
-//            val folders = repository.getFoldersWithStacks().map { folderWithStacks ->
-//                Folder(
-//                    folderWithStacks.folderEntity.name,
-//                    folderWithStacks.folderEntity.isOpen,
-//                    folderWithStacks.stacks
-//                        .map { stackEntity ->
-//                            Stack(
-//                                name = stackEntity.name,
-//                                numRep = stackEntity.numRep,
-//                                stackId = stackEntity.stackId,
-//                                hasWords = stackEntity.hasWords
-//                            )
-//                        }
-//                        .map { it.getWords() }
-//                        .map { it.prepareStack() }.toMutableList(),
-//                    folderWithStacks.folderEntity.folderId
-//                )
-//            }
             val folders = getFoldersWithWords()
             updateState { it.copy(folders = folders) }
-        }
-    }
-
-    fun deleteFolderFromDb(folder: Folder) {
-        val folderEntity = FolderEntity(folder.name, folder.isOpen, folder.folderId)
-        viewModelScope.launch {
-            folder.stacks.forEach {
-                deleteStackFromDb(it)
-            }
-            repository.deleteFolderFromDb(folderEntity)
         }
     }
 
@@ -97,55 +68,25 @@ class FolderViewModel @Inject constructor(
         Log.d(TDEBUG, "cancelled deletion $stack")
         workManager.cancelAllWorkByTag(stack.stackId.toString())
     }
-
-    private fun deleteStackFromDb(stack: Stack) {
-        viewModelScope.launch(Dispatchers.IO) {
-            stack.words.forEach {
-                deleteWordPairFromDb(it)
-            }
-            repository.deleteStackFomDb(stack.stackId)
-        }
-    }
-
-    private fun deleteWordPairFromDb(wordPair: WordPair?) {
-        wordPair?.let {
-            val wordPairEntity =
-                WordPairEntity(
-                    wordPair.stackId,
-                    wordPair.word1,
-                    wordPair.word2,
-                    wordPair.lastRep,
-                    wordPair.toLearn,
-                    wordPair.levelOfKnowledge,
-                    wordPairId = wordPair.wordPairId,
-                    wordPair.isVisible
-                )
-            viewModelScope.launch {
-                repository.deleteWordPairFromDb(wordPairEntity)
-                getWordsFromStack()
-            }
-        }
-    }
-
-    private fun getWordsFromStack() {
-        val stack = appState.currentStack
-        viewModelScope.launch(Dispatchers.IO) {
-            stack?.let {
-                val wordPairs = repository
-                    .getWordsFromStack(stack.stackId)
-                    .map {
-                        it.toWordPair()
-                    }.toMutableList()
-                stack.words = wordPairs
-            }
-        }
-    }
+//
+//    private fun getWordsFromStack() {
+//        val stack = appState.currentStack
+//        viewModelScope.launch(Dispatchers.IO) {
+//            stack?.let {
+//                val wordPairs = repository
+//                    .getWordsFromStack(stack.stackId)
+//                    .map {
+//                        it.toWordPair()
+//                    }.toMutableList()
+//                stack.words = wordPairs
+//            }
+//        }
+//    }
 
     private fun addFolder(folder: Folder? = appState.currentFolder) {
         viewModelScope.launch {
             folder?.let {
                 repository.insertFolder(it.toFolderEntity())
-                getFoldersWithStackFromDb()
             }
         }
     }
@@ -174,11 +115,6 @@ class FolderViewModel @Inject constructor(
         workManager.cancelAllWorkByTag("${wordPair.wordPairId}")
     }
 
-
-
-
-
-
     fun changeCurrentStack(stack: Stack) {
         updateState { it.copy(currentStack = stack) }
     }
@@ -187,8 +123,6 @@ class FolderViewModel @Inject constructor(
         val updatedState = update(appState)
         _appState.value = updatedState
     }
-
-
 
     fun getLanguages() {
         viewModelScope.launch {
@@ -205,7 +139,6 @@ class FolderViewModel @Inject constructor(
             }
         }
     }
-
 }
 
 data class AppState(

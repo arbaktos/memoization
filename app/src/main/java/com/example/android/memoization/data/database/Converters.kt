@@ -1,4 +1,4 @@
-package com.example.android.memoization.database
+package com.example.android.memoization.data.database
 
 import androidx.room.TypeConverter
 import com.example.android.memoization.domain.model.WordStatus

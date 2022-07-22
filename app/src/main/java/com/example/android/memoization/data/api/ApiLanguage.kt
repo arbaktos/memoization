@@ -1,4 +1,4 @@
-package com.example.android.memoization.api
+package com.example.android.memoization.data.api
 
 data class ApiLanguage(
     val err: String?,

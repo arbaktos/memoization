@@ -7,12 +7,14 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import com.example.android.memoization.api.WordTranslationRequest
-import com.example.android.memoization.database.StackEntity
-import com.example.android.memoization.database.WordPairEntity
+import com.example.android.memoization.data.api.WordTranslationRequest
+import com.example.android.memoization.data.database.StackEntity
+import com.example.android.memoization.data.database.WordPairEntity
 import com.example.android.memoization.domain.model.Stack
 import com.example.android.memoization.domain.model.WordPair
-import com.example.android.memoization.repository.MemoRepository
+import com.example.android.memoization.data.repository.MemoRepository
+import com.example.android.memoization.data.repository.StackRepository
+import com.example.android.memoization.data.repository.WordPairRepository
 import com.example.android.memoization.utils.ID_NO_FOLDER
 import com.example.android.memoization.utils.WP_ID
 import com.example.android.memoization.utils.workers.WordPairInvisibleWorker
@@ -25,7 +27,8 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class StackViewModel @Inject constructor(
-    private val repository: MemoRepository,
+    private val repository: StackRepository,
+    private val wpRepo: WordPairRepository,
     application: Application
 ) : ViewModel() {
 
@@ -54,6 +57,7 @@ class StackViewModel @Inject constructor(
     }
 
     private fun getStacksWithWords() {
+        //TODO !!!!!!
         viewModelScope.launch(Dispatchers.IO) {
             val stackNeeded = repository.getStacksWithWords().filter { stackWithWords ->
                 stackWithWords.stack.stackId == stackState.stack?.stackId
@@ -106,7 +110,7 @@ class StackViewModel @Inject constructor(
 
     fun updateWordPairDateInDb() {
         viewModelScope.launch {
-            stackState.wordPair?.toWordPairEntity()?.let { repository.updateWordPairInDb(it) }
+            stackState.wordPair?.toWordPairEntity()?.let { wpRepo.updateWordPairInDb(it) }
         }
     }
 
@@ -115,7 +119,7 @@ class StackViewModel @Inject constructor(
             stackState.wordPair?.copy(word1 = stackState.word1 ?: "", word2 = stackState.word2)
 
         viewModelScope.launch {
-            newWordPair?.toWordPairEntity()?.let { repository.updateWordPairInDb(it) }
+            newWordPair?.toWordPairEntity()?.let { wpRepo.updateWordPairInDb(it) }
         }
     }
 
@@ -133,7 +137,7 @@ class StackViewModel @Inject constructor(
                     wordPair.isVisible
                 )
             viewModelScope.launch {
-                repository.deleteWordPairFromDb(wordPairEntity)
+                wpRepo.deleteWordPairFromDb(wordPairEntity)
                 getWordsFromStack()
             }
         }
@@ -143,7 +147,7 @@ class StackViewModel @Inject constructor(
         val stack = stackState.stack
         viewModelScope.launch(Dispatchers.IO) {
             stack?.let {
-                val wordPairs = repository
+                val wordPairs = wpRepo
                     .getWordsFromStack(stack.stackId)
                     .map {
                         it.toWordPair()
@@ -174,7 +178,7 @@ class StackViewModel @Inject constructor(
                 word2 = stackState.word2 ?: ""
             )
             viewModelScope.launch {
-                repository.insertWordPair(wordPairEntityToInsert)
+                wpRepo.insertWordPair(wordPairEntityToInsert)
             }
             clearWordPair()
         }
@@ -215,26 +219,26 @@ class StackViewModel @Inject constructor(
 
     fun getTranslation(request: WordTranslationRequest) {
         viewModelScope.launch {
-            try {
-                val response = repository.getTranslation(request)
-                val code = response.code()
-                when (code) {
-                    in 100..300 -> {
-
-                        updateState {
-                            it.copy(
-                                word2 = response.body()?.translation
-                            )
-                        }// check the https codes to be correct for successful and erroneous messages
-                    }
-                    in 300..599 -> {
-                        toastMessage.value = response.errorBody()
-                            .toString() // there is err field in response.body() - check which one is working
-                    }
-                }
-            } catch (e: Exception) {
-                toastMessage.value = "Error accessing the Internet"
-            }
+//            try {
+//                val response = repository.getTranslation(request)
+//                val code = response.code()
+//                when (code) {
+//                    in 100..300 -> {
+//
+//                        updateState {
+//                            it.copy(
+//                                word2 = response.body()?.translation
+//                            )
+//                        }// check the https codes to be correct for successful and erroneous messages
+//                    }
+//                    in 300..599 -> {
+//                        toastMessage.value = response.errorBody()
+//                            .toString() // there is err field in response.body() - check which one is working
+//                    }
+//                }
+//            } catch (e: Exception) {
+//                toastMessage.value = "Error accessing the Internet"
+//            }
 
         }
     }

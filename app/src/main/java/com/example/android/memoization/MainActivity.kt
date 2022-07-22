@@ -12,8 +12,8 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.navArgument
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.android.memoization.notifications.NotificationReceiver
 import com.example.android.memoization.ui.composables.*
 import com.example.android.memoization.ui.composables.components.NewFolderScreen
@@ -106,7 +106,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private suspend fun setUpNotifications(timeToTrigger: Long, repeatInterval: Long) {
+    private fun setUpNotifications(timeToTrigger: Long, repeatInterval: Long) {
         val alarmMgr: AlarmManager? = this.getSystemService(ALARM_SERVICE) as? AlarmManager?
 
         val requestCode = Date().time

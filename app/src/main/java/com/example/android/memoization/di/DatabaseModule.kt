@@ -2,8 +2,8 @@ package com.example.android.memoization.di
 
 import android.content.Context
 import androidx.room.Room
-import com.example.android.memoization.database.MemoDao
-import com.example.android.memoization.database.MemoDatabase
+import com.example.android.memoization.data.database.MemoDao
+import com.example.android.memoization.data.database.MemoDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

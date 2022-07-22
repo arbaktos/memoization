@@ -1,4 +1,4 @@
-package com.example.android.memoization.api
+package com.example.android.memoization.data.api
 
 import com.google.gson.annotations.SerializedName
 

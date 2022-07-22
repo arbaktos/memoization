@@ -290,19 +290,6 @@ fun Folder(
                     contentDesc = "Start folder memorization",
                 )
             }
-
-            RowIcon(
-                iconSource = Icons.Filled.Add,
-                contentDesc = "Add stack to this folder",
-                onClick = _onAddStack
-            )
-
-            RowIcon(
-                iconSource = Icons.Filled.Delete,
-                contentDesc = "Delete wordpair",
-                onClick = { viewModel.deleteFolderFromDb(folder) },
-                modifier = Modifier.padding(end = 8.dp)
-            )
         }
         if (isOpen) {
             folder.stacks.forEach {
