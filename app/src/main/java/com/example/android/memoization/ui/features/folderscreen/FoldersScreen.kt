@@ -1,5 +1,6 @@
 package com.example.android.memoization.ui.composables.screens
 
+import android.util.Log
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -21,13 +22,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.ui.theme.MemoizationTheme
-import com.example.android.memoization.ui.viewmodel.FolderViewModel
+import com.example.android.memoization.ui.features.folderscreen.FolderViewModel
 import com.example.android.memoization.domain.model.Stack
 import com.example.android.memoization.ui.composables.*
 import com.example.android.memoization.ui.composables.components.*
 import com.example.android.memoization.ui.theme.PlayColors
-import com.example.android.memoization.ui.viewmodel.StackViewModel
 import com.example.android.memoization.utils.NavScreens
+import com.example.android.memoization.utils.TAG
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 const val TDEBUG = "memoization_debug"
@@ -37,11 +39,9 @@ const val TDEBUG = "memoization_debug"
 fun FoldersScreen(
     navController: NavController,
     folderViewModel: FolderViewModel,
-    stackViewModel: StackViewModel,
 ) {
     val scaffoldState = rememberScaffoldState()
     var showAddStackDialog by remember { mutableStateOf(false) } //TODO move to viewmodel
-//    val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
     MemoizationTheme {
@@ -56,42 +56,38 @@ fun FoldersScreen(
 
                     })
             },
-            drawerContent = { MenuDrawer(scaffoldState) }
-                                                                                             ,
-
+            drawerContent = { MenuDrawer(scaffoldState) },
             topBar = { AppBar(name = stringResource(id = R.string.app_name)) {
                 scope.launch { scaffoldState.drawerState.open() }
             }
             }
         ) {
-            BodyContent(
+            FolderScreenBodyContent(
                 viewModel = folderViewModel,
                 navController = navController,
-                stackViewModel = stackViewModel,
                 scaffoldState = scaffoldState,
                 update = { navController.navigate(NavScreens.Folders.route) },
             )
             if (showAddStackDialog)
-                AddStackAlerDialog(
-                    viewModel = folderViewModel,
-                    onClick = { showAddStackDialog = false })
+                AddStackAlertDialog(
+                    viewModel = folderViewModel
+                ) { showAddStackDialog = false }
         }
     }
 }
 
 @ExperimentalComposeUiApi
 @Composable
-fun BodyContent(
+fun FolderScreenBodyContent(
     viewModel: FolderViewModel,
     navController: NavController,
-    stackViewModel: StackViewModel,
     scaffoldState: ScaffoldState,
     update: () -> Unit,
 ) {
-    val appState by viewModel.publicAppState.collectAsState()
-    val currentFolder = appState.folders[0]
+
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    val stacks = viewModel.stacksWithWords.collectAsState(initial = emptyList())
 
     LazyColumn(
         state = listState,
@@ -100,7 +96,7 @@ fun BodyContent(
             .padding(8.dp)
             .fillMaxWidth()
     ) {
-        items(currentFolder.stacks) { stack ->
+        items(stacks.value) { stack ->
             SwipeToDismiss(
                 item = stack,
                 dismissContent = {
@@ -108,7 +104,7 @@ fun BodyContent(
                         stack = stack,
                         viewModel = viewModel,
                         navController = navController,
-                        stackViewModel = stackViewModel
+//                        stackViewModel = stackViewModel
                     )
                 },
                 onDismiss = {
@@ -121,7 +117,7 @@ fun BodyContent(
                             SnackbarResult.ActionPerformed -> {
                                 //Undo action performed
                                 viewModel.cancelStackDeletion(stack)
-                                viewModel.getFoldersWithStackFromDb()
+//                                viewModel.getFoldersWithStackFromDb()
                                 update()
                             }
                             SnackbarResult.Dismissed -> {}
@@ -138,29 +134,29 @@ fun ShowStack(
     stack: Stack,
     viewModel: FolderViewModel,
     navController: NavController,
-    stackViewModel: StackViewModel
+//    stackViewModel: StackViewModel
 ) {
     StackListItem(
         stack = stack,
         onPlay = {
             viewModel.changeCurrentStack(stack)
-            stackViewModel.setCurrentStack(stack)
+//            stackViewModel.setCurrentStack(stack)
             navController.navigate(NavScreens.Memorization.route)
         },
         onAdd = {
             viewModel.changeCurrentStack(stack)
-            stackViewModel.setCurrentStack(stack)
+//            stackViewModel.setCurrentStack(stack)
             navController.navigate(NavScreens.NewPair.route)
         },
         onPin = {
             viewModel.changeCurrentStack(stack)
-            stackViewModel.setCurrentStack(stack)
-            stackViewModel.onPin()
+//            stackViewModel.setCurrentStack(stack)
+//            stackViewModel.onPin()//TODO
             animateToTop()
         },
         onClickRow = {
             viewModel.changeCurrentStack(stack)
-            stackViewModel.setCurrentStack(stack)
+//            stackViewModel.setCurrentStack(stack)
             navController.navigate(NavScreens.Stack.route)
         }
     )

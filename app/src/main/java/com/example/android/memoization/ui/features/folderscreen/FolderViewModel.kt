@@ -1,55 +1,55 @@
-package com.example.android.memoization.ui.viewmodel
+package com.example.android.memoization.ui.features.folderscreen
 
 import android.util.Log
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.*
 import androidx.work.*
 import com.example.android.memoization.MemoizationApp
-import com.example.android.memoization.data.database.StackEntity
 import com.example.android.memoization.domain.model.Folder
 import com.example.android.memoization.domain.model.Stack
 import com.example.android.memoization.domain.model.WordPair
 import com.example.android.memoization.domain.usecases.GetFoldersWithStackUseCase
 import com.example.android.memoization.data.repository.MemoRepository
-import com.example.android.memoization.domain.usecases.DeleteStackUseCase
-import com.example.android.memoization.ui.composables.screens.TDEBUG
-import com.example.android.memoization.utils.ID_NO_FOLDER
+import com.example.android.memoization.domain.usecases.AddStackUseCase
+import com.example.android.memoization.domain.usecases.GetStacksWithWordsUseCase
+import com.example.android.memoization.ui.viewmodel.AppState
+import com.example.android.memoization.ui.viewmodel.State.appStatePublic
+import com.example.android.memoization.ui.viewmodel.State.updateState
 import com.example.android.memoization.utils.STACK_ID
 import com.example.android.memoization.utils.TAG
 import com.example.android.memoization.utils.workers.StackDeletionWorker
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 
+//@HiltViewModel
 class FolderViewModel @Inject constructor(
     private val repository: MemoRepository,
+//    private val workManager: WorkManager,
     application: MemoizationApp,
-    private val getFoldersWithWords: GetFoldersWithStackUseCase,
+    private val addStackUseCase: AddStackUseCase,
+    private val getStacksWithWordsUseCase: GetStacksWithWordsUseCase
 ) : ViewModel() {
 
-    private val _appState = MutableStateFlow(AppState())
-    val publicAppState: StateFlow<AppState> = _appState
-    private val appState: AppState
-        get() = _appState.value
+    val folderState = appStatePublic
 
     private val workManager = WorkManager.getInstance(application)
+    lateinit var stacksWithWords: Flow<List<Stack>>
 
     //    var languages: ApiLanguage? = null
     val toastMessage = MutableLiveData<String>()
 
 
     init {
-//        addFolder()
-        getFoldersWithStackFromDb()
-    }
-
-    fun getFoldersWithStackFromDb() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val folders = getFoldersWithWords()
-            updateState { it.copy(folders = folders) }
+        viewModelScope.launch {
+            stacksWithWords = getStacksWithWordsUseCase()
         }
     }
 
@@ -65,63 +65,17 @@ class FolderViewModel @Inject constructor(
     }
 
     fun cancelStackDeletion(stack: Stack) {
-        Log.d(TDEBUG, "cancelled deletion $stack")
         workManager.cancelAllWorkByTag(stack.stackId.toString())
-    }
-//
-//    private fun getWordsFromStack() {
-//        val stack = appState.currentStack
-//        viewModelScope.launch(Dispatchers.IO) {
-//            stack?.let {
-//                val wordPairs = repository
-//                    .getWordsFromStack(stack.stackId)
-//                    .map {
-//                        it.toWordPair()
-//                    }.toMutableList()
-//                stack.words = wordPairs
-//            }
-//        }
-//    }
-
-    private fun addFolder(folder: Folder? = appState.currentFolder) {
-        viewModelScope.launch {
-            folder?.let {
-                repository.insertFolder(it.toFolderEntity())
-            }
-        }
     }
 
     fun addStackToFolder(folder: Folder, stack: Stack) {
-        folder.stacks.add(stack)
-        val stackToInsert = StackEntity(
-            stack.name,
-            stack.numRep,
-            stack.stackId,
-            folder.folderId,
-            hasWords = stack.words.isNotEmpty()
-        )
-        updateState {
-            it.copy(
-                currentFolder = folder
-            )
-        }
         viewModelScope.launch {
-            repository.insertStack(stackToInsert)
-            getFoldersWithStackFromDb()
+            addStackUseCase(folder, stack)
         }
-    }
-
-    fun cancelDelayDeletionWork(wordPair: WordPair) {
-        workManager.cancelAllWorkByTag("${wordPair.wordPairId}")
     }
 
     fun changeCurrentStack(stack: Stack) {
         updateState { it.copy(currentStack = stack) }
-    }
-
-    private fun updateState(update: (AppState) -> AppState) {
-        val updatedState = update(appState)
-        _appState.value = updatedState
     }
 
     fun getLanguages() {
@@ -129,8 +83,7 @@ class FolderViewModel @Inject constructor(
             val response = repository.getLanguages()
             if (response.isSuccessful) {
 //                languages = response.body()
-//                Log.d ("viewmodel", " response ${response.body().toString()}")
-//                Log.d ("viewmodel", " languages $languages")
+
             } else {
                 Log.d(
                     "viewmodel",
@@ -139,10 +92,20 @@ class FolderViewModel @Inject constructor(
             }
         }
     }
-}
 
-data class AppState(
-    var folders: List<Folder> = emptyList(),
-    var currentStack: Stack? = null,
-    var currentFolder: Folder = Folder(name = "NoFolder", folderId = ID_NO_FOLDER),
-)
+    data class FolderState(
+        var folders: List<Folder>,
+        var currentStack: Stack?,
+        var currentFolder: Folder
+    )
+
+    private fun MutableStateFlow<AppState>.toFoldersState(): StateFlow<FolderState> {
+        return MutableStateFlow(
+            FolderState(
+                folders = this.value.folders,
+                currentStack = this.value.currentStack,
+                currentFolder = this.value.currentFolder
+            )
+        )
+    }
+}

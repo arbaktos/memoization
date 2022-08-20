@@ -12,8 +12,9 @@ import com.example.android.memoization.domain.model.WordPair
 import com.example.android.memoization.ui.composables.FlipCard
 import com.example.android.memoization.ui.composables.MemoIcon
 import com.example.android.memoization.ui.composables.components.StackCompleteDialog
-import com.example.android.memoization.ui.viewmodel.FolderViewModel
+import com.example.android.memoization.ui.features.folderscreen.FolderViewModel
 import com.example.android.memoization.ui.viewmodel.StackViewModel
+import com.example.android.memoization.utils.NavScreens
 import java.util.*
 
 @Composable
@@ -22,22 +23,20 @@ fun MemorizationScreen(
     viewModel: FolderViewModel,
     stackViewModel: StackViewModel
 ) {
-    val appState = viewModel.publicAppState.collectAsState()
-    val wordListToLearn = appState.value.currentStack?.prepareStack()?.words?.filter { it.toLearn } ?: emptyList()
+//    val appState = viewModel.publicAppState.collectAsState()
+    val wordListToLearn = emptyList<WordPair>() //appState.value.currentStack?.prepareStack()?.words?.filter { it.toLearn } ?: emptyList()
 
-    BodyContent(
+    FolderScreenBodyContent(
         wordsToLearn = wordListToLearn,
         navController = navController,
-        viewModel = viewModel,
         stackViewModel
     )
 }
 
 @Composable
-fun BodyContent(
+fun FolderScreenBodyContent(
     wordsToLearn: List<WordPair>,
     navController: NavController,
-    viewModel: FolderViewModel,
     stackViewModel: StackViewModel
 ) {
     var openFinishDialog by remember { mutableStateOf(false) }
@@ -47,9 +46,11 @@ fun BodyContent(
     stackViewModel.updateCurrentWordPair(wordPair)
 
     if (openFinishDialog) {
-        StackCompleteDialog(viewModel = viewModel,
-            navController = navController,
-            onClick = { openFinishDialog = false }
+        StackCompleteDialog(
+            onClick = {
+                openFinishDialog = false
+                navController.navigate(NavScreens.Folders.route)
+            }
         )
     }
 

@@ -1,15 +1,17 @@
 package com.example.android.memoization.data.repository
 
 import android.util.Log
+import androidx.lifecycle.LiveData
 import com.example.android.memoization.data.database.MemoDao
 import com.example.android.memoization.data.database.StackEntity
 import com.example.android.memoization.data.database.StackWithWords
 import com.example.android.memoization.utils.TAG
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class StackRepository @Inject constructor(private val memoDao: MemoDao){
 
-    suspend fun getStacksWithWords(): List<StackWithWords> {
+    fun getStacksWithWords(): Flow<List<StackWithWords>> {
         return memoDao.getStacksWithWords()
     }
 

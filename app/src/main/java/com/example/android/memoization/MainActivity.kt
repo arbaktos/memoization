@@ -6,8 +6,10 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -20,11 +22,15 @@ import com.example.android.memoization.ui.composables.components.NewFolderScreen
 import com.example.android.memoization.ui.composables.screens.FoldersScreen
 import com.example.android.memoization.ui.composables.screens.MemorizationScreen
 import com.example.android.memoization.ui.theme.MemoizationTheme
-import com.example.android.memoization.ui.viewmodel.FolderViewModel
+import com.example.android.memoization.ui.viewmodel.BaseViewModel
+import com.example.android.memoization.ui.features.folderscreen.FolderViewModel
 import com.example.android.memoization.ui.viewmodel.StackViewModel
+import com.example.android.memoization.ui.viewmodel.State.appStatePublic
+import com.example.android.memoization.ui.viewmodel.State.updateState
 import com.example.android.memoization.utils.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.util.*
@@ -34,6 +40,8 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
 
     @Inject
+    lateinit var baseViewModel: BaseViewModel
+    @Inject
     lateinit var folderViewModel: FolderViewModel
     @Inject
     lateinit var stackViewModel: StackViewModel
@@ -41,6 +49,8 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalComposeUiApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        
 
         val job = SupervisorJob()
         val scope = CoroutineScope(job)
@@ -50,6 +60,16 @@ class MainActivity : ComponentActivity() {
             val repeatInterval = prefs.getLong(REPEAT_INTERVAl_LABEL, day_in_millis)
             setUpNotifications(timeToTrigger, repeatInterval)
         }
+        
+        scope.launch(Dispatchers.Main) {
+            baseViewModel.getFoldersWithStackUseCase().observe(this@MainActivity) { folders ->
+                updateState{ it.copy(folders = folders)}
+                Log.d(TAG, "onCreate: $folders")
+                Log.d(TAG, "onCreate: ${appStatePublic.value}")
+            }
+        }
+
+
 
         setContent {
             val navControllerObj = rememberNavController()
@@ -62,8 +82,7 @@ class MainActivity : ComponentActivity() {
                     composable(NavScreens.Folders.route) {
                         FoldersScreen(
                             navController = navControllerObj,
-                            folderViewModel = folderViewModel,
-                            stackViewModel = stackViewModel
+                            folderViewModel = folderViewModel
                         )
                     }
 

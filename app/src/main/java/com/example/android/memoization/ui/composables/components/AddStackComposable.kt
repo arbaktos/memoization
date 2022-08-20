@@ -17,7 +17,7 @@ import com.example.android.memoization.R
 import com.example.android.memoization.domain.model.Folder
 import com.example.android.memoization.domain.model.Stack
 import com.example.android.memoization.ui.composables.AddStackTextField
-import com.example.android.memoization.ui.viewmodel.FolderViewModel
+import com.example.android.memoization.ui.features.folderscreen.FolderViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)

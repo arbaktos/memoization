@@ -27,7 +27,6 @@ class StackDeletionWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
-        Log.d(TAG, "doWork: StackDeletionWorker")
         return try {
             val stackId = inputData.getLong(STACK_ID, 0)
             deleteStackUseCase(getStackUseCase(stackId))

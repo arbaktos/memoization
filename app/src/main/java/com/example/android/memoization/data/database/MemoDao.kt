@@ -1,6 +1,8 @@
 package com.example.android.memoization.data.database
 
+import androidx.lifecycle.LiveData
 import androidx.room.*
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MemoDao {
@@ -18,7 +20,11 @@ interface MemoDao {
 
     @Transaction
     @Query("SELECT * FROM folder_entity_table")
-    suspend fun getFoldersWithStacks(): List<FolderwithStacks>
+    fun getFoldersWithStacks(): LiveData<List<FolderwithStacks>>
+
+    @Transaction
+    @Query("SELECT * FROM folder_entity_table")
+    suspend fun getFoldersWithStacks2(): List<FolderwithStacks>
 
     @Delete
     suspend fun deleteFolderFromDb(folderEntity: FolderEntity)
@@ -32,7 +38,7 @@ interface MemoDao {
 
     @Transaction
     @Query("SELECT * FROM stack_entity_table")
-    suspend fun getStacksWithWords(): List<StackWithWords>
+    fun getStacksWithWords(): Flow<List<StackWithWords>>
 
     @Transaction
     @Query("SELECT * FROM stack_entity_table WHERE stackId = :stackId")

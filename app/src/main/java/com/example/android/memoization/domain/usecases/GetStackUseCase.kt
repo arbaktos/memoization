@@ -13,5 +13,4 @@ class GetStackUseCaseImpl @Inject constructor(private val stackRepo: StackReposi
     override suspend fun invoke(stackId: Long): Stack {
         return stackRepo.getStackWithWordsById(stackId).toStack()
     }
-
 }

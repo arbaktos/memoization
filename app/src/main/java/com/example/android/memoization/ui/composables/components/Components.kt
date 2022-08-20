@@ -31,7 +31,7 @@ import com.example.android.memoization.R
 import com.example.android.memoization.domain.model.Folder
 import com.example.android.memoization.ui.composables.screens.ShowStack
 import com.example.android.memoization.ui.composables.screens.TDEBUG
-import com.example.android.memoization.ui.viewmodel.FolderViewModel
+import com.example.android.memoization.ui.features.folderscreen.FolderViewModel
 import com.example.android.memoization.ui.viewmodel.StackViewModel
 
 @Composable
@@ -247,62 +247,61 @@ fun NoCardsCard(visible: Boolean, onClick: () -> Unit) {
 
 }
 
-@OptIn(ExperimentalMaterialApi::class)
-@ExperimentalComposeUiApi
-@Composable
-fun Folder(
-    folder: Folder,
-    navContoller: NavController,
-    viewModel: FolderViewModel,
-    onAddStack: () -> Unit,
-    stackViewModel: StackViewModel
-) {
-    Column {
-        var isOpen by remember { mutableStateOf(folder.isOpen) }
-        folder.isOpen = isOpen
-
-        val _onAddStack = {
-            onAddStack()
-            folder.isOpen = true
-        }
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .clip(RoundedCornerShape(4.dp))
-        ) {
-            val iconSrouce = if (isOpen) Icons.Filled.FolderOpen else Icons.Filled.Folder
-            RowIcon(
-                iconSource = iconSrouce,
-                contentDesc = "Folder icon",
-                onClick = { isOpen = !isOpen }
-            )
-
-            H5TextBox(
-                text = folder.name,
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable { isOpen = !isOpen }
-            )
-            if (folder.stacks.isNotEmpty()) {
-                RowIcon(
-                    iconSource = Icons.Filled.PlayCircle,
-                    contentDesc = "Start folder memorization",
-                )
-            }
-        }
-        if (isOpen) {
-            folder.stacks.forEach {
-                Row {
-                    Spacer(modifier = Modifier.width(30.dp))
-                    ShowStack(
-                        stack = it,
-                        viewModel = viewModel,
-                        navController = navContoller,
-                        stackViewModel = stackViewModel
-                    )
-                }
-            }
-        }
-    }
-}
+//@ExperimentalComposeUiApi
+//@Composable
+//fun Folder(
+//    folder: Folder,
+//    navContoller: NavController,
+//    viewModel: FolderViewModel,
+//    onAddStack: () -> Unit,
+//    stackViewModel: StackViewModel
+//) {
+//    Column {
+//        var isOpen by remember { mutableStateOf(folder.isOpen) }
+//        folder.isOpen = isOpen
+//
+//        val _onAddStack = {
+//            onAddStack()
+//            folder.isOpen = true
+//        }
+//
+//        Row(
+//            verticalAlignment = Alignment.CenterVertically,
+//            modifier = Modifier
+//                .clip(RoundedCornerShape(4.dp))
+//        ) {
+//            val iconSrouce = if (isOpen) Icons.Filled.FolderOpen else Icons.Filled.Folder
+//            RowIcon(
+//                iconSource = iconSrouce,
+//                contentDesc = "Folder icon",
+//                onClick = { isOpen = !isOpen }
+//            )
+//
+//            H5TextBox(
+//                text = folder.name,
+//                modifier = Modifier
+//                    .weight(1f)
+//                    .clickable { isOpen = !isOpen }
+//            )
+//            if (folder.stacks.isNotEmpty()) {
+//                RowIcon(
+//                    iconSource = Icons.Filled.PlayCircle,
+//                    contentDesc = "Start folder memorization",
+//                )
+//            }
+//        }
+//        if (isOpen) {
+//            folder.stacks.forEach {
+//                Row {
+//                    Spacer(modifier = Modifier.width(30.dp))
+//                    ShowStack(
+//                        stack = it,
+//                        viewModel = viewModel,
+//                        navController = navContoller,
+//                        stackViewModel = stackViewModel
+//                    )
+//                }
+//            }
+//        }
+//    }
+//}

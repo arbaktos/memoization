@@ -58,17 +58,17 @@ class StackViewModel @Inject constructor(
 
     private fun getStacksWithWords() {
         //TODO !!!!!!
-        viewModelScope.launch(Dispatchers.IO) {
-            val stackNeeded = repository.getStacksWithWords().filter { stackWithWords ->
-                stackWithWords.stack.stackId == stackState.stack?.stackId
-            }.firstOrNull()
-            stackNeeded?.let { stack ->
-                val words = stack.words.map { it.toWordPair() }.toMutableList()
-                updateState { it.copy(
-                    stack = stackState.stack?.copy(words = words)
-                ) }
-            }
-        }
+//        viewModelScope.launch(Dispatchers.IO) {
+//            val stackNeeded = repository.getStacksWithWords().filter { stackWithWords ->
+//                stackWithWords.stack.stackId == stackState.stack?.stackId
+//            }.firstOrNull()
+//            stackNeeded?.let { stack ->
+//                val words = stack.words.map { it.toWordPair() }.toMutableList()
+//                updateState { it.copy(
+//                    stack = stackState.stack?.copy(words = words)
+//                ) }
+//            }
+//        }
     }
 
     fun cancelDelayDeletionWork(wordPair: WordPair) {

@@ -1,10 +1,13 @@
 package com.example.android.memoization.data.repository
 
+import android.util.Log
+import androidx.lifecycle.LiveData
 import com.example.android.memoization.data.api.ApiLanguage
 import com.example.android.memoization.data.api.Retrofit
 import com.example.android.memoization.data.api.WordTranslationRequest
 import com.example.android.memoization.data.api.WordTranslationResponse
 import com.example.android.memoization.data.database.*
+import com.example.android.memoization.utils.TAG
 import retrofit2.Response
 import javax.inject.Inject
 
@@ -17,8 +20,16 @@ class MemoRepository @Inject constructor(
         return memoDao.insertFolder(folderEntity)
     }
 
-    suspend fun getFoldersWithStacks(): List<FolderwithStacks> {
-        return memoDao.getFoldersWithStacks()
+    fun getFoldersWithStacks(): LiveData<List<FolderwithStacks>> {
+        val folders = memoDao.getFoldersWithStacks()
+        Log.d(TAG, "getFoldersWithStacks: ${folders.value}")
+        return folders
+    }
+
+    suspend fun getFoldersWithStacks2(): List<FolderwithStacks> {
+        val folders = memoDao.getFoldersWithStacks2()
+        Log.d(TAG, "getFoldersWithStacks2: ${folders}")
+        return folders
     }
 
     suspend fun getTranslation(request: WordTranslationRequest): Response<WordTranslationResponse> {

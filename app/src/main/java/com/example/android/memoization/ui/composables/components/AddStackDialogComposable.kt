@@ -7,11 +7,11 @@ import com.example.android.memoization.R
 import com.example.android.memoization.domain.model.Stack
 import com.example.android.memoization.ui.theme.MemoButtonColors
 import com.example.android.memoization.ui.theme.MemoTextFieldColors
-import com.example.android.memoization.ui.viewmodel.FolderViewModel
+import com.example.android.memoization.ui.features.folderscreen.FolderViewModel
 
 @Composable
-fun AddStackAlerDialog(viewModel: FolderViewModel, onClick: () -> Unit) {
-    val appState = viewModel.publicAppState
+fun AddStackAlertDialog(viewModel: FolderViewModel, onClick: () -> Unit) {
+    val appState = viewModel.folderState.collectAsState()
     var text by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = { },
