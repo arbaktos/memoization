@@ -33,7 +33,7 @@ import com.example.android.memoization.data.api.WordTranslationRequest
 import com.example.android.memoization.extensions.ConnectionState
 import com.example.android.memoization.extensions.currentConnectivityState
 import com.example.android.memoization.ui.theme.AddTextFieldColors
-import com.example.android.memoization.ui.viewmodel.StackViewModel
+import com.example.android.memoization.ui.features.stackscreen.StackViewModel
 import com.example.android.memoization.utils.NavScreens
 import kotlinx.coroutines.launch
 

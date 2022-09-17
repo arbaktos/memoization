@@ -13,7 +13,7 @@ import com.example.android.memoization.ui.composables.FlipCard
 import com.example.android.memoization.ui.composables.MemoIcon
 import com.example.android.memoization.ui.composables.components.StackCompleteDialog
 import com.example.android.memoization.ui.features.folderscreen.FolderViewModel
-import com.example.android.memoization.ui.viewmodel.StackViewModel
+import com.example.android.memoization.ui.features.stackscreen.StackViewModel
 import com.example.android.memoization.utils.NavScreens
 import java.util.*
 
