@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.android.memoization.model.WordPair
+import com.example.android.memoization.domain.model.WordPair
 
 @Composable
 fun FlipCard(wordPair: WordPair) {

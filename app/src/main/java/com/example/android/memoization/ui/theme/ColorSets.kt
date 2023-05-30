@@ -16,6 +16,16 @@ fun MemoTextFieldColors(): TextFieldColors {
 }
 
 @Composable
+fun AddTextFieldColors():TextFieldColors {
+    return textFieldColors(
+        backgroundColor = Color.White,
+        focusedIndicatorColor = Color.Transparent,
+        unfocusedIndicatorColor = Color.Transparent,
+        disabledIndicatorColor = Color.Transparent
+    )
+}
+
+@Composable
 fun MemoButtonColors(): ButtonColors {
     return buttonColors(
         backgroundColor = Color.Transparent,

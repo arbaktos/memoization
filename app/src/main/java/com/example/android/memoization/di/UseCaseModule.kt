@@ -1,0 +1,49 @@
+package com.example.android.memoization.di
+
+import com.example.android.memoization.domain.usecases.*
+import dagger.Binds
+import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+
+@InstallIn(SingletonComponent::class)
+@Module
+abstract class UseCaseModule {
+
+    @Binds
+    abstract fun bindFoldersWithStackFromDbUseCase(useCaseImpl: GetFoldersWithStackUseCaseImpl):
+            GetFoldersWithStackUseCase
+
+    @Binds
+    abstract fun bindGetStackUseCase(useCaseImpl: GetStackUseCaseImpl):
+            GetStackUseCase
+
+    @Binds
+    abstract fun bindDeleteWordPairUseCase(useCaseImpl: DeleteWordPairUseCaseImpl):
+            DeleteWordPairUseCase
+
+    @Binds
+    abstract fun bindDeleteStackUseCase(useCaseImpl: DeleteStackUseCaseImpl):
+            DeleteStackUseCase
+
+    @Binds
+    abstract fun bindAddStackUseCase(useCaseImpl: AddStackUseCaseImpl):
+            AddStackUseCase
+
+    @Binds
+    abstract fun bindGetStacksUseCase(useCaseImpl: GetStacksWithWordsUseCaseImpl):
+            GetStacksWithWordsUseCase
+
+    @Binds
+    abstract fun bindUpdateStackUseCase(impl: UpdateStackUseCaseImpl): UpdateStackUseCase
+
+    @Binds
+    abstract fun bindUpdateWordPairUseCase(impl: UpdateWordPairUseCaseImpl): UpdateWordPairUseCase
+
+    @Binds
+    abstract fun bindAddWorPairUseCase(impl: AddWordPairUseCaseImpl): AddWordPairUseCase
+
+    @Binds
+    abstract fun bindGetWorPairUseCase(impl: GetWorPairLoadingStateUseCaseImpl): GetWordPairLoadingStateUseCase
+
+}

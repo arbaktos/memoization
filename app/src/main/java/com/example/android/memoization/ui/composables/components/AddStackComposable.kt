@@ -1,8 +1,6 @@
 package com.example.android.memoization.ui.composables.components
 
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.*
@@ -12,16 +10,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusEvent
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import com.example.android.memoization.R
-import com.example.android.memoization.model.Folder
-import com.example.android.memoization.model.Stack
+import com.example.android.memoization.domain.model.Folder
+import com.example.android.memoization.domain.model.Stack
 import com.example.android.memoization.ui.composables.AddStackTextField
-import com.example.android.memoization.ui.composables.screens.TDEBUG
-import com.example.android.memoization.ui.viewmodel.FolderViewModel
+import com.example.android.memoization.ui.features.folderscreen.FolderViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -44,7 +40,7 @@ fun AddStack(
 
     val onClick: () -> Unit = {
         onTextChange("")
-        viewModel.addStackToFolder(folder = folder, stack = Stack(text))
+        viewModel.addStackToFolder(folder = folder, stack = Stack(name = text))
         keyboardController?.hide()
         focusManager.clearFocus()
     }

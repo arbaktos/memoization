@@ -19,4 +19,12 @@
     <string name="notif_content">"10 minutes that help you make progress"</string>
     <string name="notif_switch_desc">Switch to turn notifications on or off</string>
     <string name="notifications">Notifications</string>
+    <string name="translate_btn_desc">Translate</string>
+    <string name="word_to_learn">Word to learn</string>
+    <string name="word2_label">Explanation</string>
+    <string name="confirm_deletion">Do you want to delete</string>
+    <string name="undo">Undo</string>
+    <string name="easy">Easy\n</string>
+    <string name="hard">Hard\n</string>
+    <string name="wrong">Wrong\n</string>
 </resources>

@@ -1,6 +1,5 @@
 package com.example.android.memoization.ui.composables
 
-import android.content.res.Resources
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -13,29 +12,22 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Done
-import androidx.compose.material.icons.outlined.DoneOutline
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.example.android.memoization.R
-import com.example.android.memoization.model.Folder
-import com.example.android.memoization.ui.composables.screens.ShowStack
-import com.example.android.memoization.ui.composables.screens.TDEBUG
-import com.example.android.memoization.ui.viewmodel.FolderViewModel
-import com.example.android.memoization.ui.viewmodel.StackViewModel
+import com.example.android.memoization.domain.model.Folder
+import com.example.android.memoization.ui.features.folderscreen.TDEBUG
 
 @Composable
 fun RowIcon(
@@ -201,11 +193,10 @@ fun OpenAndCloseIcon(
 fun Fab(
     icon: ImageVector,
     contentDesc: String,
-    onclick: () -> Unit
-
+    onClick: () -> Unit
 ) {
     FloatingActionButton(
-        onClick = { onclick() },
+        onClick = { onClick() },
         modifier = Modifier
             .padding(8.dp)
     ) {
@@ -216,6 +207,16 @@ fun Fab(
         )
     }
 }
+
+@Composable
+fun AddNewCardFab(onAdd: () -> Unit) {
+    Fab(
+        icon = Icons.Filled.Add,
+        contentDesc = stringResource(R.string.add_new_card),
+        onClick = onAdd
+    )
+}
+
 
 @Composable
 fun NoCardsCard(visible: Boolean, onClick: () -> Unit) {
@@ -250,75 +251,61 @@ fun NoCardsCard(visible: Boolean, onClick: () -> Unit) {
 
 }
 
-@OptIn(ExperimentalMaterialApi::class)
-@ExperimentalComposeUiApi
-@Composable
-fun Folder(
-    folder: Folder,
-    navContoller: NavController,
-    viewModel: FolderViewModel,
-    onAddStack: () -> Unit,
-    stackViewModel: StackViewModel
-) {
-    Column {
-        var isOpen by remember { mutableStateOf(folder.isOpen) }
-        folder.isOpen = isOpen
-
-        val _onAddStack = {
-            onAddStack()
-            folder.isOpen = true
-        }
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .clip(RoundedCornerShape(4.dp))
-        ) {
-            val iconSrouce = if (isOpen) Icons.Filled.FolderOpen else Icons.Filled.Folder
-            RowIcon(
-                iconSource = iconSrouce,
-                contentDesc = "Folder icon",
-                onClick = { isOpen = !isOpen }
-            )
-
-            H5TextBox(
-                text = folder.name,
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable { isOpen = !isOpen }
-            )
-            if (folder.stacks.isNotEmpty()) {
-                RowIcon(
-                    iconSource = Icons.Filled.PlayCircle,
-                    contentDesc = "Start folder memorization",
-                )
-            }
-
-            RowIcon(
-                iconSource = Icons.Filled.Add,
-                contentDesc = "Add stack to this folder",
-                onClick = _onAddStack
-            )
-
-            RowIcon(
-                iconSource = Icons.Filled.Delete,
-                contentDesc = "Delete wordpair",
-                onClick = { viewModel.deleteFolderFromDb(folder) },
-                modifier = Modifier.padding(end = 8.dp)
-            )
-        }
-        if (isOpen) {
-            folder.stacks.forEach {
-                Row {
-                    Spacer(modifier = Modifier.width(30.dp))
-                    ShowStack(
-                        stack = it,
-                        viewModel = viewModel,
-                        navController = navContoller,
-                        stackViewModel = stackViewModel
-                    )
-                }
-            }
-        }
-    }
-}
+//@ExperimentalComposeUiApi
+//@Composable
+//fun Folder(
+//    folder: Folder,
+//    navContoller: NavController,
+//    viewModel: FolderViewModel,
+//    onAddStack: () -> Unit,
+//    stackViewModel: StackViewModel
+//) {
+//    Column {
+//        var isOpen by remember { mutableStateOf(folder.isOpen) }
+//        folder.isOpen = isOpen
+//
+//        val _onAddStack = {
+//            onAddStack()
+//            folder.isOpen = true
+//        }
+//
+//        Row(
+//            verticalAlignment = Alignment.CenterVertically,
+//            modifier = Modifier
+//                .clip(RoundedCornerShape(4.dp))
+//        ) {
+//            val iconSrouce = if (isOpen) Icons.Filled.FolderOpen else Icons.Filled.Folder
+//            RowIcon(
+//                iconSource = iconSrouce,
+//                contentDesc = "Folder icon",
+//                onClick = { isOpen = !isOpen }
+//            )
+//
+//            H5TextBox(
+//                text = folder.name,
+//                modifier = Modifier
+//                    .weight(1f)
+//                    .clickable { isOpen = !isOpen }
+//            )
+//            if (folder.stacks.isNotEmpty()) {
+//                RowIcon(
+//                    iconSource = Icons.Filled.PlayCircle,
+//                    contentDesc = "Start folder memorization",
+//                )
+//            }
+//        }
+//        if (isOpen) {
+//            folder.stacks.forEach {
+//                Row {
+//                    Spacer(modifier = Modifier.width(30.dp))
+//                    ShowStack(
+//                        stack = it,
+//                        viewModel = viewModel,
+//                        navController = navContoller,
+//                        stackViewModel = stackViewModel
+//                    )
+//                }
+//            }
+//        }
+//    }
+//}

@@ -4,8 +4,6 @@ import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
-import com.example.android.memoization.ui.composables.screens.TDEBUG
 import com.example.android.memoization.utils.NOTIFICATION_ID_LABEL
 
 class CancelBroadcastReceiver: BroadcastReceiver() {

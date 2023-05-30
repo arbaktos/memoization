@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.android.memoization">
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <application
-        android:name = ".MemoizationApp"
+        android:name=".MemoizationApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -18,18 +20,44 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.Memoization.NoActionBar">
+            android:theme="@style/Theme.Memoization.NoActionBar"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <receiver android:name=".notifications.PostponeBroadcastReceiver" android:exported="false"/>
-        <receiver android:name=".notifications.CancelBroadcastReceiver" android:exported="false"/>
-        <receiver android:name=".notifications.LearnBroadcastReceiver" android:exported="false"/>
-        <receiver android:name=".notifications.AlarmReceiver" android:exported="false"/>
-        <receiver android:name=".notifications.NotificationReceiver" android:exported="false"/>
-    </application>
 
-</manifest>
+        <receiver
+            android:name=".notifications.PostponeBroadcastReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".notifications.CancelBroadcastReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".notifications.LearnBroadcastReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".notifications.AlarmReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".notifications.NotificationReceiver"
+            android:exported="false" />
+
+<!--        <provider-->
+<!--            android:name="androidx.startup.InitializationProvider"-->
+<!--            android:authorities="${applicationId}.androidx-startup"-->
+<!--            android:exported="false"-->
+<!--            tools:node="merge">-->
+<!--            &lt;!&ndash; disable default &ndash;&gt;-->
+<!--            <meta-data-->
+<!--                android:name="androidx.work.WorkManagerInitializer"-->
+<!--                android:value="@string/androidx_startup"-->
+<!--                tools:node="remove" />-->
+<!--            <meta-data-->
+<!--                android:name="com.example.android.memoization.utils.workers.CustomWorkManagerInitializer"-->
+<!--                android:value="androidx.startup" />-->
+<!--        </provider>-->
+</application>
+
+    </manifest>
