@@ -44,21 +44,20 @@
             android:name=".notifications.NotificationReceiver"
             android:exported="false" />
 
-        <provider
-            android:name="androidx.startup.InitializationProvider"
-            android:authorities="${applicationId}.androidx-startup"
-            android:exported="false"
-            tools:node="merge">
-            <!-- disable default -->
-            <meta-data
-                android:name="androidx.work.WorkManagerInitializer"
-                android:value="@string/androidx_startup"
-                tools:node="remove" />
-            <!-- enable custom -->
-            <meta-data
-                android:name="com.example.android.memoization.utils.workers.CustomWorkManagerInitializer"
-                android:value="androidx.startup" />
-        </provider>
+<!--        <provider-->
+<!--            android:name="androidx.startup.InitializationProvider"-->
+<!--            android:authorities="${applicationId}.androidx-startup"-->
+<!--            android:exported="false"-->
+<!--            tools:node="merge">-->
+<!--            &lt;!&ndash; disable default &ndash;&gt;-->
+<!--            <meta-data-->
+<!--                android:name="androidx.work.WorkManagerInitializer"-->
+<!--                android:value="@string/androidx_startup"-->
+<!--                tools:node="remove" />-->
+<!--            <meta-data-->
+<!--                android:name="com.example.android.memoization.utils.workers.CustomWorkManagerInitializer"-->
+<!--                android:value="androidx.startup" />-->
+<!--        </provider>-->
 </application>
 
     </manifest>

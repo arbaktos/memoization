@@ -34,5 +34,16 @@ abstract class UseCaseModule {
     abstract fun bindGetStacksUseCase(useCaseImpl: GetStacksWithWordsUseCaseImpl):
             GetStacksWithWordsUseCase
 
+    @Binds
+    abstract fun bindUpdateStackUseCase(impl: UpdateStackUseCaseImpl): UpdateStackUseCase
+
+    @Binds
+    abstract fun bindUpdateWordPairUseCase(impl: UpdateWordPairUseCaseImpl): UpdateWordPairUseCase
+
+    @Binds
+    abstract fun bindAddWorPairUseCase(impl: AddWordPairUseCaseImpl): AddWordPairUseCase
+
+    @Binds
+    abstract fun bindGetWorPairUseCase(impl: GetWorPairLoadingStateUseCaseImpl): GetWordPairLoadingStateUseCase
 
 }

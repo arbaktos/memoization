@@ -11,7 +11,6 @@ import com.example.android.memoization.ui.features.folderscreen.FolderViewModel
 
 @Composable
 fun AddStackAlertDialog(viewModel: FolderViewModel, onClick: () -> Unit) {
-    val appState = viewModel.folderState.collectAsState()
     var text by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = { },
@@ -20,7 +19,6 @@ fun AddStackAlertDialog(viewModel: FolderViewModel, onClick: () -> Unit) {
                 onClick = {
                     onClick()
                     viewModel.addStackToFolder(
-                        folder = appState.value.currentFolder,
                         stack = Stack(text)
                     )
                 },

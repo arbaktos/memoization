@@ -1,6 +1,5 @@
-package com.example.android.memoization.ui.composables.screens
+package com.example.android.memoization.ui.features.folderscreen
 
-import android.util.Log
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,17 +18,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.ui.theme.MemoizationTheme
-import com.example.android.memoization.ui.features.folderscreen.FolderViewModel
 import com.example.android.memoization.domain.model.Stack
 import com.example.android.memoization.ui.composables.*
 import com.example.android.memoization.ui.composables.components.*
 import com.example.android.memoization.ui.theme.PlayColors
-import com.example.android.memoization.utils.NavScreens
-import com.example.android.memoization.utils.TAG
-import kotlinx.coroutines.flow.collect
+import com.example.android.memoization.utils.NewPairNavArgs
 import kotlinx.coroutines.launch
 
 const val TDEBUG = "memoization_debug"
@@ -38,7 +35,7 @@ const val TDEBUG = "memoization_debug"
 @Composable
 fun FoldersScreen(
     navController: NavController,
-    folderViewModel: FolderViewModel,
+    folderViewModel: FolderViewModel = hiltViewModel()
 ) {
     val scaffoldState = rememberScaffoldState()
     var showAddStackDialog by remember { mutableStateOf(false) } //TODO move to viewmodel
@@ -51,22 +48,23 @@ fun FoldersScreen(
                 Fab(
                     icon = Icons.Filled.Add,
                     contentDesc = stringResource(R.string.add_new_stack),
-                    onclick = {
+                    onClick = {
                         showAddStackDialog = true
-
                     })
             },
             drawerContent = { MenuDrawer(scaffoldState) },
-            topBar = { AppBar(name = stringResource(id = R.string.app_name)) {
-                scope.launch { scaffoldState.drawerState.open() }
+            topBar = {
+                AppBar(name = stringResource(id = R.string.app_name)) {
+                    scope.launch { scaffoldState.drawerState.open() }
+                }
             }
-            }
-        ) {
+        ) { _ ->
+
             FolderScreenBodyContent(
                 viewModel = folderViewModel,
                 navController = navController,
                 scaffoldState = scaffoldState,
-                update = { navController.navigate(NavScreens.Folders.route) },
+                update = { },
             )
             if (showAddStackDialog)
                 AddStackAlertDialog(
@@ -104,7 +102,6 @@ fun FolderScreenBodyContent(
                         stack = stack,
                         viewModel = viewModel,
                         navController = navController,
-//                        stackViewModel = stackViewModel
                     )
                 },
                 onDismiss = {
@@ -133,31 +130,27 @@ fun FolderScreenBodyContent(
 fun ShowStack(
     stack: Stack,
     viewModel: FolderViewModel,
-    navController: NavController,
-//    stackViewModel: StackViewModel
+    navController: NavController
 ) {
     StackListItem(
         stack = stack,
         onPlay = {
-            viewModel.changeCurrentStack(stack)
-//            stackViewModel.setCurrentStack(stack)
-            navController.navigate(NavScreens.Memorization.route)
+            val action = FolderScreenFragmentDirections.toMemorization(stack.stackId)
+            navController.navigate(action)
         },
         onAdd = {
-            viewModel.changeCurrentStack(stack)
-//            stackViewModel.setCurrentStack(stack)
-            navController.navigate(NavScreens.NewPair.route)
+            navController.navigate(
+                FolderScreenFragmentDirections.toNewPairFragment(
+                    NewPairNavArgs.NewWordPair(stackId = stack.stackId)
+                )
+            )
         },
         onPin = {
-            viewModel.changeCurrentStack(stack)
-//            stackViewModel.setCurrentStack(stack)
 //            stackViewModel.onPin()//TODO
             animateToTop()
         },
         onClickRow = {
-            viewModel.changeCurrentStack(stack)
-//            stackViewModel.setCurrentStack(stack)
-            navController.navigate(NavScreens.Stack.route)
+            navController.navigate(FolderScreenFragmentDirections.toStackScreen(stack.stackId))
         }
     )
 }
@@ -195,7 +188,8 @@ fun AppBar(
             fontWeight = FontWeight.Bold,
             fontSize = 28.sp,
             color = colors.primaryVariant,
-            modifier = Modifier.padding(12.dp))
+            modifier = Modifier.padding(12.dp)
+        )
         Icon(Icons.Filled.Menu,
             stringResource(R.string.app_menu),
             modifier = Modifier

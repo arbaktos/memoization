@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/memo_nav"
+    app:startDestination="@id/folderScreenFragment">
+
+    <fragment
+        android:id="@+id/folderScreenFragment"
+        android:name="com.example.android.memoization.ui.features.folderscreen.FolderScreenFragment"
+        android:label="FolderScreenFragment" >
+        <action
+            android:id="@+id/to_stackScreen"
+            app:destination="@id/stackScreenFragment" />
+        <action
+            android:id="@+id/to_memorization"
+            app:destination="@id/memorizationFragment" />
+        <action
+            android:id="@+id/to_newPairFragment"
+            app:destination="@id/newPairFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/stackScreenFragment"
+        android:name="com.example.android.memoization.ui.features.stackscreen.StackScreenFragment"
+        android:label="StackScreenFragment" >
+        <action
+            android:id="@+id/to_folderScreenFragment"
+            app:destination="@id/folderScreenFragment" />
+        <argument
+            android:name="stackId"
+            app:argType="long"
+            android:defaultValue="-1L" />
+        <action
+            android:id="@+id/to_memorizationFragment"
+            app:destination="@id/memorizationFragment" />
+        <action
+            android:id="@+id/action_stackScreenFragment_to_newPairFragment"
+            app:destination="@id/newPairFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/memorizationFragment"
+        android:name="com.example.android.memoization.ui.features.memoizationscreen.MemorizationFragment"
+        android:label="MemorizationFragment" >
+        <action
+            android:id="@+id/to_stackScreenFragment"
+            app:destination="@id/stackScreenFragment" />
+        <action
+            android:id="@+id/to_folderScreenFragment"
+            app:destination="@id/folderScreenFragment" />
+        <argument
+            android:name="stackId"
+            app:argType="long" />
+    </fragment>
+    <fragment
+        android:id="@+id/newPairFragment"
+        android:name="com.example.android.memoization.ui.features.addnewpair.NewPairFragment"
+        android:label="NewPairFragment" >
+        <action
+            android:id="@+id/to_folderScreenFragment"
+            app:destination="@id/folderScreenFragment" />
+        <argument
+            android:name="wpArg"
+            app:argType="com.example.android.memoization.utils.NewPairNavArgs" />
+    </fragment>
+</navigation>

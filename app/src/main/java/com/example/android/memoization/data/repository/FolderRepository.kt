@@ -10,9 +10,10 @@ import com.example.android.memoization.data.database.*
 import com.example.android.memoization.utils.TAG
 import retrofit2.Response
 import javax.inject.Inject
+import javax.inject.Singleton
 
-
-class MemoRepository @Inject constructor(
+@Singleton
+class FolderRepository @Inject constructor(
     private val memoDao: MemoDao, private val retrofit: Retrofit
 ) {
     //folders

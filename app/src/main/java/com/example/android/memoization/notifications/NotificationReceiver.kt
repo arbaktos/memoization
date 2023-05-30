@@ -8,12 +8,10 @@ import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
 import android.content.Intent
 import android.os.Build
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.android.memoization.MainActivity
 import com.example.android.memoization.R
-import com.example.android.memoization.ui.composables.screens.TDEBUG
 import com.example.android.memoization.utils.NOTIFICATION_ID
 import com.example.android.memoization.utils.NOTIFICATION_ID_LABEL
 

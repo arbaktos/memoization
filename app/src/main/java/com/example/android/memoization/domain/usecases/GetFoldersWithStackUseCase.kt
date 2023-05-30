@@ -1,15 +1,10 @@
 package com.example.android.memoization.domain.usecases
 
-import android.util.Log
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.asFlow
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.map
 import com.example.android.memoization.domain.model.Folder
-import com.example.android.memoization.data.repository.MemoRepository
+import com.example.android.memoization.data.repository.FolderRepository
 import com.example.android.memoization.domain.model.Stack
-import com.example.android.memoization.utils.TAG
-import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 interface GetFoldersWithStackUseCase {
@@ -17,7 +12,7 @@ interface GetFoldersWithStackUseCase {
 }
 
 class GetFoldersWithStackUseCaseImpl @Inject constructor(
-    private val repository: MemoRepository,
+    private val repository: FolderRepository,
     private val getStackUseCase: GetStackUseCase
 ) :
     GetFoldersWithStackUseCase {

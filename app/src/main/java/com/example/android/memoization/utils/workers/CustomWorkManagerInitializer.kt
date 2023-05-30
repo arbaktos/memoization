@@ -12,36 +12,37 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
-
-@Module
-@InstallIn(SingletonComponent::class)
-class CustomWorkManagerInitializer: Initializer<WorkManager> {
-
-    @Provides
-    @Singleton
-    override fun create(context: Context): WorkManager {
-        val workerFactory = getWorkerFactory(appContext = context.applicationContext)
-        val config = Configuration.Builder()
-            .setWorkerFactory(workerFactory)
-            .build()
-        WorkManager.initialize(context, config)
-        return WorkManager.getInstance(context)
-    }
-
-    override fun dependencies(): MutableList<Class<out Initializer<*>>> = mutableListOf()
-
-    private fun getWorkerFactory(appContext: Context): HiltWorkerFactory {
-        val workManagerEntryPoint = EntryPointAccessors.fromApplication(
-            appContext,
-            WorkManagerInitializerEntryPoint::class.java
-        )
-        return workManagerEntryPoint.hiltWorkerFactory()
-    }
-
-    @InstallIn(SingletonComponent::class)
-//    @Module
-    @EntryPoint
-    interface WorkManagerInitializerEntryPoint {
-        fun hiltWorkerFactory(): HiltWorkerFactory
-    }
-}
+import dagger.hilt.android.qualifiers.ApplicationContext
+//
+//@Module
+//@InstallIn(SingletonComponent::class)
+//class CustomWorkManagerInitializer: Initializer<WorkManager> {
+//
+//    @Provides
+//    @Singleton
+//    override fun create(@ApplicationContext context: Context): WorkManager {
+//        val workerFactory = getWorkerFactory(appContext = context)
+//        val config = Configuration.Builder()
+//            .setWorkerFactory(workerFactory)
+//            .build()
+//        WorkManager.initialize(context, config)
+//        return WorkManager.getInstance(context)
+//    }
+//
+//    override fun dependencies(): MutableList<Class<out Initializer<*>>> = mutableListOf()
+//
+//    private fun getWorkerFactory(appContext: Context): HiltWorkerFactory {
+//        val workManagerEntryPoint = EntryPointAccessors.fromApplication(
+//            appContext,
+//            WorkManagerInitializerEntryPoint::class.java
+//        )
+//        return workManagerEntryPoint.hiltWorkerFactory()
+//    }
+//
+//    @InstallIn(SingletonComponent::class)
+////    @Module
+//    @EntryPoint
+//    interface WorkManagerInitializerEntryPoint {
+//        fun hiltWorkerFactory(): HiltWorkerFactory
+//    }
+//}

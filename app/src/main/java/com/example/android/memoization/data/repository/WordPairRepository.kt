@@ -2,6 +2,9 @@ package com.example.android.memoization.data.repository
 
 import com.example.android.memoization.data.database.MemoDao
 import com.example.android.memoization.data.database.WordPairEntity
+import com.example.android.memoization.domain.model.WordPair
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class WordPairRepository @Inject constructor(private val memoDao: MemoDao) {
@@ -18,7 +21,10 @@ class WordPairRepository @Inject constructor(private val memoDao: MemoDao) {
         memoDao.updateWordPair(wordPairEntity)
     }
 
-    suspend fun getWordsFromStack(stackId: Long): List<WordPairEntity> {
-        return memoDao.getWordsFromStack(stackId)
+    fun getWordPairById(wpId: Long): Flow<WordPair> {
+        return memoDao.getWordPairByIdFlow(wpId)
+            .map {
+                it.toWordPair()
+            }
     }
 }

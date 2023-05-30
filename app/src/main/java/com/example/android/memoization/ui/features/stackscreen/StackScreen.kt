@@ -1,5 +1,6 @@
-package com.example.android.memoization.ui.composables
+package com.example.android.memoization.ui.features.stackscreen
 
+import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -14,93 +15,163 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.extensions.checkLength
 import com.example.android.memoization.domain.model.WordPair
 import com.example.android.memoization.ui.composables.components.MotionAppBar
-import com.example.android.memoization.ui.viewmodel.StackViewModel
-import com.example.android.memoization.utils.NavScreens
 import com.example.android.memoization.ui.composables.components.SwipeToDismiss
+import com.example.android.memoization.domain.model.Stack
+import com.example.android.memoization.ui.composables.AddNewCardFab
+import com.example.android.memoization.ui.composables.RowIcon
+import com.example.android.memoization.utils.LoadingState
+import com.example.android.memoization.utils.NewPairNavArgs
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.stateIn
+
 
 @Composable
 fun StackScreen(
-    navContoller: NavController,
-    viewModel: StackViewModel
+    navController: NavController,
+    stackId: Long,
+    viewModel: StackViewModel = hiltViewModel()
 ) {
-    val appState by viewModel.publicStackState.collectAsState()
-    val currentStack = appState.stack
-    val scaffoldState = rememberScaffoldState()
-    val state = rememberLazyListState()
+    var state by remember { mutableStateOf<LoadingState<Stack>>(LoadingState.Loading) }
+    LaunchedEffect(key1 = true, block = {
+        delay(400)
+        state = viewModel.onStackIdReceived(stackId).stateIn(this).value
+    })
 
     BackHandler {
-        navContoller.navigate(NavScreens.Folders.route)
+        navController.navigate(StackScreenFragmentDirections.toFolderScreenFragment())
     }
 
+    DisplayStackState(state = state, navController = navController)
+}
+
+@Composable
+fun DisplayStackState(state: LoadingState<Stack>, navController: NavController) {
+    when (state) {
+        is LoadingState.Collected<Stack> -> DisplayStack(
+            loadingState = state as LoadingState.Collected<Stack>,
+            navController = navController
+        )
+
+        is LoadingState.Loading -> DisplayLoadingStack()
+        is LoadingState.Error -> DisplayStackError()
+    }
+}
+
+@Composable
+fun DisplayStackError() {
+    Text(text =  "Error")
+}
+
+@Composable
+fun DisplayLoadingStack() {
+    Text("Loading...")
+}
+
+@Composable
+fun DisplayStack(
+    loadingState: LoadingState.Collected<Stack>,
+    navController: NavController,
+    viewModel: StackViewModel = hiltViewModel()
+) {
+    val scaffoldState = rememberScaffoldState()
+    val lazyListState = rememberLazyListState()
+
+    val currentStack = loadingState.content
+
     Scaffold(
-        topBar = { MotionAppBar(lazyScrollState = state, stackName = currentStack?.name ?: "") },
+        topBar = {
+            MotionAppBar(
+                lazyScrollState = lazyListState,
+                stackName = currentStack.name ?: ""
+            )
+        },
         isFloatingActionButtonDocked = false,
         floatingActionButton = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                currentStack?.let { stack ->
-                    if (stack.words.any { it.toLearn }) {
-                        ExtendedFloatingActionButton(
-                            text = {
-                                Text(
-                                    text = stringResource(R.string.learn),
-                                    color = MaterialTheme.colors.surface
-                                )
-                            },
-                            onClick = { navContoller.navigate(NavScreens.Memorization.route) },
-                            icon = {
-                                Icon(
-                                    imageVector = Icons.Filled.PlayArrow,
-                                    contentDescription = stringResource(R.string.learn_this_stack),
-                                    tint = MaterialTheme.colors.surface
-                                )
-                            },
-                            modifier = Modifier
-                                .padding(8.dp)
-                        )
-                    }
-                }
-
-                Fab(
-                    icon = Icons.Filled.Add,
-                    contentDesc = stringResource(R.string.add_new_card),
-                    onclick = { navContoller.navigate(NavScreens.NewPair.route) }
+            Column() {
+                AddNewCardFab(
+                    onAdd = { navController
+                        .navigate(
+                            StackScreenFragmentDirections
+                                .actionStackScreenFragmentToNewPairFragment(
+                                    NewPairNavArgs.NewWordPair(stackId = currentStack.stackId)
+                                )) }
                 )
+
+                StackFab(navController = navController, currentStack = currentStack)
             }
         },
         scaffoldState = scaffoldState,
         content = { innerPadding ->
-            Box(modifier = Modifier.padding(innerPadding)){
+            Box(modifier = Modifier.padding(innerPadding)) {
                 WordList(
-                    currentStack?.words ?: emptyList(),
+                    wordList = currentStack.words,
                     viewModel = viewModel,
-                    onEditNavigate = { navContoller.navigate("new_pair?editMode=true") },
-                    onDelete = { navContoller.navigate(NavScreens.Stack.route) },
+                    navController = navController,
+                    onDelete = {},
                     scaffoldState = scaffoldState,
-                    listState = state
+                    listState = lazyListState,
+                    currentStack = currentStack
                 )
             }
-
         }
     )
+}
+
+@Composable
+fun StackFab(navController: NavController, currentStack: Stack?) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        currentStack?.let { stack ->
+            if (stack.words.any { it.toLearn }) {
+                ExtendedFloatingActionButton(
+                    text = {
+                        Text(
+                            text = stringResource(R.string.learn),
+                            color = MaterialTheme.colors.surface
+                        )
+                    },
+                    onClick = {
+                        navController.navigate(
+                            StackScreenFragmentDirections.toMemorizationFragment(
+                                stack.stackId
+                            )
+                        )
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Filled.PlayArrow,
+                            contentDescription = stringResource(R.string.learn_this_stack),
+                            tint = MaterialTheme.colors.surface
+                        )
+                    },
+                    modifier = Modifier
+                        .padding(8.dp)
+                )
+            }
+        }
     }
+}
 
 @Composable
 fun WordList(
     wordList: List<WordPair>,
     viewModel: StackViewModel,
-    onEditNavigate: () -> Unit,
+    navController: NavController,
     onDelete: () -> Unit,
     scaffoldState: ScaffoldState,
-    listState: LazyListState
+    listState: LazyListState,
+    currentStack: Stack?
 ) {
+    val context = LocalContext.current
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth(),
@@ -111,19 +182,20 @@ fun WordList(
                 item = wordPair,
                 dismissContent = {
                     WordPairListItem(
-                        wordPair,
-                        viewModel = viewModel,
-                        onEditNavigate = onEditNavigate,
+                        wordPair = wordPair,
+                        onEditNavigate = { navController.navigate(
+                            StackScreenFragmentDirections.actionStackScreenFragmentToNewPairFragment(
+                                NewPairNavArgs.EditPair(wordPair.wordPairId)
+                            )
+                        )},
                     )
                 },
                 onDismiss = {
-                    val snackBarResult =
-                        scaffoldState.snackbarHostState.showOnDeleteSnackBar(wordPair)
-                    when (snackBarResult) {
+                    when (scaffoldState.snackbarHostState.showOnDeleteSnackBar(wordPair, context)) {
                         SnackbarResult.ActionPerformed -> {
                             viewModel.cancelDelayDeletionWork(wordPair)
                             wordPair.isVisible = true
-                            viewModel.updateStackInDb()
+                            viewModel.updateStackInDb(currentStack)
                             onDelete()
                         }
                         SnackbarResult.Dismissed -> viewModel.delayDeletionWordPair(wordPair)
@@ -138,15 +210,8 @@ fun WordList(
 @Composable
 fun WordPairListItem(
     wordPair: WordPair,
-    viewModel: StackViewModel,
     onEditNavigate: () -> Unit,
 ) {
-    val onEdit = {
-        viewModel.updateCurrentWordPair(wordPair)
-        viewModel.setWord(1, wordPair.word1)
-        viewModel.setWord(2, wordPair.word2 ?: "")
-        onEditNavigate()
-    }
     Card(
         shape = RoundedCornerShape(16.dp),
         elevation = 8.dp,
@@ -154,11 +219,13 @@ fun WordPairListItem(
             .fillMaxWidth(0.9f)
             .padding(top = 4.dp, bottom = 4.dp)
             .clickable {
-                onEdit()
+                onEditNavigate()
             }
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(8.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(8.dp)
+        ) {
 
             RowIcon(
                 iconSource = Icons.Filled.Circle,
@@ -166,41 +233,27 @@ fun WordPairListItem(
                 modifier = Modifier.padding(start = 10.dp)
             )
             ListItem(
-                text = { Text(wordPair.word1.checkLength(), maxLines = 2, overflow = TextOverflow.Ellipsis) },
-                secondaryText = { wordPair.word2?.checkLength()?.let { Text(it, maxLines = 2, overflow = TextOverflow.Ellipsis) } }
+                text = {
+                    Text(
+                        wordPair.word1.checkLength(),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
+                secondaryText = {
+                    wordPair.word2?.checkLength()
+                        ?.let { Text(it, maxLines = 2, overflow = TextOverflow.Ellipsis) }
+                }
             )
         }
     }
 }
 
-suspend fun SnackbarHostState.showOnDeleteSnackBar(wordPair: WordPair): SnackbarResult {
+suspend fun SnackbarHostState.showOnDeleteSnackBar(wordPair: WordPair, context: Context): SnackbarResult {
     val result = this.showSnackbar(
-        message = "Do you want to delete ${wordPair.word1}/${wordPair.word2}?",
-        actionLabel = "Undo",
+        message = context.getString(R.string.confirm_deletion) + "${wordPair.word1}/${wordPair.word2}?",
+        actionLabel = context.getString(R.string.undo),
         duration = SnackbarDuration.Long
     )
     return result
 }
-
-
-//
-//@Composable
-//fun ImageListItem(index: Int) {
-//    Row(verticalAlignment = Alignment.CenterVertically) {
-//
-//        Image(
-//            painter = rememberImagePainter(
-//                data = "https://developer.android.com/images/brand/Android_Robot.png"
-//            ),
-//            contentDescription = "Android Logo",
-//            modifier = Modifier.size(50.dp)
-//        )
-//        Spacer(Modifier.width(10.dp))
-//        Text("Item #$index", style = MaterialTheme.typography.subtitle1)
-//    }
-//}
-//
-
-
-
-

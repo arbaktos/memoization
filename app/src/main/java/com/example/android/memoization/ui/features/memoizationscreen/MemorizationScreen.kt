@@ -1,115 +1,125 @@
-package com.example.android.memoization.ui.composables.screens
+package com.example.android.memoization.ui.features.memoizationscreen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.domain.model.WordPair
 import com.example.android.memoization.ui.composables.FlipCard
 import com.example.android.memoization.ui.composables.MemoIcon
 import com.example.android.memoization.ui.composables.components.StackCompleteDialog
-import com.example.android.memoization.ui.features.folderscreen.FolderViewModel
-import com.example.android.memoization.ui.features.stackscreen.StackViewModel
-import com.example.android.memoization.utils.NavScreens
 import java.util.*
 
 @Composable
 fun MemorizationScreen(
     navController: NavController,
-    viewModel: FolderViewModel,
-    stackViewModel: StackViewModel
+    stackId: Long,
 ) {
-//    val appState = viewModel.publicAppState.collectAsState()
-    val wordListToLearn = emptyList<WordPair>() //appState.value.currentStack?.prepareStack()?.words?.filter { it.toLearn } ?: emptyList()
+    val viewModel: MemoizationViewModel = hiltViewModel()
+    val wordListToLearn = viewModel.onStackIdReceived(stackId).collectAsState(initial = emptyList())
 
     FolderScreenBodyContent(
         wordsToLearn = wordListToLearn,
         navController = navController,
-        stackViewModel
+        viewModel = viewModel
     )
 }
 
 @Composable
 fun FolderScreenBodyContent(
-    wordsToLearn: List<WordPair>,
+    wordsToLearn: State<List<WordPair>>,
     navController: NavController,
-    stackViewModel: StackViewModel
+    viewModel: MemoizationViewModel
 ) {
-    var openFinishDialog by remember { mutableStateOf(false) }
-    var wordPairNum by remember { mutableStateOf(0) }
-    val wordPair = wordsToLearn.get(wordPairNum)
+    wordsToLearn.value.forEach { wordPair ->
+        viewModel.clicked = false
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(Modifier.height(60.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
 
-    stackViewModel.updateCurrentWordPair(wordPair)
+                FlipCard(wordPair)
 
-    if (openFinishDialog) {
+            }
+            Spacer(Modifier.height(100.dp))
+            Row(modifier = Modifier.weight(0.3f)) {
+
+                EasyIcon {
+                    viewModel.onBottomButtonClick(
+                        wordPair = wordPair,
+                        icon = com.example.android.memoization.ui.features.memoizationscreen.Icon.Easy
+                    )
+                }
+                HardIcon {
+                    viewModel.onBottomButtonClick(
+                        wordPair = wordPair,
+                        icon = com.example.android.memoization.ui.features.memoizationscreen.Icon.Hard
+                    )
+                }
+                WrongIcon {
+                    viewModel.onBottomButtonClick(
+                        wordPair = wordPair,
+                        icon = com.example.android.memoization.ui.features.memoizationscreen.Icon.Wrong
+                    )
+                }
+            }
+        }
+    }
+
+    if (viewModel.clicked) {
         StackCompleteDialog(
             onClick = {
-                openFinishDialog = false
-                navController.navigate(NavScreens.Folders.route)
+                navController.navigate(MemorizationFragmentDirections.toFolderScreenFragment())
             }
         )
+
     }
 
-    val onBottomButtonClick = {
-        stackViewModel.updateCurrentWordPair(
-            wordPair.copy(lastRep = Date())
-        )
-        stackViewModel.updateWordPairDateInDb()
-        if (wordPairNum == wordsToLearn.lastIndex) openFinishDialog = true
-        else wordPairNum++
-    }
+}
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(Modifier.height(60.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
 
-            FlipCard(wordPair)
+@Composable
+fun EasyIcon(onClick: () -> Unit) {
+    MemoIcon(
+        contentDesc = stringResource(id = R.string.easy),
+        tint = colorResource(R.color.teal_700),
+        onClick = onClick
+    )
+}
 
-        }
-        Spacer(Modifier.height(100.dp))
-        Row(
-            modifier = Modifier
-                .weight(0.3f)
+@Composable
+fun HardIcon(onClick: () -> Unit) {
+    MemoIcon(
+        contentDesc = stringResource(R.string.hard),
+        tint = colorResource(R.color.yellow),
+        onClick = onClick
+    )
+}
 
-        ) {
-            MemoIcon(
-                contentDesc = "Easy",
-                tint = colorResource(R.color.teal_700),
-                onClick = {
-                    onBottomButtonClick()
-                    wordPair.harderLevel()
-                }
-            )
-            MemoIcon(
-                contentDesc = "Hard",
-                tint = colorResource(R.color.yellow),
-                onClick = {
-                    onBottomButtonClick()
-                    wordPair.easierLevel()
-                }
-            )
-            MemoIcon(
-                contentDesc = "Wrong",
-                tint = colorResource(R.color.red),
-                onClick = {
-                    onBottomButtonClick()
-                    wordPair.toLevel1()
-                }
-            )
-        }
-    }
+@Composable
+fun WrongIcon(onClick: () -> Unit) {
+    MemoIcon(
+        contentDesc = stringResource(id = R.string.wrong),
+        tint = colorResource(R.color.red),
+        onClick = onClick
+    )
+}
+
+enum class Icon {
+    Easy, Hard, Wrong
 }
 
 

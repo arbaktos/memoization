@@ -42,7 +42,7 @@ interface MemoDao {
 
     @Transaction
     @Query("SELECT * FROM stack_entity_table WHERE stackId = :stackId")
-    suspend fun getStackWithWordsById(stackId: Long): StackWithWords
+    fun getStackWithWordsById(stackId: Long): Flow<StackWithWords>
 
     @Update
     suspend fun updateStack(stackEntity: StackEntity)
@@ -65,4 +65,7 @@ interface MemoDao {
 
     @Delete
     suspend fun deleteWordPairFromDb(wordPairEntity: WordPairEntity)
+
+    @Query("SELECT * FROM wordpairentity WHERE wordPairId LIKE :wpId")
+    fun getWordPairByIdFlow(wpId: Long): Flow<WordPairEntity>
 }

@@ -1,8 +1,7 @@
 package com.example.android.memoization.domain.usecases
 
 import com.example.android.memoization.data.database.StackEntity
-import com.example.android.memoization.data.repository.MemoRepository
-import com.example.android.memoization.data.repository.StackRepository
+import com.example.android.memoization.data.repository.FolderRepository
 import com.example.android.memoization.domain.model.Folder
 import com.example.android.memoization.domain.model.Stack
 import javax.inject.Inject
@@ -11,7 +10,7 @@ interface AddStackUseCase {
     suspend operator fun invoke(folder: Folder, stack: Stack)
 }
 
-class AddStackUseCaseImpl @Inject constructor( private val repository: MemoRepository): AddStackUseCase {
+class AddStackUseCaseImpl @Inject constructor( private val repository: FolderRepository): AddStackUseCase {
     override suspend fun invoke(folder: Folder, stack: Stack) {
         val stackToInsert = StackEntity(
             name = stack.name,

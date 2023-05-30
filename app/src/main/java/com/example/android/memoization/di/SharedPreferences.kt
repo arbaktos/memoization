@@ -1,8 +1,8 @@
 package com.example.android.memoization.di
 
 import android.content.Context
-import androidx.work.WorkManager
-import dagger.Binds
+import android.content.SharedPreferences
+import com.example.android.memoization.R
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -11,14 +11,12 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Inject
 import javax.inject.Singleton
 
-//@Binds
-//fun bindWorkManager(impl: )
-
-//@InstallIn(SingletonComponent::class)
-//@Module
-//class WorkManager @Inject constructor() {
-//
-//    @Provides
-//    @Singleton
-//    fun workManager(@ApplicationContext context: Context) = WorkManager.getInstance(context)
-//}
+@InstallIn(SingletonComponent::class)
+@Module
+class SharedPreferences @Inject constructor() {
+    @Provides
+    @Singleton
+    fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
+        return context.getSharedPreferences(context.getString(R.string.app_name), Context.MODE_PRIVATE)
+    }
+}

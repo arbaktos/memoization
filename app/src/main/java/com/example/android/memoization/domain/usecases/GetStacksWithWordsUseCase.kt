@@ -3,8 +3,8 @@ package com.example.android.memoization.domain.usecases
 import android.util.Log
 import com.example.android.memoization.data.repository.StackRepository
 import com.example.android.memoization.domain.model.Stack
+import com.example.android.memoization.extensions.toStack
 import com.example.android.memoization.utils.TAG
-import com.example.android.memoization.utils.workers.toStack
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.transform
 import javax.inject.Inject

@@ -22,14 +22,13 @@ import javax.inject.Inject
 class StackDeletionWorker @AssistedInject constructor(
     @Assisted context: Context,
     val deleteStackUseCase: DeleteStackUseCase,
-    val getStackUseCase: GetStackUseCase,
     @Assisted params: WorkerParameters
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
         return try {
-            val stackId = inputData.getLong(STACK_ID, 0)
-            deleteStackUseCase(getStackUseCase(stackId))
+            val stackId = inputData.getLong(STACK_ID, -1)
+            deleteStackUseCase(stackId)
             Result.success()
         } catch (throwable: Throwable) {
             throwable.printStackTrace()
@@ -38,12 +37,3 @@ class StackDeletionWorker @AssistedInject constructor(
     }
 }
 
-fun StackWithWords.toStack(): Stack {
-    return Stack(
-        name = this.stack.name,
-        numRep = this.stack.numRep,
-        stackId = this.stack.stackId,
-        words = this.words.map { it.toWordPair() }.toMutableList(),
-        hasWords = this.stack.hasWords
-    )
-}

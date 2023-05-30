@@ -23,12 +23,6 @@ class Retrofit @Inject constructor(){
     val httpLoginIntercepror = setLoginInterceptor()
 
     @Provides
-    @Singleton
-    fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
-        return context.getSharedPreferences(context.getString(R.string.app_name), Context.MODE_PRIVATE)
-    }
-
-    @Provides
     fun setLoginInterceptor(): HttpLoggingInterceptor {
         val httpLoginIntercepror = HttpLoggingInterceptor()
         httpLoginIntercepror.level = HttpLoggingInterceptor.Level.BODY
@@ -53,7 +47,7 @@ class Retrofit @Inject constructor(){
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
-    val linganexApi = retrofit().create(LinganexApi::class.java)
+    val linganexApi: LinganexApi = retrofit().create(LinganexApi::class.java)
 }
 
 

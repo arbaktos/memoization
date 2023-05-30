@@ -8,7 +8,7 @@ import com.example.android.memoization.utils.TAG
 import javax.inject.Inject
 
 interface DeleteStackUseCase {
-    suspend operator fun invoke(stack: Stack)
+    suspend operator fun invoke(stackId: Long)
 }
 
 class DeleteStackUseCaseImpl @Inject constructor(
@@ -16,10 +16,10 @@ class DeleteStackUseCaseImpl @Inject constructor(
     private val repository: StackRepository
 ): DeleteStackUseCase {
 
-    override suspend fun invoke(stack: Stack) {
-        stack.words.forEach {
-            deleteWordPairUseCase(it)
-        }
-        repository.deleteStackFomDb(stack.stackId)
+    override suspend fun invoke(stackId: Long) {
+//        stack.words.forEach {
+//            deleteWordPairUseCase(it)
+//        }
+        repository.deleteStackFomDb(stackId)
     }
 }

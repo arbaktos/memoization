@@ -40,7 +40,7 @@ fun AddStack(
 
     val onClick: () -> Unit = {
         onTextChange("")
-        viewModel.addStackToFolder(folder = folder, stack = Stack(text))
+        viewModel.addStackToFolder(folder = folder, stack = Stack(name = text))
         keyboardController?.hide()
         focusManager.clearFocus()
     }
