@@ -26,12 +26,11 @@ import com.example.android.memoization.extensions.checkLength
 import com.example.android.memoization.domain.model.WordPair
 import com.example.android.memoization.ui.composables.components.MotionAppBar
 import com.example.android.memoization.ui.composables.components.SwipeToDismiss
-import com.example.android.memoization.domain.model.Stack
+import com.example.android.memoization.domain.model.MemoStack
 import com.example.android.memoization.ui.composables.AddNewCardFab
 import com.example.android.memoization.ui.composables.RowIcon
 import com.example.android.memoization.utils.LoadingState
 import com.example.android.memoization.utils.NewPairNavArgs
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.stateIn
 
 
@@ -41,9 +40,8 @@ fun StackScreen(
     stackId: Long,
     viewModel: StackViewModel = hiltViewModel()
 ) {
-    var state by remember { mutableStateOf<LoadingState<Stack>>(LoadingState.Loading) }
+    var state by remember { mutableStateOf<LoadingState<MemoStack>>(LoadingState.Loading) }
     LaunchedEffect(key1 = true, block = {
-        delay(400)
         state = viewModel.onStackIdReceived(stackId).stateIn(this).value
     })
 
@@ -55,10 +53,10 @@ fun StackScreen(
 }
 
 @Composable
-fun DisplayStackState(state: LoadingState<Stack>, navController: NavController) {
+fun DisplayStackState(state: LoadingState<MemoStack>, navController: NavController) {
     when (state) {
-        is LoadingState.Collected<Stack> -> DisplayStack(
-            loadingState = state as LoadingState.Collected<Stack>,
+        is LoadingState.Collected<MemoStack> -> DisplayStack(
+            loadingState = state,
             navController = navController
         )
 
@@ -79,7 +77,7 @@ fun DisplayLoadingStack() {
 
 @Composable
 fun DisplayStack(
-    loadingState: LoadingState.Collected<Stack>,
+    loadingState: LoadingState.Collected<MemoStack>,
     navController: NavController,
     viewModel: StackViewModel = hiltViewModel()
 ) {
@@ -128,7 +126,7 @@ fun DisplayStack(
 }
 
 @Composable
-fun StackFab(navController: NavController, currentStack: Stack?) {
+fun StackFab(navController: NavController, currentStack: MemoStack?) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         currentStack?.let { stack ->
             if (stack.words.any { it.toLearn }) {
@@ -169,7 +167,7 @@ fun WordList(
     onDelete: () -> Unit,
     scaffoldState: ScaffoldState,
     listState: LazyListState,
-    currentStack: Stack?
+    currentStack: MemoStack?
 ) {
     val context = LocalContext.current
     LazyColumn(

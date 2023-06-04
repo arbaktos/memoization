@@ -13,13 +13,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.android.memoization.domain.model.ListItem
+import com.example.android.memoization.domain.model.DismissableItem
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun SwipeToDismiss(
-    item: ListItem,
+    item: DismissableItem,
     dismissContent: @Composable () -> Unit,
     onDismiss: suspend () -> Unit
 ) {

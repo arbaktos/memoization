@@ -1,5 +1,5 @@
 package com.example.android.memoization.domain.model
 
-interface ListItem {
+interface DismissableItem {
     var isVisible: Boolean
 }

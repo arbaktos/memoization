@@ -40,11 +40,9 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    kotlinOptions {
-        jvmTarget = '1.8'
-//        languageVersion = '1.8.0'
-//        useIR = true
-    }
+//    kotlinOptions {
+//        jvmTarget = '1.1'
+//    }
 
     buildFeatures {
         compose true
@@ -54,11 +52,6 @@ android {
         kotlinCompilerVersion "1.8.0"
         kotlinCompilerExtensionVersion "1.4.0"
     }
-//    packagingOptions {
-//        resources {
-//            excludes += '/META-INF/{AL2.0,LGPL2.1}'
-//        }
-//    }
 
 }
 
@@ -76,10 +69,11 @@ ext {
     j_unit = "4.13.2"
     ext_j_unit = "1.1.5"
     espresso = "3.5.1"
+    workmanager = "2.8.1"
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:$core_version")
+    implementation "androidx.core:core-ktx:$core_version"
     implementation "androidx.core:core-ktx:$core_version"
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation "androidx.fragment:fragment-ktx:1.5.7"
@@ -145,7 +139,7 @@ dependencies {
     kapt 'androidx.hilt:hilt-compiler:1.0.0'
 
     //workmanager
-    implementation "androidx.work:work-runtime-ktx:2.7.1"
+    implementation "androidx.work:work-runtime-ktx:$workmanager"
 
     //datastore
     implementation "androidx.datastore:datastore-preferences:1.0.0"

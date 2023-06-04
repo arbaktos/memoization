@@ -5,7 +5,7 @@ import com.example.android.memoization.data.database.FolderEntity
 data class Folder(
     val name: String,
     var isOpen: Boolean = false,
-    val stacks: MutableList<Stack> = mutableListOf(),
+    val stacks: MutableList<MemoStack> = mutableListOf(),
     var folderId: Long = 0
 //    val language1: Language,
 //    val language2: Language,

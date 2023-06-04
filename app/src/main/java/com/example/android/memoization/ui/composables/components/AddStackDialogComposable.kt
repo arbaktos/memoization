@@ -4,7 +4,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
 import com.example.android.memoization.R
-import com.example.android.memoization.domain.model.Stack
+import com.example.android.memoization.domain.model.MemoStack
 import com.example.android.memoization.ui.theme.MemoButtonColors
 import com.example.android.memoization.ui.theme.MemoTextFieldColors
 import com.example.android.memoization.ui.features.folderscreen.FolderViewModel
@@ -19,7 +19,7 @@ fun AddStackAlertDialog(viewModel: FolderViewModel, onClick: () -> Unit) {
                 onClick = {
                     onClick()
                     viewModel.addStackToFolder(
-                        stack = Stack(text)
+                        stack = MemoStack(text)
                     )
                 },
                 enabled = text.isNotEmpty(),

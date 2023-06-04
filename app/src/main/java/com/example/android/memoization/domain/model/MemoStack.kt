@@ -2,7 +2,7 @@ package com.example.android.memoization.domain.model
 
 import java.util.*
 
-data class Stack(
+data class MemoStack(
     val name: String,
     var numRep: Int = 0, //to schedule check days
     var words: MutableList<WordPair> = mutableListOf(),
@@ -12,9 +12,9 @@ data class Stack(
     var pinned: Boolean = false
 //    val language1: Language,
 //    val language2: Language,
-) : ListItem {
+) : DismissableItem {
 
-    fun prepareStack(): Stack {
+    fun prepareStack(): MemoStack {
         val currentDate = Date()
         return this.apply {
             words.forEach { wordPair ->

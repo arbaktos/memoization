@@ -14,7 +14,7 @@ data class WordPair(
     override var isVisible: Boolean = true
 //    val language1: Language,
 //    val language2: Language,
-) : ListItem {
+) : DismissableItem {
     var toLearn: Boolean = false
         get() = checkIfShow()
 

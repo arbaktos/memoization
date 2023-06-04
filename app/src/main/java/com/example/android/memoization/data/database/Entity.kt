@@ -1,6 +1,7 @@
 package com.example.android.memoization.data.database
 
 import androidx.room.*
+import com.example.android.memoization.domain.model.MemoStack
 import com.example.android.memoization.domain.model.WordPair
 import com.example.android.memoization.domain.model.WordStatus
 import com.example.android.memoization.utils.FOLDER_TABLE
@@ -46,6 +47,18 @@ data class StackWithWords(
     val words: List<WordPairEntity>
 )
 
+fun StackWithWords.toStack(): MemoStack {
+    return MemoStack(
+        name = this.stack.name,
+        numRep = this.stack.numRep,
+        stackId = this.stack.stackId,
+        words = this.words.map { it.toWordPair() }.toMutableList(),
+        hasWords = this.words.isNotEmpty(),
+        isVisible = this.stack.isVisible,
+        pinned = this.stack.pinned
+    )
+}
+
 @Entity
 data class WordPairEntity(
     val parentStackId: Long,
@@ -70,4 +83,5 @@ data class WordPairEntity(
         )
     }
 }
+
 

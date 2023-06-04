@@ -19,13 +19,14 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.android.memoization.R
-import com.example.android.memoization.domain.model.Stack
+import com.example.android.memoization.domain.model.MemoStack
 import com.example.android.memoization.ui.features.folderscreen.getPlayIconColor
 import com.example.android.memoization.ui.theme.MemoButtonColors
 
 
 @Composable
-fun StackListItem(stack: Stack,
+fun StackListItem(stack: MemoStack,
+                  modifier: Modifier = Modifier,
                   onPin: () -> Unit = {},
                   onAdd: () -> Unit= {},
                   onPlay: () -> Unit = {},
@@ -39,7 +40,7 @@ fun StackListItem(stack: Stack,
     Card(
         elevation = 8.dp,
         shape = RoundedCornerShape(20.dp),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(Color.White)
             .padding(5.dp)

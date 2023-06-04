@@ -6,7 +6,7 @@ import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 //import com.example.android.memoization.data.SessionState.currentStack
-import com.example.android.memoization.domain.model.Stack
+import com.example.android.memoization.domain.model.MemoStack
 import com.example.android.memoization.domain.model.WordPair
 import com.example.android.memoization.domain.usecases.GetStackUseCase
 import com.example.android.memoization.domain.usecases.UpdateStackUseCase
@@ -25,9 +25,6 @@ class StackViewModel @Inject constructor(
     private val getStackUseCase: GetStackUseCase,
     private val workManager: WorkManager
 ) : ViewModel() {
-
-//    private var mutableStackState = Flow<LoadingState<Stack>>()
-//    val stackState = mutableStackState.asStateFlow()
 
     fun cancelDelayDeletionWork(wordPair: WordPair) {
         workManager.cancelAllWorkByTag("${wordPair.wordPairId}")
@@ -48,11 +45,11 @@ class StackViewModel @Inject constructor(
 //        updateStackInDb()
     }
 
-    fun onStackIdReceived(stackId: Long): Flow<LoadingState<Stack>> {
+    fun onStackIdReceived(stackId: Long): Flow<LoadingState<MemoStack>> {
         return getStackUseCase(stackId)
     }
 
-    fun updateStackInDb(stack: Stack?) {
+    fun updateStackInDb(stack: MemoStack?) {
         viewModelScope.launch {
             stack?.let {
                 updateStackUseCase(stack)

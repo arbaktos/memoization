@@ -1,5 +1,6 @@
 package com.example.android.memoization.data.repository
 
+import android.util.Log
 import com.example.android.memoization.data.database.MemoDao
 import com.example.android.memoization.data.database.StackEntity
 import com.example.android.memoization.data.database.StackWithWords
@@ -8,6 +9,7 @@ import javax.inject.Inject
 
 class StackRepository @Inject constructor(private val memoDao: MemoDao){
 
+    private val TAG = "StackRepository"
     fun getStacksWithWords(): Flow<List<StackWithWords>> {
         return memoDao.getStacksWithWords()
     }
@@ -17,6 +19,7 @@ class StackRepository @Inject constructor(private val memoDao: MemoDao){
     }
 
     suspend fun deleteStackFomDb(stackId: Long) {
+        Log.d(TAG, "deleteStackFomDb: ")
         memoDao.deleteStackFomDb(stackId)
     }
 

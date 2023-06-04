@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
 import com.example.android.memoization.domain.model.Folder
 import com.example.android.memoization.data.repository.FolderRepository
-import com.example.android.memoization.domain.model.Stack
+import com.example.android.memoization.domain.model.MemoStack
 import javax.inject.Inject
 
 interface GetFoldersWithStackUseCase {
@@ -26,7 +26,7 @@ class GetFoldersWithStackUseCaseImpl @Inject constructor(
                         folderId = folderWithStacks.folderEntity.folderId,
                         stacks = folderWithStacks.stacks
                             .map { stackEntity ->
-                                Stack(
+                                MemoStack(
                                     name = stackEntity.name,
                                     numRep = stackEntity.numRep,
                                     stackId = stackEntity.stackId,
