@@ -4,7 +4,7 @@
     <string name="add_new_stack">Add new stack</string>
     <string name="ok">Ok</string>
     <string name="cancel">Cancel</string>
-    <string name="new_stack_name">Name of the new stack</string>
+    <string name="new_stack_name">New stack name</string>
     <string name="stack_complete">Stack complete!</string>
     <string name="pin_stack">Pin this stack</string>
     <string name="add_wordpair">Add new wordpair</string>
@@ -27,4 +27,6 @@
     <string name="easy">Easy\n</string>
     <string name="hard">Hard\n</string>
     <string name="wrong">Wrong\n</string>
+    <string name="edit_stack_desc">Edit memo stack</string>
+    <string name="create_first_stack">Create your first stack</string>
 </resources>

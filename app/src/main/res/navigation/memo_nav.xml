@@ -2,7 +2,7 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/memo_nav"
-    app:startDestination="@id/folderScreenFragment">
+    app:startDestination="@id/splashFragment">
 
     <fragment
         android:id="@+id/folderScreenFragment"
@@ -60,5 +60,13 @@
         <argument
             android:name="wpArg"
             app:argType="com.example.android.memoization.utils.NewPairNavArgs" />
+    </fragment>
+    <fragment
+        android:id="@+id/splashFragment"
+        android:name="com.example.android.memoization.ui.splash.SplashFragment"
+        android:label="SplashFragment" >
+        <action
+            android:id="@+id/action_splashFragment_to_folderScreenFragment"
+            app:destination="@id/folderScreenFragment" />
     </fragment>
 </navigation>

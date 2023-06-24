@@ -1,5 +1,7 @@
 package com.example.android.memoization.ui.features.stackscreen
 
+import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.Data
@@ -8,6 +10,7 @@ import androidx.work.WorkManager
 //import com.example.android.memoization.data.SessionState.currentStack
 import com.example.android.memoization.domain.model.MemoStack
 import com.example.android.memoization.domain.model.WordPair
+import com.example.android.memoization.domain.usecases.DeleteWordPairUseCase
 import com.example.android.memoization.domain.usecases.GetStackUseCase
 import com.example.android.memoization.domain.usecases.UpdateStackUseCase
 import com.example.android.memoization.utils.LoadingState
@@ -23,12 +26,15 @@ import javax.inject.Inject
 class StackViewModel @Inject constructor(
     private val updateStackUseCase: UpdateStackUseCase,
     private val getStackUseCase: GetStackUseCase,
-    private val workManager: WorkManager
+    private val workManager: WorkManager,
+    private val deleteWordPairUseCase: DeleteWordPairUseCase
 ) : ViewModel() {
 
+    val showEditStackDialog = MutableStateFlow(false)
     fun cancelDelayDeletionWork(wordPair: WordPair) {
         workManager.cancelAllWorkByTag("${wordPair.wordPairId}")
     }
+
 
     fun delayDeletionWordPair(wordPair: WordPair) {
         val inputData = Data.Builder()
@@ -57,4 +63,14 @@ class StackViewModel @Inject constructor(
         }
     }
 
+    fun deleteWordPairFromDb(wordPair: WordPair) {
+        viewModelScope.launch {
+            deleteWordPairUseCase(wordPair)
+        }
+    }
+
+    fun showEditStackDialog(toShow: Boolean) {
+        showEditStackDialog.value = toShow
+        Log.d(TAG, "showEditStackDialog: to Show $toShow")
+    }
 }

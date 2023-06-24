@@ -5,32 +5,24 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material.SnackbarDefaults.backgroundColor
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Brush.Companion.verticalGradient
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.Transparent
-import androidx.compose.ui.graphics.Color.Companion.White
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,11 +30,15 @@ import androidx.constraintlayout.compose.ExperimentalMotionApi
 import androidx.constraintlayout.compose.MotionLayout
 import androidx.constraintlayout.compose.MotionScene
 import androidx.constraintlayout.compose.layoutId
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.android.memoization.R
+import com.example.android.memoization.domain.model.MemoStack
+import com.example.android.memoization.ui.features.stackscreen.StackViewModel
 
 @OptIn(ExperimentalMotionApi::class)
 @Composable
-fun MotionAppBar(lazyScrollState: LazyListState, stackName: String) {
+fun MotionAppBar(lazyScrollState: LazyListState, stackName: String, viewmodel: StackViewModel = hiltViewModel()) {
 
     val context = LocalContext.current
     val motionScene = remember {
@@ -62,35 +58,37 @@ fun MotionAppBar(lazyScrollState: LazyListState, stackName: String) {
         targetValue = if (lazyScrollState.firstVisibleItemIndex == 0) 36 else 20,
         tween(500)
     )
-
-    // handle composables within motion layout just like xml, first is always on bottom
-
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
+//    var showEditStackDialog = remember { mutableStateOf(false) }
 
         MotionLayout(
             motionScene = MotionScene(content = motionScene),
             progress = progress,
             modifier = Modifier
                 .fillMaxWidth()
-                .background(backgroundColor)
+                .background(Color.White)
                 .height(motionHeight)
         ) {
 
-            Box(
-                modifier = Modifier
-                    .layoutId("box")
-                    .background(colors.onPrimary)
-            )
-
-            Text(
-                text = stackName,
-                fontSize = motionTextSize.sp,
-                fontWeight = if (progress == 1f) FontWeight.Light else FontWeight.Bold,
-                color = colors.onSecondary,
-                modifier = Modifier.layoutId("user_name").padding(start = 30.dp),
-            )
+            Row(
+                modifier = Modifier.padding(top = 30.dp),
+            ) {
+                Text(
+                    text = stackName,
+                    fontSize = motionTextSize.sp,
+                    fontWeight = if (progress == 1f) FontWeight.Light else FontWeight.Bold,
+                    color = colors.onSecondary,
+                    modifier = Modifier
+                        .padding(start = 30.dp)
+                )
+                Icon(
+                    imageVector = Icons.Outlined.Edit,
+                    contentDescription = context.getString(R.string.edit_stack_desc),
+                    modifier = Modifier
+                        .clickable {
+                            viewmodel.showEditStackDialog(true)
+                        }
+                        .padding(start = 16.dp)
+                )
+            }
         }
-    }
 }
