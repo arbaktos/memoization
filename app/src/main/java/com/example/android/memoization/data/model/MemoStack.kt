@@ -1,5 +1,7 @@
-package com.example.android.memoization.domain.model
+package com.example.android.memoization.data.model
 
+import org.intellij.lang.annotations.Language
+import ru.vasilisasycheva.translation.api.LanguageItem
 import java.util.*
 
 data class MemoStack(
@@ -9,9 +11,9 @@ data class MemoStack(
     var hasWords: Boolean = false,
     var stackId: Long = 0,
     override var isVisible: Boolean = true,
-    var pinned: Boolean = false
-//    val language1: Language,
-//    val language2: Language,
+    var pinned: Boolean = false,
+    val fromLanguage: LanguageItem? = null,
+    val toLanguage: LanguageItem? = null,
 ) : DismissableItem {
 
     fun prepareStack(): MemoStack {

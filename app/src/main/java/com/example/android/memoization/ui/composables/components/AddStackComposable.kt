@@ -14,9 +14,8 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import com.example.android.memoization.R
-import com.example.android.memoization.domain.model.Folder
-import com.example.android.memoization.domain.model.MemoStack
-import com.example.android.memoization.ui.composables.AddStackTextField
+import com.example.android.memoization.data.model.Folder
+import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.ui.features.folderscreen.FolderViewModel
 import kotlinx.coroutines.launch
 

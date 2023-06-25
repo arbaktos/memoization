@@ -11,11 +11,3 @@ data class WordTranslationRequest (
     val enableTransliteration: Boolean = false
 )
 
-data class WordTranslationResponse(
-    val err: String?,
-    @SerializedName("result")
-    val translation: String,
-    val sourceTransliteration: String = "",
-    val targetTransliteration: String = ""
-)
-

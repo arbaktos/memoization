@@ -34,10 +34,13 @@ import com.example.android.memoization.ui.theme.MemoizationTheme
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.data.api.WordTranslationRequest
-import com.example.android.memoization.domain.model.WordPair
+import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.extensions.ConnectionState
 import com.example.android.memoization.extensions.currentConnectivityState
 import com.example.android.memoization.ui.composables.*
+import com.example.android.memoization.ui.composables.components.Fab
+import com.example.android.memoization.ui.composables.components.RowIcon
+import com.example.android.memoization.ui.composables.components.ShowToast
 import com.example.android.memoization.ui.features.stackscreen.DisplayStackError
 import com.example.android.memoization.ui.theme.AddTextFieldColors
 import com.example.android.memoization.utils.Empty_string
@@ -72,10 +75,6 @@ fun AddNewPairScreen(
     val toastMessage by viewModel.toastMessage.observeAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    val onTranslate = {
-        val request = WordTranslationRequest("en_EN", "ru_RU", viewModel.word1)
-        viewModel.getTranslation(request)
-    }
     toastMessage?.let {
         ShowToast(text = it)
     }
@@ -100,17 +99,16 @@ fun AddNewPairScreen(
         state = state,
         viewModel = viewModel,
         onAdd = onConfirm,
-        onTranslate = onTranslate,
+        onTranslate = { viewModel.getTranslation() }
     )
-
-
 }
 
 @Composable
 fun ShowNoConnectionToast() {
     val context = LocalContext.current
+    val toastText = stringResource(id = R.string.toast_no_connectio)
     val toast = {
-        Toast.makeText(context, "No Internet connection", Toast.LENGTH_SHORT)
+        Toast.makeText(context, toastText, Toast.LENGTH_SHORT)
             .show() //TODO extract resourse
     }
     when (context.currentConnectivityState) {

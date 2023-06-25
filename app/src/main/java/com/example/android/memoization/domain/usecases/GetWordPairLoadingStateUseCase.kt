@@ -1,7 +1,7 @@
 package com.example.android.memoization.domain.usecases
 
 import com.example.android.memoization.data.repository.WordPairRepository
-import com.example.android.memoization.domain.model.WordPair
+import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.utils.LoadingState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch

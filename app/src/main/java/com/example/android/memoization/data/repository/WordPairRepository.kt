@@ -2,7 +2,7 @@ package com.example.android.memoization.data.repository
 
 import com.example.android.memoization.data.database.MemoDao
 import com.example.android.memoization.data.database.WordPairEntity
-import com.example.android.memoization.domain.model.WordPair
+import com.example.android.memoization.data.model.WordPair
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject

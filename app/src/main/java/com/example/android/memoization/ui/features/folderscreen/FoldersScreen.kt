@@ -22,7 +22,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.ui.theme.MemoizationTheme
-import com.example.android.memoization.domain.model.MemoStack
+import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.ui.composables.*
 import com.example.android.memoization.ui.composables.components.*
 import com.example.android.memoization.ui.features.stackscreen.DisplayStackError

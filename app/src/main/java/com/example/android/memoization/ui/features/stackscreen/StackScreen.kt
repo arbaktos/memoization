@@ -16,7 +16,6 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -25,16 +24,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.extensions.checkLength
-import com.example.android.memoization.domain.model.WordPair
+import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.ui.composables.components.MotionAppBar
 import com.example.android.memoization.ui.composables.components.SwipeToDismiss
-import com.example.android.memoization.domain.model.MemoStack
-import com.example.android.memoization.ui.composables.AddNewCardFab
-import com.example.android.memoization.ui.composables.RowIcon
+import com.example.android.memoization.data.model.MemoStack
+import com.example.android.memoization.ui.composables.components.AddNewCardFab
+import com.example.android.memoization.ui.composables.components.RowIcon
 import com.example.android.memoization.ui.composables.components.AddStackAlertDialog
 import com.example.android.memoization.utils.LoadingState
 import com.example.android.memoization.utils.NewPairNavArgs
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.stateIn
 
 

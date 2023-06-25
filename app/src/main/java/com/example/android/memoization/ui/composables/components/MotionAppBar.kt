@@ -33,7 +33,7 @@ import androidx.constraintlayout.compose.layoutId
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.android.memoization.R
-import com.example.android.memoization.domain.model.MemoStack
+import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.ui.features.stackscreen.StackViewModel
 
 @OptIn(ExperimentalMotionApi::class)
