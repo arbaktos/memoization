@@ -25,17 +25,18 @@ import com.example.android.memoization.ui.theme.MemoButtonColors
 
 
 @Composable
-fun StackListItem(stack: MemoStack,
-                  modifier: Modifier = Modifier,
-                  onPin: () -> Unit = {},
-                  onAdd: () -> Unit= {},
-                  onPlay: () -> Unit = {},
-                  onClickRow: () -> Unit = {}
+fun StackListItem(
+    stack: MemoStack,
+    modifier: Modifier = Modifier,
+    onPin: () -> Unit = {},
+    onAdd: () -> Unit = {},
+    onPlay: () -> Unit = {},
+    onClickRow: () -> Unit = {}
 ) {
 
     val wordsToLearn = stack.words.filter { it.toLearn }
-    val unRepeatedPercent =  remember {
-        wordsToLearn.size.toFloat() /stack.words.size.toFloat() * 100
+    val unRepeatedPercent = remember {
+        wordsToLearn.size.toFloat() / stack.words.size.toFloat() * 100
     }
     Card(
         elevation = 8.dp,
@@ -50,14 +51,18 @@ fun StackListItem(stack: MemoStack,
     ) {
         Column(modifier = Modifier.padding(5.dp)) {
             Row(modifier = Modifier.weight(1f)) {
-                Column(modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 12.dp, top = 8.dp)) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 12.dp, top = 8.dp)
+                ) {
                     StackNameText(text = stack.name)
-                    if (stack.words.isNotEmpty()) Text(text =  stringResource(R.string.wrods_to_learn) + "${wordsToLearn.size}/${stack.words.size}",
+                    if (stack.words.isNotEmpty()) Text(
+                        text = stringResource(R.string.wrods_to_learn) + "${wordsToLearn.size}/${stack.words.size}",
                         color = Color.LightGray,
                         style = MaterialTheme.typography.caption,
-                        modifier = Modifier)
+                        modifier = Modifier
+                    )
                 }
                 PinPushIcon() { onPin() }
             }
@@ -68,28 +73,33 @@ fun StackListItem(stack: MemoStack,
         Column(
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.Bottom,
-            modifier = Modifier.height(IntrinsicSize.Max)) {
+            modifier = Modifier.height(IntrinsicSize.Max)
+        ) {
             if (wordsToLearn.isNotEmpty()) PlayIcon(tint = getPlayIconColor(unRepeatedPercent)) { onPlay() }
         }
     }
 }
 
 @Composable
-fun StackNameText(text: String) {
+fun StackNameText(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text,
         maxLines = 2,
         overflow = TextOverflow.Ellipsis,
         fontFamily = FontFamily.Serif,
         style = MaterialTheme.typography.h6,
+        modifier = modifier
     )
 }
 
 @Composable
-fun PinPushIcon(modifier: Modifier = Modifier, isPinned: Boolean = false,
-                onPin: () -> Unit) {
+fun PinPushIcon(
+    modifier: Modifier = Modifier, isPinned: Boolean = false,
+    onPin: () -> Unit
+) {
     val _isPinned = remember { mutableStateOf(isPinned) }
-    Icon(Icons.Outlined.PushPin, stringResource(R.string.pin_stack),
+    Icon(
+        Icons.Outlined.PushPin, stringResource(R.string.pin_stack),
         tint = if (_isPinned.value) MaterialTheme.colors.primary else Color.LightGray,
         modifier = modifier
             .size(30.dp)
@@ -102,23 +112,29 @@ fun PinPushIcon(modifier: Modifier = Modifier, isPinned: Boolean = false,
 }
 
 @Composable
-fun AddIconBtn(onAdd: () -> Unit) {
+fun AddIconBtn(modifier: Modifier = Modifier, onAdd: () -> Unit) {
 
-   OutlinedButton(onClick = onAdd,
+    OutlinedButton(
+        onClick = onAdd,
         shape = RoundedCornerShape(16.dp),
         colors = MemoButtonColors(),
+        modifier = modifier
     ) {
         Icon(Icons.Outlined.Add, stringResource(R.string.add_wordpair), tint = Color.Gray)
-       Spacer(modifier = Modifier.width(5.dp))
+        Spacer(modifier = Modifier.width(5.dp))
         Text(stringResource(R.string.add), color = Color.Gray)
 
     }
 }
 
 @Composable
-fun PlayIcon(tint: Color=MaterialTheme.colors.primary, onPlay: () -> Unit) {
+fun PlayIcon(
+    tint: Color = MaterialTheme.colors.primary,
+    modifier: Modifier = Modifier,
+    onPlay: () -> Unit
+) {
     Icon(Icons.Outlined.PlayCircleFilled, stringResource(R.string.add_wordpair),
-        tint= tint, modifier = Modifier
+        tint = tint, modifier = modifier
             .size(60.dp)
 //            .padding(8.dp)
             .clickable {

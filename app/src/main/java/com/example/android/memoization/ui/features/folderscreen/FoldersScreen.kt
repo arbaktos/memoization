@@ -1,6 +1,5 @@
 package com.example.android.memoization.ui.features.folderscreen
 
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,7 +25,6 @@ import com.example.android.memoization.ui.theme.MemoizationTheme
 import com.example.android.memoization.domain.model.MemoStack
 import com.example.android.memoization.ui.composables.*
 import com.example.android.memoization.ui.composables.components.*
-import com.example.android.memoization.ui.features.stackscreen.DisplayLoadingStack
 import com.example.android.memoization.ui.features.stackscreen.DisplayStackError
 import com.example.android.memoization.ui.theme.PlayColors
 import com.example.android.memoization.utils.LoadingState
@@ -34,9 +32,9 @@ import com.example.android.memoization.utils.NewPairNavArgs
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.lazy.items
-import androidx.compose.ui.composed
-import androidx.compose.ui.unit.IntSize
-import kotlinx.coroutines.delay
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 
 const val TDEBUG = "memoization_debug"
 
@@ -44,22 +42,30 @@ const val TDEBUG = "memoization_debug"
 @Composable
 fun FoldersScreen(
     navController: NavController,
-    folderViewModel: FolderViewModel = hiltViewModel()
+    viewModel: FolderViewModel = hiltViewModel()
 ) {
     val scaffoldState = rememberScaffoldState()
     var showAddStackDialog by remember { mutableStateOf(false) } //TODO move to viewmodel
     val scope = rememberCoroutineScope()
 
+
+    var state by remember { mutableStateOf<LoadingState<List<MemoStack>>>(LoadingState.Loading) }
+    LaunchedEffect(key1 = state, block = {
+        state = viewModel.stacksWithWords().stateIn(this).value
+    })
+
+    val stackExists = state is LoadingState.Collected && (state as LoadingState.Collected<List<MemoStack>>).content.isNotEmpty()
+
     MemoizationTheme {
         Scaffold(
             scaffoldState = scaffoldState,
             floatingActionButton = {
-                Fab(
-                    icon = Icons.Filled.Add,
-                    contentDesc = stringResource(R.string.add_new_stack),
-                    onClick = {
-                        showAddStackDialog = true
-                    })
+                if (stackExists) {
+                    CustomFab(
+                        onClick = {
+                            showAddStackDialog = true
+                        })
+                }
             },
             drawerContent = { MenuDrawer(scaffoldState) },
             topBar = {
@@ -70,14 +76,15 @@ fun FoldersScreen(
         ) { _ ->
 
             FolderScreenBodyContent(
-                viewModel = folderViewModel,
+                viewModel = viewModel,
                 navController = navController,
                 scaffoldState = scaffoldState,
                 update = { },
+                state = state
             )
             if (showAddStackDialog)
                 AddStackAlertDialog(
-                    viewModel = folderViewModel
+                    viewModel = viewModel
                 ) { showAddStackDialog = false }
         }
     }
@@ -89,15 +96,11 @@ fun FolderScreenBodyContent(
     viewModel: FolderViewModel,
     navController: NavController,
     scaffoldState: ScaffoldState,
+    state: LoadingState<List<MemoStack>>,
     update: () -> Unit,
 ) {
     val listState = rememberLazyListState()
 
-    var state by remember { mutableStateOf<LoadingState<List<MemoStack>>>(LoadingState.Loading) }
-    LaunchedEffect(key1 = state, block = {
-        delay(5000)
-        state = viewModel.stacksWithWords().stateIn(this).value
-    })
     when (state) {
         is LoadingState.Loading -> LoadingStackList()
         is LoadingState.Collected -> FolderColumn(
@@ -108,28 +111,15 @@ fun FolderScreenBodyContent(
             scaffoldState = scaffoldState,
             update = update
         )
+
         is LoadingState.Error -> DisplayStackError()
     }
 }
 
 @Composable
 private fun LoadingStackList() {
-    val dummyStack = MemoStack("Loading..")
-    Column() {
-        repeat(10) {
-
-            StackListItem(stack = dummyStack)
-        }
-    }
+    LinearProgressIndicator()
 }
-
-//fun Modifier.shimmerEffect(): Modifier = composed {
-//    var size by remember {
-//        mutableStateOf(IntSize.Zero)
-//    }
-//    val transition = rememberInfiniteTransition()
-//
-//}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -149,7 +139,8 @@ fun FolderColumn(
             .padding(8.dp)
             .fillMaxWidth()
     ) {
-        items(state.content, key = { stack -> stack.stackId },
+        items(
+            state.content, key = { stack -> stack.stackId },
         ) { stack ->
             SwipeToDismiss(
                 item = stack,
@@ -164,7 +155,7 @@ fun FolderColumn(
                 onDismiss = {
                     scope.launch {
                         val updatedStack = stack.copy(isVisible = false)
-                        viewModel.updateStackUseCase(updatedStack)
+                        viewModel.updateStack(updatedStack)
                         val snackBarResult =
                             scaffoldState.snackbarHostState.showOnStackDeleteSnackBar(stack)
 
@@ -183,8 +174,22 @@ fun FolderColumn(
                 }
             )
         }
+        item { Spacer(modifier = Modifier.padding(40.dp))}
+    }
+    if (state.content.isEmpty()) {
+        InvitationToCreateStack()
     }
 
+}
+@Preview
+@Composable
+fun InvitationToCreateStack() {
+    Card(elevation = 4.dp, border = BorderStroke(1.dp, color = Color.Gray), shape = RoundedCornerShape(8.dp)) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(16.dp)) {
+            Text(fontSize = 20.sp, text = stringResource(id = R.string.create_first_stack), modifier = Modifier.padding(bottom = 10.dp))
+            Image(painterResource(id = R.drawable.noun_create_1202533), stringResource(id = R.string.create_first_stack))
+        }
+    }
 }
 
 @Composable

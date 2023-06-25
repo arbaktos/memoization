@@ -15,6 +15,7 @@ import com.example.android.memoization.utils.STACK_ID
 import com.example.android.memoization.utils.TAG
 import com.example.android.memoization.utils.workers.StackDeletionWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
@@ -26,8 +27,9 @@ class FolderViewModel @Inject constructor(
     private val workManager: WorkManager,
     private val addStackUseCase: AddStackUseCase,
     private val getStacksWithWordsUseCase: GetStacksWithWordsUseCase,
-    val updateStackUseCase: UpdateStackUseCase
+    private val updateStackUseCase: UpdateStackUseCase
 ) : ViewModel() {
+
 
     //    var languages: ApiLanguage? = null
     val toastMessage = MutableLiveData<String>()
@@ -35,6 +37,12 @@ class FolderViewModel @Inject constructor(
 
     fun stacksWithWords(): Flow<LoadingState<List<MemoStack>>> {
         return getStacksWithWordsUseCase()
+    }
+
+    fun updateStack(stack: MemoStack) {
+        viewModelScope.launch(Dispatchers.IO) {
+            updateStackUseCase(stack)
+        }
     }
 
 

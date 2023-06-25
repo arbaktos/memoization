@@ -1,6 +1,7 @@
 package com.example.android.memoization.ui.features.stackscreen
 
 import android.content.Context
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -29,8 +31,10 @@ import com.example.android.memoization.ui.composables.components.SwipeToDismiss
 import com.example.android.memoization.domain.model.MemoStack
 import com.example.android.memoization.ui.composables.AddNewCardFab
 import com.example.android.memoization.ui.composables.RowIcon
+import com.example.android.memoization.ui.composables.components.AddStackAlertDialog
 import com.example.android.memoization.utils.LoadingState
 import com.example.android.memoization.utils.NewPairNavArgs
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.stateIn
 
 
@@ -41,7 +45,7 @@ fun StackScreen(
     viewModel: StackViewModel = hiltViewModel()
 ) {
     var state by remember { mutableStateOf<LoadingState<MemoStack>>(LoadingState.Loading) }
-    LaunchedEffect(key1 = true, block = {
+    LaunchedEffect(key1 = state, block = {
         state = viewModel.onStackIdReceived(stackId).stateIn(this).value
     })
 
@@ -53,11 +57,13 @@ fun StackScreen(
 }
 
 @Composable
-fun DisplayStackState(state: LoadingState<MemoStack>, navController: NavController) {
+fun DisplayStackState(state: LoadingState<MemoStack>, navController: NavController, viewmodel: StackViewModel = hiltViewModel()) {
+    var showDialog = viewmodel.showEditStackDialog.collectAsState().value
     when (state) {
         is LoadingState.Collected<MemoStack> -> DisplayStack(
             loadingState = state,
-            navController = navController
+            navController = navController,
+            showDialog = showDialog
         )
 
         is LoadingState.Loading -> DisplayLoadingStack()
@@ -67,42 +73,80 @@ fun DisplayStackState(state: LoadingState<MemoStack>, navController: NavControll
 
 @Composable
 fun DisplayStackError() {
-    Text(text =  "Error")
+    Text(text = "Error")
 }
 
 @Composable
 fun DisplayLoadingStack() {
-    Text("Loading...")
-}
-
-@Composable
-fun DisplayStack(
-    loadingState: LoadingState.Collected<MemoStack>,
-    navController: NavController,
-    viewModel: StackViewModel = hiltViewModel()
-) {
-    val scaffoldState = rememberScaffoldState()
-    val lazyListState = rememberLazyListState()
-
-    val currentStack = loadingState.content
-
     Scaffold(
         topBar = {
             MotionAppBar(
-                lazyScrollState = lazyListState,
-                stackName = currentStack.name ?: ""
+                lazyScrollState = rememberLazyListState(),
+                stackName = "Loading..."
             )
         },
         isFloatingActionButtonDocked = false,
         floatingActionButton = {
             Column() {
                 AddNewCardFab(
-                    onAdd = { navController
-                        .navigate(
-                            StackScreenFragmentDirections
-                                .actionStackScreenFragmentToNewPairFragment(
-                                    NewPairNavArgs.NewWordPair(stackId = currentStack.stackId)
-                                )) }
+                    onAdd = { }
+                )
+            }
+        },
+        content = { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding)) {
+                LinearProgressIndicator()
+            }
+        }
+    )
+}
+const val TAG = "DisplayStack"
+@Composable
+fun DisplayStack(
+    loadingState: LoadingState.Collected<MemoStack>,
+    navController: NavController,
+    viewModel: StackViewModel = hiltViewModel(),
+    showDialog: Boolean = false
+) {
+    val scaffoldState = rememberScaffoldState()
+    val lazyListState = rememberLazyListState()
+
+    val currentStack = loadingState.content
+
+
+    Log.d(TAG, "DisplayStack: $showDialog")
+
+
+    if (showDialog) {
+        AddStackAlertDialog(
+            viewModel = hiltViewModel(),
+            isEditMode = true,
+            stack = loadingState.content
+        ) {
+            viewModel.showEditStackDialog(false)
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            MotionAppBar(
+                lazyScrollState = lazyListState,
+                stackName = loadingState.content.name
+            )
+        },
+        isFloatingActionButtonDocked = false,
+        floatingActionButton = {
+            Column() {
+                AddNewCardFab(
+                    onAdd = {
+                        navController
+                            .navigate(
+                                StackScreenFragmentDirections
+                                    .actionStackScreenFragmentToNewPairFragment(
+                                        NewPairNavArgs.NewWordPair(stackId = currentStack.stackId)
+                                    )
+                            )
+                    }
                 )
 
                 StackFab(navController = navController, currentStack = currentStack)
@@ -112,7 +156,7 @@ fun DisplayStack(
         content = { innerPadding ->
             Box(modifier = Modifier.padding(innerPadding)) {
                 WordList(
-                    wordList = currentStack.words,
+                    wordList = loadingState.content.words,
                     viewModel = viewModel,
                     navController = navController,
                     onDelete = {},
@@ -159,6 +203,7 @@ fun StackFab(navController: NavController, currentStack: MemoStack?) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun WordList(
     wordList: List<WordPair>,
@@ -175,29 +220,33 @@ fun WordList(
         modifier = Modifier.fillMaxWidth(),
         state = listState
     ) {
-        items(wordList.reversed()) { wordPair ->
+        items(wordList.reversed(), key = { it.wordPairId }) { wordPair ->
             SwipeToDismiss(
                 item = wordPair,
                 dismissContent = {
                     WordPairListItem(
                         wordPair = wordPair,
-                        onEditNavigate = { navController.navigate(
-                            StackScreenFragmentDirections.actionStackScreenFragmentToNewPairFragment(
-                                NewPairNavArgs.EditPair(wordPair.wordPairId)
+                        onEditNavigate = {
+                            navController.navigate(
+                                StackScreenFragmentDirections.actionStackScreenFragmentToNewPairFragment(
+                                    NewPairNavArgs.EditPair(wordPair.wordPairId)
+                                )
                             )
-                        )},
+                        },
+                        modifier = Modifier.animateItemPlacement()
                     )
                 },
                 onDismiss = {
-                    when (scaffoldState.snackbarHostState.showOnDeleteSnackBar(wordPair, context)) {
-                        SnackbarResult.ActionPerformed -> {
-                            viewModel.cancelDelayDeletionWork(wordPair)
-                            wordPair.isVisible = true
-                            viewModel.updateStackInDb(currentStack)
-                            onDelete()
-                        }
-                        SnackbarResult.Dismissed -> viewModel.delayDeletionWordPair(wordPair)
-                    }
+                    viewModel.deleteWordPairFromDb(wordPair)
+//                    when (scaffoldState.snackbarHostState.showOnDeleteSnackBar(wordPair, context)) {
+//                        SnackbarResult.ActionPerformed -> {
+//                            viewModel.cancelDelayDeletionWork(wordPair)
+//                            wordPair.isVisible = true
+//                            viewModel.updateStackInDb(currentStack)
+//                            onDelete()
+//                        }
+//                        SnackbarResult.Dismissed -> viewModel.delayDeletionWordPair(wordPair)
+//                    }
                 }
             )
         }
@@ -209,11 +258,12 @@ fun WordList(
 fun WordPairListItem(
     wordPair: WordPair,
     onEditNavigate: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        elevation = 8.dp,
-        modifier = Modifier
+        elevation = 4.dp,
+        modifier = modifier
             .fillMaxWidth(0.9f)
             .padding(top = 4.dp, bottom = 4.dp)
             .clickable {
@@ -247,7 +297,10 @@ fun WordPairListItem(
     }
 }
 
-suspend fun SnackbarHostState.showOnDeleteSnackBar(wordPair: WordPair, context: Context): SnackbarResult {
+suspend fun SnackbarHostState.showOnDeleteSnackBar(
+    wordPair: WordPair,
+    context: Context
+): SnackbarResult {
     val result = this.showSnackbar(
         message = context.getString(R.string.confirm_deletion) + "${wordPair.word1}/${wordPair.word2}?",
         actionLabel = context.getString(R.string.undo),

@@ -2,6 +2,7 @@ package com.example.android.memoization.ui.composables
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -206,6 +207,17 @@ fun Fab(
             tint = MaterialTheme.colors.surface
         )
     }
+}
+
+@Composable
+fun CustomFab(onClick: () -> Unit) {
+    Image(
+        painter = painterResource(id = R.drawable.noun_create_1202533),
+        contentDescription = stringResource(R.string.add_new_stack),
+        modifier = Modifier.clickable {
+            onClick()
+        }
+    )
 }
 
 @Composable

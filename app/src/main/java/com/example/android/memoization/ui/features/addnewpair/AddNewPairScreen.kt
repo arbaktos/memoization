@@ -18,6 +18,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -198,6 +200,8 @@ fun UpperField(
     val text1 = rememberSaveable { mutableStateOf(editWord ?: Empty_string) }
     viewModel.word1 = text1.value
 
+    val focusRequester = remember { FocusRequester() }
+
     NewPairCard(
         modifier = modifier
             .padding(bottom = 8.dp),
@@ -208,8 +212,12 @@ fun UpperField(
                 text1.value = it
                 viewModel.word1 = it
             },
-            label = stringResource(R.string.word_to_learn)
+            label = stringResource(R.string.word_to_learn),
+            modifier = Modifier.focusRequester(focusRequester)
         )
+    }
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
     }
 }
 
@@ -262,7 +270,8 @@ fun NewPairTextField(
     onTextChange: (String) -> Unit,
     label: String,
     onClick: () -> Unit = {},
-    imeAction: ImeAction = ImeAction.Default
+    imeAction: ImeAction = ImeAction.Default,
+    modifier: Modifier = Modifier
 ) {
     OutlinedTextField(
         value = text,
@@ -277,6 +286,6 @@ fun NewPairTextField(
         keyboardActions = KeyboardActions(
             onDone = { onClick() }
         ),
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize()
     )
 }
