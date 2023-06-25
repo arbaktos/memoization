@@ -2,7 +2,7 @@ package com.example.android.memoization.domain.usecases
 
 import com.example.android.memoization.data.database.toStack
 import com.example.android.memoization.data.repository.StackRepository
-import com.example.android.memoization.domain.model.MemoStack
+import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.utils.LoadingState
 
 import kotlinx.coroutines.flow.Flow

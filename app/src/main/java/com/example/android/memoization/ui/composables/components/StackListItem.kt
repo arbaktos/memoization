@@ -19,7 +19,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.android.memoization.R
-import com.example.android.memoization.domain.model.MemoStack
+import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.ui.features.folderscreen.getPlayIconColor
 import com.example.android.memoization.ui.theme.MemoButtonColors
 

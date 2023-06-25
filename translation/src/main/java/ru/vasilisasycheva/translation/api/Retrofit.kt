@@ -1,20 +1,19 @@
 package com.example.android.memoization.data.api
 
-import android.content.Context
-import android.content.SharedPreferences
-import com.example.android.memoization.R
-import com.example.android.memoization.utils.API_KEY
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import ru.vasilisasycheva.translation.utils.Constants.API_KEY
+import ru.vasilisasycheva.translation.utils.Constants.BASE_URL
+import ru.vasilisasycheva.translation.utils.Constants.HEADER_ACCEPT
+import ru.vasilisasycheva.translation.utils.Constants.HEADER_ACCEPT_VALUE
+import ru.vasilisasycheva.translation.utils.Constants.HEADER_AUTH
 import javax.inject.Inject
-import javax.inject.Singleton
 
 
 @Module
@@ -34,15 +33,15 @@ class Retrofit @Inject constructor(){
         .addInterceptor(httpLoginIntercepror)
         .addInterceptor { chain ->
             val request = chain.request().newBuilder()
-                .addHeader("Authorization", API_KEY)
-                .addHeader("accept","application/json").build()
+                .addHeader(HEADER_AUTH, API_KEY)
+                .addHeader(HEADER_ACCEPT, HEADER_ACCEPT_VALUE).build()
             return@addInterceptor chain.proceed(request)
         }
         .build()
 
     @Provides
     fun retrofit() = Retrofit.Builder()
-        .baseUrl("https://api-b2b.backenster.com/")
+        .baseUrl(BASE_URL)
         .client(okHttpClient())
         .addConverterFactory(GsonConverterFactory.create())
         .build()

@@ -4,8 +4,8 @@ import android.util.Log
 import androidx.lifecycle.*
 import androidx.work.*
 //import com.example.android.memoization.data.SessionState
-import com.example.android.memoization.domain.model.Folder
-import com.example.android.memoization.domain.model.MemoStack
+import com.example.android.memoization.data.model.Folder
+import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.domain.usecases.AddStackUseCase
 import com.example.android.memoization.domain.usecases.GetStacksWithWordsUseCase
 import com.example.android.memoization.domain.usecases.UpdateStackUseCase
@@ -18,20 +18,23 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import ru.vasilisasycheva.translation.api.LanguageItem
+import ru.vasilisasycheva.translation.data.TranslationState
+import ru.vasilisasycheva.translation.domain.TranslationRepo
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 
 @HiltViewModel
 class FolderViewModel @Inject constructor(
-    private val workManager: WorkManager,
-    private val addStackUseCase: AddStackUseCase,
-    private val getStacksWithWordsUseCase: GetStacksWithWordsUseCase,
-    private val updateStackUseCase: UpdateStackUseCase
+    val workManager: WorkManager,
+    val addStackUseCase: AddStackUseCase,
+    val getStacksWithWordsUseCase: GetStacksWithWordsUseCase,
+    val updateStackUseCase: UpdateStackUseCase,
+    val languageRepo: TranslationRepo
 ) : ViewModel() {
 
-
-    //    var languages: ApiLanguage? = null
+    var languages: List<LanguageItem>? = null
     val toastMessage = MutableLiveData<String>()
 
 
@@ -43,6 +46,10 @@ class FolderViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             updateStackUseCase(stack)
         }
+    }
+
+    private fun updateToastMessage(message: String) {
+        toastMessage.value = message
     }
 
 
@@ -68,19 +75,20 @@ class FolderViewModel @Inject constructor(
         }
     }
 
-    fun getLanguages() {
+    fun getLanguagesList(): List<LanguageItem>? {
         viewModelScope.launch {
-//            val response = repository.getLanguages()
-//            if (response.isSuccessful) {
-//                languages = response.body()
-//
-//            } else {
-//                Log.d(
-//                    "viewmodel",
-//                    "response was not a success ${response.errorBody().toString()}"
-//                )
-//            }
+            val response = languageRepo.getLanguages()
+            when (response) {
+                is TranslationState.Loading -> ShowLoadingLangs()
+                is TranslationState.Error -> response.errorMessage?.let {updateToastMessage(response.errorMessage!!) }
+                is TranslationState.Success<*> -> languages = response.content as List<LanguageItem>
+            }
         }
+        return languages
     }
+
+}
+
+fun ShowLoadingLangs() {
 
 }

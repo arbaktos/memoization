@@ -2,8 +2,8 @@ package com.example.android.memoization.domain.usecases
 
 import com.example.android.memoization.data.database.StackEntity
 import com.example.android.memoization.data.repository.FolderRepository
-import com.example.android.memoization.domain.model.Folder
-import com.example.android.memoization.domain.model.MemoStack
+import com.example.android.memoization.data.model.Folder
+import com.example.android.memoization.data.model.MemoStack
 import javax.inject.Inject
 
 interface AddStackUseCase {

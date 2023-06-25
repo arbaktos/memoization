@@ -1,9 +1,5 @@
-package com.example.android.memoization.data.api
+package ru.vasilisasycheva.translation.api
 
-data class ApiLanguage(
-    val err: String?,
-    val result: List<LanguageItem>
-)
 
 data class LanguageItem(
     val full_code: String,
@@ -15,8 +11,3 @@ data class LanguageItem(
     val rtl: String,
     val modes: List<LanguageMode>
 )
-
-class LanguageMode (
-    val name: String,
-    var value: Boolean
-        )

@@ -12,15 +12,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.android.memoization.R
-import com.example.android.memoization.domain.model.MemoStack
+import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.ui.theme.MemoButtonColors
 import com.example.android.memoization.ui.theme.MemoTextFieldColors
 import com.example.android.memoization.ui.features.folderscreen.FolderViewModel
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AddStackAlertDialog(
-    viewModel: FolderViewModel,
+    viewModel: FolderViewModel = hiltViewModel(),
     isEditMode: Boolean = false,
     stack: MemoStack? = null,
     onClick: () -> Unit,
@@ -32,11 +34,14 @@ fun AddStackAlertDialog(
             stack = MemoStack(text)
         )
     }
+    val languages = viewModel.getLanguagesList()
     Dialog(onDismissRequest = { onClick() }) {
-        Card(shape = RoundedCornerShape(4.dp),
+        Card(
+            shape = RoundedCornerShape(4.dp),
             elevation = 4.dp,
         ) {
-            Column(modifier = Modifier.padding(16.dp)){
+
+            Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = stringResource(id = R.string.new_stack_name)
                 )
@@ -49,6 +54,22 @@ fun AddStackAlertDialog(
                         shape = RoundedCornerShape(4.dp)
                     )
                 )
+                var langMenuVisible by remember { mutableStateOf(false) }
+                Chip(
+                    onClick = { langMenuVisible = !langMenuVisible },
+                    border = BorderStroke(1.dp, if (langMenuVisible) Color.Black else Color.Gray),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ChipDefaults.chipColors(
+                        backgroundColor = Color.Transparent)
+                ) {
+                    Text(text = stringResource(R.string.chip_language_stack),
+                    color = if (langMenuVisible) Color.Black else Color.Gray)
+                }
+                Row() {
+                    Column() {
+
+                    }
+                }
                 Row() {
                     Button(
                         onClick = {

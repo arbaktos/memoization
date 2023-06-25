@@ -1,9 +1,9 @@
 package com.example.android.memoization.data.database
 
 import androidx.room.*
-import com.example.android.memoization.domain.model.MemoStack
-import com.example.android.memoization.domain.model.WordPair
-import com.example.android.memoization.domain.model.WordStatus
+import com.example.android.memoization.data.model.MemoStack
+import com.example.android.memoization.data.model.WordPair
+import com.example.android.memoization.data.model.WordStatus
 import com.example.android.memoization.utils.FOLDER_TABLE
 import com.example.android.memoization.utils.STACK_TABLE
 import java.util.*

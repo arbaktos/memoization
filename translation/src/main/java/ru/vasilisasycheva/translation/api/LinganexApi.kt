@@ -2,6 +2,7 @@ package com.example.android.memoization.data.api
 
 import retrofit2.Response
 import retrofit2.http.*
+import ru.vasilisasycheva.translation.api.WordTranslationResponse
 
 
 interface LinganexApi {

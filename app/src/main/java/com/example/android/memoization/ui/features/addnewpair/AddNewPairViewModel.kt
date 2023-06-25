@@ -1,36 +1,43 @@
 package com.example.android.memoization.ui.features.addnewpair
 
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.android.memoization.data.api.WordTranslationRequest
-import com.example.android.memoization.domain.model.WordPair
+import com.example.android.memoization.data.model.MemoStack
+import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.domain.usecases.AddWordPairUseCase
+import com.example.android.memoization.domain.usecases.GetStackUseCase
 import com.example.android.memoization.domain.usecases.GetWordPairLoadingStateUseCase
 import com.example.android.memoization.domain.usecases.UpdateWordPairUseCase
 import com.example.android.memoization.utils.Default_folder_ID
 import com.example.android.memoization.utils.Empty_string
 import com.example.android.memoization.utils.LoadingState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import ru.vasilisasycheva.translation.data.TranslationState
+import ru.vasilisasycheva.translation.domain.TranslationRepo
 import javax.inject.Inject
 
 @HiltViewModel
 class AddNewPairViewModel @Inject constructor(
     val updateWordPairUseCase: UpdateWordPairUseCase,
     val addWordPairUseCase: AddWordPairUseCase,
-    val getWordPairLoadingState: GetWordPairLoadingStateUseCase
+    val getWordPairLoadingState: GetWordPairLoadingStateUseCase,
+    val translationRepo: TranslationRepo,
+    val getStackUseCase: GetStackUseCase
 ) : ViewModel() {
 
     private val TAG = "AddNewPairViewModel"
     private var currentWordPair: WordPair? = null
     var word1 = Empty_string
     var word2 = Empty_string
+    private var frLang: String? = null
+    private var tLang: String? = null
     private var currentStackId: Long? = null
+    var translationLoading = false
     val toastMessage = MutableLiveData<String>()
 
     fun updateWordPairInDb() {
@@ -41,6 +48,18 @@ class AddNewPairViewModel @Inject constructor(
             updateWordPairUseCase(newWordPair)
         }
         clearWordPair()
+    }
+
+    fun getTranslation(fromLang: String? = frLang, toLang: String? = tLang, wordToTranslate: String = word1) {
+        Log.d(TAG, "getTranslation: ")
+        if (fromLang != null && toLang != null) {
+            val translationState =  translationRepo.getTranslation(fromLang, toLang, wordToTranslate)
+            when (translationState) {
+                is TranslationState.Loading -> translationLoading = true
+                is TranslationState.Success<*> -> word2 = translationState.content as String
+                is TranslationState.Error -> updateToastMessage(translationState.errorMessage ?: "Error")
+            }
+        }
     }
 
     fun addWordPairToDb() {
@@ -67,6 +86,10 @@ class AddNewPairViewModel @Inject constructor(
 
     }
 
+    private fun updateToastMessage(message: String) {
+        toastMessage.value = message
+    }
+
     fun setCurrentWordPair(wordPair: WordPair?) {
         currentWordPair = wordPair
 //        word1 = wordPair?.word1 ?: ""
@@ -75,6 +98,20 @@ class AddNewPairViewModel @Inject constructor(
 
     fun setCurrentStackId(stackId: Long) {
         currentStackId = stackId
+        viewModelScope.launch(Dispatchers.IO) {
+            setLanguages(stackId)
+        }
+    }
+
+    private fun setLanguages(stackId: Long? = currentStackId) {
+        stackId?.let{
+            getStackUseCase(currentStackId!!).map { state ->
+                if (state is LoadingState.Collected<MemoStack>) {
+                    frLang = state.content.fromLanguage?.codeName
+                    tLang = state.content.toLanguage?.codeName
+                }
+            }
+        }
     }
 
 
@@ -82,32 +119,5 @@ class AddNewPairViewModel @Inject constructor(
         currentWordPair = null
         word1 = ""
         word2 = ""
-    }
-
-
-    fun getTranslation(request: WordTranslationRequest) {
-        viewModelScope.launch {
-//            try {
-//                val response = repository.getTranslation(request)
-//                val code = response.code()
-//                when (code) {
-//                    in 100..300 -> {
-//
-//                        updateState {
-//                            it.copy(
-//                                word2 = response.body()?.translation
-//                            )
-//                        }// check the https codes to be correct for successful and erroneous messages
-//                    }
-//                    in 300..599 -> {
-//                        toastMessage.value = response.errorBody()
-//                            .toString() // there is err field in response.body() - check which one is working
-//                    }
-//                }
-//            } catch (e: Exception) {
-//                toastMessage.value = "Error accessing the Internet"
-//            }
-
-        }
     }
 }

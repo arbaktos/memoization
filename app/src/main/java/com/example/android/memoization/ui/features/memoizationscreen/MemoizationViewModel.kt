@@ -3,7 +3,7 @@ package com.example.android.memoization.ui.features.memoizationscreen
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.android.memoization.domain.model.WordPair
+import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.domain.usecases.GetStackUseCase
 import com.example.android.memoization.domain.usecases.UpdateWordPairUseCase
 import com.example.android.memoization.utils.LoadingState

@@ -8,8 +8,8 @@ import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 //import com.example.android.memoization.data.SessionState.currentStack
-import com.example.android.memoization.domain.model.MemoStack
-import com.example.android.memoization.domain.model.WordPair
+import com.example.android.memoization.data.model.MemoStack
+import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.domain.usecases.DeleteWordPairUseCase
 import com.example.android.memoization.domain.usecases.GetStackUseCase
 import com.example.android.memoization.domain.usecases.UpdateStackUseCase

@@ -1,4 +1,4 @@
-package com.example.android.memoization.ui.composables
+package com.example.android.memoization.ui.composables.components
 
 import android.util.Log
 import android.widget.Toast
@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.android.memoization.R
-import com.example.android.memoization.domain.model.Folder
+import com.example.android.memoization.data.model.Folder
 import com.example.android.memoization.ui.features.folderscreen.TDEBUG
 
 @Composable
@@ -228,96 +228,3 @@ fun AddNewCardFab(onAdd: () -> Unit) {
         onClick = onAdd
     )
 }
-
-
-@Composable
-fun NoCardsCard(visible: Boolean, onClick: () -> Unit) {
-    val isVisible = remember {
-        mutableStateOf(visible)
-    }
-    if (isVisible.value) {
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            AlertDialog(
-                buttons = {
-                    Button(
-                        modifier = Modifier.padding(16.dp),
-                        onClick = {
-                            isVisible.value = false
-                            onClick()
-                        },
-                        content = { Text("Ok") }
-                    )
-                },
-                title = { Text("Nothing to learn now") },
-                text = { Text("You've learned everything for today, try tomorrow!") },
-                onDismissRequest = onClick
-            )
-
-
-        }
-    }
-
-
-}
-
-//@ExperimentalComposeUiApi
-//@Composable
-//fun Folder(
-//    folder: Folder,
-//    navContoller: NavController,
-//    viewModel: FolderViewModel,
-//    onAddStack: () -> Unit,
-//    stackViewModel: StackViewModel
-//) {
-//    Column {
-//        var isOpen by remember { mutableStateOf(folder.isOpen) }
-//        folder.isOpen = isOpen
-//
-//        val _onAddStack = {
-//            onAddStack()
-//            folder.isOpen = true
-//        }
-//
-//        Row(
-//            verticalAlignment = Alignment.CenterVertically,
-//            modifier = Modifier
-//                .clip(RoundedCornerShape(4.dp))
-//        ) {
-//            val iconSrouce = if (isOpen) Icons.Filled.FolderOpen else Icons.Filled.Folder
-//            RowIcon(
-//                iconSource = iconSrouce,
-//                contentDesc = "Folder icon",
-//                onClick = { isOpen = !isOpen }
-//            )
-//
-//            H5TextBox(
-//                text = folder.name,
-//                modifier = Modifier
-//                    .weight(1f)
-//                    .clickable { isOpen = !isOpen }
-//            )
-//            if (folder.stacks.isNotEmpty()) {
-//                RowIcon(
-//                    iconSource = Icons.Filled.PlayCircle,
-//                    contentDesc = "Start folder memorization",
-//                )
-//            }
-//        }
-//        if (isOpen) {
-//            folder.stacks.forEach {
-//                Row {
-//                    Spacer(modifier = Modifier.width(30.dp))
-//                    ShowStack(
-//                        stack = it,
-//                        viewModel = viewModel,
-//                        navController = navContoller,
-//                        stackViewModel = stackViewModel
-//                    )
-//                }
-//            }
-//        }
-//    }
-//}
