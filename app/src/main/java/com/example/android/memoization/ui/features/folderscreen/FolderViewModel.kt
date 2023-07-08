@@ -2,17 +2,19 @@ package com.example.android.memoization.ui.features.folderscreen
 
 import android.util.Log
 import androidx.lifecycle.*
+import androidx.navigation.NavController
 import androidx.work.*
-//import com.example.android.memoization.data.SessionState
 import com.example.android.memoization.data.model.Folder
 import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.domain.usecases.AddStackUseCase
 import com.example.android.memoization.domain.usecases.GetStacksWithWordsUseCase
 import com.example.android.memoization.domain.usecases.UpdateStackUseCase
+import com.example.android.memoization.ui.features.BaseViewModel
 import com.example.android.memoization.utils.Default_folder_ID
+import com.example.android.memoization.utils.Empty_folder_name
 import com.example.android.memoization.utils.LoadingState
+import com.example.android.memoization.utils.NewPairNavArgs
 import com.example.android.memoization.utils.STACK_ID
-import com.example.android.memoization.utils.TAG
 import com.example.android.memoization.utils.workers.StackDeletionWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -27,31 +29,20 @@ import javax.inject.Inject
 
 @HiltViewModel
 class FolderViewModel @Inject constructor(
-    val workManager: WorkManager,
+    private val workManager: WorkManager,
+    private val languageRepo: TranslationRepo,
     val addStackUseCase: AddStackUseCase,
     val getStacksWithWordsUseCase: GetStacksWithWordsUseCase,
     val updateStackUseCase: UpdateStackUseCase,
-    val languageRepo: TranslationRepo
-) : ViewModel() {
+) : BaseViewModel<LoadingState<List<MemoStack>>, Any>() {
 
     var languages: List<LanguageItem>? = null
-    val toastMessage = MutableLiveData<String>()
-
-
-    fun stacksWithWords(): Flow<LoadingState<List<MemoStack>>> {
-        return getStacksWithWordsUseCase()
-    }
 
     fun updateStack(stack: MemoStack) {
         viewModelScope.launch(Dispatchers.IO) {
             updateStackUseCase(stack)
         }
     }
-
-    private fun updateToastMessage(message: String) {
-        toastMessage.value = message
-    }
-
 
     fun deleteStackWithDelay(stack: MemoStack) {
         val inputData = Data.Builder()
@@ -65,11 +56,13 @@ class FolderViewModel @Inject constructor(
     }
 
     fun cancelStackDeletion(stack: MemoStack) {
-        Log.d(TAG, "cancelStackDeletion: ")
         workManager.cancelAllWorkByTag(stack.stackId.toString())
     }
 
-    fun addStackToFolder(folder: Folder = Folder("empty", folderId = Default_folder_ID), stack: MemoStack) {
+    fun addStackToFolder(
+        folder: Folder = Folder(Empty_folder_name, folderId = Default_folder_ID),
+        stack: MemoStack
+    ) {
         viewModelScope.launch {
             addStackUseCase(folder, stack)
         }
@@ -80,15 +73,45 @@ class FolderViewModel @Inject constructor(
             val response = languageRepo.getLanguages()
             when (response) {
                 is TranslationState.Loading -> ShowLoadingLangs()
-                is TranslationState.Error -> response.errorMessage?.let {updateToastMessage(response.errorMessage!!) }
+                is TranslationState.Error -> response.errorMessage?.let {
+                    updateToastMessage(
+                        response.errorMessage!!
+                    )
+                }
+
                 is TranslationState.Success<*> -> languages = response.content as List<LanguageItem>
             }
         }
         return languages
     }
 
-}
+    fun onNavigateTosStack(navController: NavController, stackId: Long) {
+        navController.navigate(FolderScreenFragmentDirections.toStackScreen(stackId))
+    }
 
-fun ShowLoadingLangs() {
+    fun onAddNewWord(navController: NavController, stackId: Long) {
+        navController.navigate(
+            FolderScreenFragmentDirections.toNewPairFragment(
+                NewPairNavArgs.NewWordPair(stackId = stackId)
+            )
+        )
+    }
+
+    override fun getDataToDisplay(): Flow<LoadingState<List<MemoStack>>> {
+        return getStacksWithWordsUseCase()
+    }
+
+    override fun onBackPressed(navController: NavController) {
+
+    }
+
+    override fun setArgs(args: Any?) {
+    }
+
+    fun ShowLoadingLangs() {}
+    fun onPlayWords(navController: NavController, stackId: Long) {
+        val action = FolderScreenFragmentDirections.toMemorization(stackId)
+        navController.navigate(action)
+    }
 
 }

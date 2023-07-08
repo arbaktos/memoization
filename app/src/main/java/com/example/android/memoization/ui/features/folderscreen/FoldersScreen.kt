@@ -29,7 +29,6 @@ import com.example.android.memoization.ui.composables.components.*
 import com.example.android.memoization.ui.features.stackscreen.DisplayStackError
 import com.example.android.memoization.ui.theme.PlayColors
 import com.example.android.memoization.utils.LoadingState
-import com.example.android.memoization.utils.NewPairNavArgs
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.lazy.items
@@ -49,17 +48,17 @@ fun FoldersScreen(
     var showAddStackDialog by remember { mutableStateOf(false) } //TODO move to viewmodel
     val scope = rememberCoroutineScope()
 
-
     var state by remember { mutableStateOf<LoadingState<List<MemoStack>>>(LoadingState.Loading) }
     LaunchedEffect(key1 = state, block = {
-        state = viewModel.stacksWithWords().stateIn(this).value
+        state = viewModel.getDataToDisplay().stateIn(this).value
     })
 
     BackHandler {
-
+        viewModel.onBackPressed(navController)
     }
 
-    val stackExists = state is LoadingState.Collected && (state as LoadingState.Collected<List<MemoStack>>).content.isNotEmpty()
+    val stackExists =
+        state is LoadingState.Collected && (state as LoadingState.Collected<List<MemoStack>>).content.isNotEmpty()
 
     MemoizationTheme {
         Scaffold(
@@ -84,7 +83,6 @@ fun FoldersScreen(
                 viewModel = viewModel,
                 navController = navController,
                 scaffoldState = scaffoldState,
-                update = { },
                 state = state
             )
             if (showAddStackDialog)
@@ -102,7 +100,6 @@ fun FolderScreenBodyContent(
     navController: NavController,
     scaffoldState: ScaffoldState,
     state: LoadingState<List<MemoStack>>,
-    update: () -> Unit,
 ) {
     val listState = rememberLazyListState()
 
@@ -110,11 +107,10 @@ fun FolderScreenBodyContent(
         is LoadingState.Loading -> LoadingStackList()
         is LoadingState.Collected -> FolderColumn(
             listState = listState,
-            state = state as LoadingState.Collected<List<MemoStack>>,
+            state = state,
             viewModel = viewModel,
             navController = navController,
             scaffoldState = scaffoldState,
-            update = update
         )
 
         is LoadingState.Error -> DisplayStackError()
@@ -133,8 +129,7 @@ fun FolderColumn(
     state: LoadingState.Collected<List<MemoStack>>,
     viewModel: FolderViewModel,
     navController: NavController,
-    scaffoldState: ScaffoldState,
-    update: () -> Unit
+    scaffoldState: ScaffoldState
 ) {
     val scope = rememberCoroutineScope()
     LazyColumn(
@@ -152,8 +147,14 @@ fun FolderColumn(
                 dismissContent = {
                     ShowStack(
                         stack = stack,
-                        viewModel = viewModel,
-                        navController = navController,
+                        onAddNewWord = { viewModel.onAddNewWord(navController, stack.stackId) },
+                        onNavigateToStack = {
+                            viewModel.onNavigateTosStack(
+                                navController,
+                                stack.stackId
+                            )
+                        },
+                        onPlayWords = { viewModel.onPlayWords(navController, stack.stackId) },
                         modifier = Modifier.animateItemPlacement()
                     )
                 },
@@ -165,34 +166,42 @@ fun FolderColumn(
                             scaffoldState.snackbarHostState.showOnStackDeleteSnackBar(stack)
 
                         when (snackBarResult) {
-                            SnackbarResult.ActionPerformed -> {
-                                //Undo action performed
-                                viewModel.cancelStackDeletion(stack)
-                                update()
-                            }
-
-                            SnackbarResult.Dismissed -> {
-                                viewModel.deleteStackWithDelay(stack)
-                            }
+                            SnackbarResult.ActionPerformed -> viewModel.cancelStackDeletion(stack)
+                            SnackbarResult.Dismissed -> viewModel.deleteStackWithDelay(stack)
                         }
                     }
                 }
             )
         }
-        item { Spacer(modifier = Modifier.padding(40.dp))}
+        item { Spacer(modifier = Modifier.padding(40.dp)) }
     }
     if (state.content.isEmpty()) {
         InvitationToCreateStack()
     }
 
 }
+
 @Preview
 @Composable
 fun InvitationToCreateStack() {
-    Card(elevation = 4.dp, border = BorderStroke(1.dp, color = Color.Gray), shape = RoundedCornerShape(8.dp)) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(16.dp)) {
-            Text(fontSize = 20.sp, text = stringResource(id = R.string.create_first_stack), modifier = Modifier.padding(bottom = 10.dp))
-            Image(painterResource(id = R.drawable.noun_create_1202533), stringResource(id = R.string.create_first_stack))
+    Card(
+        elevation = 4.dp,
+        border = BorderStroke(1.dp, color = Color.Gray),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                fontSize = 20.sp,
+                text = stringResource(id = R.string.create_first_stack),
+                modifier = Modifier.padding(bottom = 10.dp)
+            )
+            Image(
+                painterResource(id = R.drawable.noun_create_1202533),
+                stringResource(id = R.string.create_first_stack)
+            )
         }
     }
 }
@@ -200,31 +209,21 @@ fun InvitationToCreateStack() {
 @Composable
 fun ShowStack(
     stack: MemoStack,
-    viewModel: FolderViewModel,
-    navController: NavController,
+    onPlayWords: () -> Unit,
+    onNavigateToStack: () -> Unit,
+    onAddNewWord: () -> Unit,
     modifier: Modifier
 ) {
     StackListItem(
         stack = stack,
         modifier = modifier,
-        onPlay = {
-            val action = FolderScreenFragmentDirections.toMemorization(stack.stackId)
-            navController.navigate(action)
-        },
-        onAdd = {
-            navController.navigate(
-                FolderScreenFragmentDirections.toNewPairFragment(
-                    NewPairNavArgs.NewWordPair(stackId = stack.stackId)
-                )
-            )
-        },
+        onPlay = onPlayWords,
+        onAdd = onAddNewWord,
         onPin = {
-//            stackViewModel.onPin()//TODO
+//            viewModel.onPin()//TODO
             animateToTop()
         },
-        onClickRow = {
-            navController.navigate(FolderScreenFragmentDirections.toStackScreen(stack.stackId))
-        }
+        onClickRow = onNavigateToStack
     )
 }
 

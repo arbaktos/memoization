@@ -34,7 +34,6 @@ fun AddStackAlertDialog(
             stack = MemoStack(text)
         )
     }
-    val languages = viewModel.getLanguagesList()
     Dialog(onDismissRequest = { onClick() }) {
         Card(
             shape = RoundedCornerShape(4.dp),

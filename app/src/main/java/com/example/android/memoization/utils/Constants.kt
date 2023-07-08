@@ -1,6 +1,7 @@
 package com.example.android.memoization.utils
 
 const val Default_folder_ID: Long = -1 // Hard Coded ID for stacks which are created outside of all folders
+const val Empty_folder_name = "empty"
 const val WP_ID = "wpId"
 const val STACK_ID = "stackId"
 const val NOTIFICATION_ID = 1
