@@ -35,6 +35,7 @@ import com.example.android.memoization.utils.LoadingState
 import com.example.android.memoization.utils.NewPairNavArgs
 import kotlinx.coroutines.flow.stateIn
 
+const val TAG = "DisplayStack"
 
 @Composable
 fun StackScreen(
@@ -42,13 +43,15 @@ fun StackScreen(
     stackId: Long,
     viewModel: StackViewModel = hiltViewModel()
 ) {
+    viewModel.setArgs(stackId)
     var state by remember { mutableStateOf<LoadingState<MemoStack>>(LoadingState.Loading) }
+
     LaunchedEffect(key1 = state, block = {
-        state = viewModel.onStackIdReceived(stackId).stateIn(this).value
+        state = viewModel.getDataToDisplay().stateIn(this).value
     })
 
     BackHandler {
-        navController.navigate(StackScreenFragmentDirections.toFolderScreenFragment())
+        viewModel.onBackPressed(navController)
     }
 
     DisplayStackState(state = state, navController = navController)
@@ -56,7 +59,7 @@ fun StackScreen(
 
 @Composable
 fun DisplayStackState(state: LoadingState<MemoStack>, navController: NavController, viewmodel: StackViewModel = hiltViewModel()) {
-    var showDialog = viewmodel.showEditStackDialog.collectAsState().value
+    val showDialog = viewmodel.showEditStackDialog.collectAsState().value
     when (state) {
         is LoadingState.Collected<MemoStack> -> DisplayStack(
             loadingState = state,
@@ -80,7 +83,7 @@ fun DisplayLoadingStack() {
         topBar = {
             MotionAppBar(
                 lazyScrollState = rememberLazyListState(),
-                stackName = "Loading..."
+                stackName = stringResource(id = R.string.loading)
             )
         },
         isFloatingActionButtonDocked = false,
@@ -98,7 +101,8 @@ fun DisplayLoadingStack() {
         }
     )
 }
-const val TAG = "DisplayStack"
+
+
 @Composable
 fun DisplayStack(
     loadingState: LoadingState.Collected<MemoStack>,

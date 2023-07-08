@@ -4,8 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.android.memoization.data.model.WordPair
+import com.example.android.memoization.data.repository.WordPairRepository
 import com.example.android.memoization.domain.usecases.GetStackUseCase
-import com.example.android.memoization.domain.usecases.UpdateWordPairUseCase
 import com.example.android.memoization.utils.LoadingState
 import com.example.android.memoization.utils.TAG
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,7 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MemoizationViewModel @Inject constructor(
-    val updateWordPairUseCase: UpdateWordPairUseCase,
+    val repository: WordPairRepository,
     val getStackUseCase: GetStackUseCase
 ) : ViewModel() {
 
@@ -25,7 +25,7 @@ class MemoizationViewModel @Inject constructor(
     private fun updateWordPairDateInDb(wordPair: WordPair?) {
         wordPair?.let {
             viewModelScope.launch {
-                updateWordPairUseCase(wordPair.copy(lastRep = Date(System.currentTimeMillis())))
+                repository.updateWordPairInDb(wordPair.copy(lastRep = Date(System.currentTimeMillis())))
             }
         }
     }

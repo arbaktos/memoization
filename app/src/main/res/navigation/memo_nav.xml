@@ -64,7 +64,8 @@
     <fragment
         android:id="@+id/splashFragment"
         android:name="com.example.android.memoization.ui.splash.SplashFragment"
-        android:label="SplashFragment" >
+        android:label="SplashFragment"
+        >
         <action
             android:id="@+id/action_splashFragment_to_folderScreenFragment"
             app:destination="@id/folderScreenFragment" />

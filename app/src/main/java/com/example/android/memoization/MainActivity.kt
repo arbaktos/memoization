@@ -36,8 +36,6 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
-//    @Inject
-//    lateinit var folderViewModel: FolderViewModel
     private lateinit var navController: NavController
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,73 +43,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         val navHost = supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
         navController = navHost.navController
-
-//        lifecycleScope.launch {
-//            val prefs = this@MainActivity.getPreferences(Context.MODE_PRIVATE)
-//            val timeToTrigger = prefs.getLong(TRIGGER_AT_LABEL, SystemClock.elapsedRealtime()) // TODO how to set to 12 pm by default
-//            val repeatInterval = prefs.getLong(REPEAT_INTERVAl_LABEL, day_in_millis)
-////            setUpNotifications(timeToTrigger, repeatInterval)
-//        }
-
-//        setContent {
-//            val navControllerObj = rememberNavController()
-//
-//            MemoizationTheme {
-//                NavHost(
-//                    navController = navControllerObj,
-//                    startDestination = NavScreens.Folders.route
-//                ) {
-//                    composable(NavScreens.Folders.route) {
-//                        FoldersScreen(
-//                            navController = navControllerObj,
-//                            folderViewModel = folderViewModel
-//                        )
-//                    }
-//
-//                    composable(NavScreens.NewFolder.route) {
-//                        NewFolderScreen(
-//                            navController = navControllerObj
-//                        )
-//                    }
-//
-//                    composable(
-//                        NavScreens.Stack.route,
-//                    ) {
-//                        StackScreen(
-//                            navController = navControllerObj
-//                        )
-//                    }
-//
-//                    composable(
-//                        NavScreens.NewPair.route,
-//                        arguments = listOf(navArgument(IS_EDIT_MODE) {
-//                            type = NavType.BoolType
-//                            defaultValue = false
-//                        })
-//                    ) {
-//                        AddNewPairScreen(
-//                            navController = navControllerObj,
-//                            editMode = it.arguments?.getBoolean(IS_EDIT_MODE) ?: false
-//                        )
-//                    }
-//
-//                    composable(
-//                        "${NavScreens.Memorization.route}?$STACK_ID={$STACK_ID}",
-//                        arguments = listOf(
-//                            navArgument(STACK_ID) {
-//                                type = NavType.LongType
-//                            }
-//                        )
-//                    )
-//                    { backStackEntry ->
-//                        MemorizationScreen(
-//                            navController = navControllerObj,
-//                            stackId = backStackEntry.arguments?.getLong(STACK_ID) ?: 0
-//                        )
-//                    }
-//                }
-//            }
-//        }
     }
 
 //    private fun setUpNotifications(timeToTrigger: Long, repeatInterval: Long) {

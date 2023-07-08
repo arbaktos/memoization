@@ -14,7 +14,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Done
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -157,13 +156,16 @@ fun AddStackTextField(
 
 @Composable
 fun ShowToast(
-    text: String
+    text: Any?
 ) {
-    val context = LocalContext.current
-    val toast = {
-        Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
+    text?.let {
+        val context = LocalContext.current
+        when (text) {
+            is String -> Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
+            is Int -> Toast.makeText(context, context.getString(text), Toast.LENGTH_SHORT).show()
+            else -> {}
+        }
     }
-    toast()
 }
 
 @Composable

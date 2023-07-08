@@ -1,20 +1,22 @@
 package com.example.android.memoization.ui.features.addnewpair
 
-import android.util.Log
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
+import com.example.android.memoization.R
 import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.data.model.WordPair
-import com.example.android.memoization.domain.usecases.AddWordPairUseCase
+import com.example.android.memoization.data.repository.WordPairRepository
 import com.example.android.memoization.domain.usecases.GetStackUseCase
 import com.example.android.memoization.domain.usecases.GetWordPairLoadingStateUseCase
-import com.example.android.memoization.domain.usecases.UpdateWordPairUseCase
+import com.example.android.memoization.ui.features.BaseViewModel
 import com.example.android.memoization.utils.Default_folder_ID
 import com.example.android.memoization.utils.Empty_string
 import com.example.android.memoization.utils.LoadingState
+import com.example.android.memoization.utils.NewPairNavArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import ru.vasilisasycheva.translation.data.TranslationState
@@ -23,80 +25,94 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddNewPairViewModel @Inject constructor(
-    val updateWordPairUseCase: UpdateWordPairUseCase,
-    val addWordPairUseCase: AddWordPairUseCase,
+    private val repo: WordPairRepository,
+    private val translationRepo: TranslationRepo,
     val getWordPairLoadingState: GetWordPairLoadingStateUseCase,
-    val translationRepo: TranslationRepo,
     val getStackUseCase: GetStackUseCase
-) : ViewModel() {
+) : BaseViewModel<LoadingState<WordPair>, NewPairNavArgs>() {
 
-    private val TAG = "AddNewPairViewModel"
-    private var currentWordPair: WordPair? = null
     var word1 = Empty_string
     var word2 = Empty_string
-    private var frLang: String? = null
-    private var tLang: String? = null
-    private var currentStackId: Long? = null
     var translationLoading = false
-    val toastMessage = MutableLiveData<String>()
 
-    fun updateWordPairInDb() {
-        Log.d(TAG, "updateWordPairInDb: word1: $word1 word2: $word2")
-        val newWordPair = currentWordPair!!.copy(word1 = word1, word2 = word2)
+    private var currentWpId: Long? = null
+    private var currentWordPair: WordPair? = null
+    private var currentStackId: Long? = null
+    private var fromLanguage: String? = null
+    private var toLanguage: String? = null
+    private var editMode: Boolean = false
+    private val TAG = "AddNewPairViewModel"
 
-        viewModelScope.launch {
-            updateWordPairUseCase(newWordPair)
-        }
-        clearWordPair()
-    }
-
-    fun getTranslation(fromLang: String? = frLang, toLang: String? = tLang, wordToTranslate: String = word1) {
-        Log.d(TAG, "getTranslation: ")
-        if (fromLang != null && toLang != null) {
-            val translationState =  translationRepo.getTranslation(fromLang, toLang, wordToTranslate)
+    fun onTranslate(
+        wordToTranslate: String = word1
+    ) {
+        if (fromLanguage != null && toLanguage != null) {
+            val translationState = translationRepo.getTranslation(fromLanguage!!, toLanguage!!, wordToTranslate)
             when (translationState) {
                 is TranslationState.Loading -> translationLoading = true
                 is TranslationState.Success<*> -> word2 = translationState.content as String
-                is TranslationState.Error -> updateToastMessage(translationState.errorMessage ?: "Error")
+                is TranslationState.Error -> updateToastMessage(
+                    translationState.errorMessage ?: R.string.translation_error
+                )
             }
         }
     }
 
-    fun addWordPairToDb() {
-        composeWordPairFromWords(word1, word2)
+    fun onConfirm() {
+        val wordPairToSubmit = composeWordPairFromWords(word1, word2)
         viewModelScope.launch {
-            addWordPairUseCase(currentWordPair!!)
+            if (editMode) repo.updateWordPairInDb(wordPairToSubmit)
+            else repo.insertWordPair(wordPairToSubmit)
         }
         clearWordPair()
     }
 
-    private fun composeWordPairFromWords(word1: String, word2: String) {
-        if (currentWordPair == null) {
-            currentWordPair = WordPair(
+    override fun setArgs(args: NewPairNavArgs?) {
+        args?.let {
+            editMode = args.editMode
+            when (args) {
+                is NewPairNavArgs.NewWordPair -> {
+                    setCurrentStackId(args.stackId)
+                }
+
+                is NewPairNavArgs.EditPair -> {
+                    currentWpId = args.wordPairId
+                }
+            }
+        } ?: updateToastMessage(R.string.someting_went_wrong)
+
+    }
+
+    override fun getDataToDisplay(): Flow<LoadingState<WordPair>> {
+        return if (currentWpId != null) getWordPairLoadingState(currentWpId!!).map {
+            if (it is LoadingState.Collected<WordPair>){
+                currentWordPair = it.content
+                currentStackId = currentWordPair!!.stackId
+                setLanguages(currentStackId)
+            }
+            it
+        }
+        else emptyFlow()
+    }
+
+    override fun onBackPressed(navController: NavController) {
+        navController.popBackStack()
+        clearWordPair()
+    }
+
+    private fun composeWordPairFromWords(word1: String, word2: String): WordPair {
+        return currentWordPair?.copy(
+            word1 = word1,
+            word2 = word2
+        )
+            ?: WordPair(
                 stackId = currentStackId ?: Default_folder_ID,
                 word1 = word1,
                 word2 = word2
             )
-        } else {
-            currentWordPair = currentWordPair?.copy(
-                word1 = word1,
-                word2 = word2
-            )
-        }
-
     }
 
-    private fun updateToastMessage(message: String) {
-        toastMessage.value = message
-    }
-
-    fun setCurrentWordPair(wordPair: WordPair?) {
-        currentWordPair = wordPair
-//        word1 = wordPair?.word1 ?: ""
-//        word2 = wordPair?.word2 ?: ""
-    }
-
-    fun setCurrentStackId(stackId: Long) {
+    private fun setCurrentStackId(stackId: Long) {
         currentStackId = stackId
         viewModelScope.launch(Dispatchers.IO) {
             setLanguages(stackId)
@@ -104,20 +120,21 @@ class AddNewPairViewModel @Inject constructor(
     }
 
     private fun setLanguages(stackId: Long? = currentStackId) {
-        stackId?.let{
+        stackId?.let {
             getStackUseCase(currentStackId!!).map { state ->
                 if (state is LoadingState.Collected<MemoStack>) {
-                    frLang = state.content.fromLanguage?.codeName
-                    tLang = state.content.toLanguage?.codeName
+                    fromLanguage = state.content.fromLanguage?.codeName
+                    toLanguage = state.content.toLanguage?.codeName
                 }
             }
         }
     }
 
-
-    fun clearWordPair() {
+    private fun clearWordPair() {
         currentWordPair = null
-        word1 = ""
-        word2 = ""
+        word1 = Empty_string
+        word2 = Empty_string
     }
+
+
 }

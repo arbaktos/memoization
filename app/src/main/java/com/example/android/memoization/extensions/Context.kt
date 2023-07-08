@@ -3,7 +3,7 @@ package com.example.android.memoization.extensions
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import androidx.core.content.ContextCompat.getSystemService
+import android.widget.Toast
 
 val Context.currentConnectivityState: ConnectionState
     get() {
@@ -11,6 +11,18 @@ val Context.currentConnectivityState: ConnectionState
             getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         return getCurrentConnectivityState(connectivityManager)
     }
+
+fun Context.showToast(stringId: Int?) {
+    if (stringId != null) {
+        Toast.makeText(this, this.resources.getText(stringId), Toast.LENGTH_SHORT).show()
+    }
+}
+
+fun Context.showToast(message: String) {
+    if (message.isNotBlank()) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+}
 
 private fun getCurrentConnectivityState(
     connectivityManager: ConnectivityManager

@@ -27,16 +27,10 @@ class NewPairFragment : Fragment() {
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
-                when (newPairNavArgs) {
-                    is NewPairNavArgs.NewWordPair -> AddNewPairScreen(
-                        navController = findNavController(),
-                        args = newPairNavArgs
-                    )
-                    is NewPairNavArgs.EditPair -> AddNewPairScreen(
-                        navController = findNavController(),
-                        args = newPairNavArgs
-                    )
-                }
+                AddNewPairScreen(
+                navController = findNavController(),
+                args = newPairNavArgs
+                )
             }
         }
     }

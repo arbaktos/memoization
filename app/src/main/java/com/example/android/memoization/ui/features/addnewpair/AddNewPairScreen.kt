@@ -1,7 +1,5 @@
 package com.example.android.memoization.ui.features.addnewpair
 
-import android.util.Log
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
@@ -21,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -33,10 +30,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.android.memoization.ui.theme.MemoizationTheme
 import androidx.navigation.NavController
 import com.example.android.memoization.R
-import com.example.android.memoization.data.api.WordTranslationRequest
 import com.example.android.memoization.data.model.WordPair
-import com.example.android.memoization.extensions.ConnectionState
-import com.example.android.memoization.extensions.currentConnectivityState
 import com.example.android.memoization.ui.composables.*
 import com.example.android.memoization.ui.composables.components.Fab
 import com.example.android.memoization.ui.composables.components.RowIcon
@@ -46,7 +40,6 @@ import com.example.android.memoization.ui.theme.AddTextFieldColors
 import com.example.android.memoization.utils.Empty_string
 import com.example.android.memoization.utils.LoadingState
 import com.example.android.memoization.utils.NewPairNavArgs
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -59,62 +52,34 @@ fun AddNewPairScreen(
     viewModel: AddNewPairViewModel = hiltViewModel(),
     args: NewPairNavArgs
 ) {
-    Log.d(TAG, "AddNewPairScreen: editmode ${args.editMode}")
+    viewModel.setArgs(args)
     var state by remember { mutableStateOf<LoadingState<WordPair>>(LoadingState.Loading) }
-    when(args) {
-        is NewPairNavArgs.NewWordPair -> {
-            viewModel.setCurrentStackId(args.stackId)
-        }
-        is NewPairNavArgs.EditPair -> {
-            LaunchedEffect(key1 = state, block = {
-                delay(400)
-                state = viewModel.getWordPairLoadingState(args.wordPairId).stateIn(this).value
-            })
-        }
-    }
+
+    LaunchedEffect(key1 = state, block = {
+        state = viewModel.getDataToDisplay().stateIn(this).value
+    })
+
     val toastMessage by viewModel.toastMessage.observeAsState()
+    ShowToast(text = toastMessage)
+
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    toastMessage?.let {
-        ShowToast(text = it)
-    }
-
     val onConfirm: () -> Unit = {
-        if (args.editMode) {
-            viewModel.updateWordPairInDb()
-        } else {
-            viewModel.addWordPairToDb()
-        }
-        viewModel.clearWordPair()
+        viewModel.onConfirm()
         keyboardController?.hide()
         navController.popBackStack()
     }
 
     BackHandler(enabled = true) {
-        navController.popBackStack()
-        viewModel.clearWordPair()
+        viewModel.onBackPressed(navController)
     }
 
     ShowNewPairScreenState(
         state = state,
         viewModel = viewModel,
         onAdd = onConfirm,
-        onTranslate = { viewModel.getTranslation() }
+        onTranslate = { viewModel.onTranslate() }
     )
-}
-
-@Composable
-fun ShowNoConnectionToast() {
-    val context = LocalContext.current
-    val toastText = stringResource(id = R.string.toast_no_connectio)
-    val toast = {
-        Toast.makeText(context, toastText, Toast.LENGTH_SHORT)
-            .show() //TODO extract resourse
-    }
-    when (context.currentConnectivityState) {
-        is ConnectionState.Unavailable -> toast()
-        else -> ""
-    }
 }
 
 @Composable
@@ -128,13 +93,13 @@ fun ShowNewPairScreenState(
         is LoadingState.Loading -> DisplayWordPair(
             wordPair = null,
             viewModel = viewModel,
-            onAdd = onAdd,
+            onConfirm = onAdd,
             onTranslate = onTranslate
         )
         is LoadingState.Collected -> DisplayWordPair(
             wordPair = state.content,
             viewModel = viewModel,
-            onAdd = onAdd,
+            onConfirm = onAdd,
             onTranslate = onTranslate
         )
         is LoadingState.Error -> DisplayStackError()
@@ -146,16 +111,15 @@ fun DisplayWordPair(
     wordPair: WordPair?,
     viewModel: AddNewPairViewModel,
     onTranslate: () -> Unit,
-    onAdd: () -> Unit
+    onConfirm: () -> Unit
 ) {
-    viewModel.setCurrentWordPair(wordPair)
     MemoizationTheme {
         Scaffold(
             floatingActionButton = {
                 Fab(
                     icon = Icons.Filled.Done,
-                    contentDesc = stringResource(R.string.fab_transformation_scrim_behavior),
-                    onClick = onAdd
+                    contentDesc = "",
+                    onClick = onConfirm
                 )
             }
         ) { _ ->
@@ -182,7 +146,7 @@ fun DisplayWordPair(
                         }
                     })
                 BottomField(
-                    modifier = Modifier.weight(1f), onAdd, viewModel, word2 =  wordPair?.word2
+                    modifier = Modifier.weight(1f), onConfirm, viewModel, word2 =  wordPair?.word2
                 )
             }
         }
@@ -227,7 +191,7 @@ fun BottomField(
     translation: String? = null,
     word2: String?
 ) {
-    val textVal = translation ?: (word2 ?: Empty_string)
+    val textVal = translation ?: word2 ?: Empty_string
     val text2 = rememberSaveable { mutableStateOf(textVal) }
     viewModel.word2 = text2.value
 

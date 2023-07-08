@@ -1,5 +1,6 @@
 package com.example.android.memoization.ui.features.folderscreen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -53,6 +54,10 @@ fun FoldersScreen(
     LaunchedEffect(key1 = state, block = {
         state = viewModel.stacksWithWords().stateIn(this).value
     })
+
+    BackHandler {
+
+    }
 
     val stackExists = state is LoadingState.Collected && (state as LoadingState.Collected<List<MemoStack>>).content.isNotEmpty()
 

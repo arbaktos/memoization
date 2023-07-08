@@ -9,16 +9,16 @@ import javax.inject.Inject
 
 class WordPairRepository @Inject constructor(private val memoDao: MemoDao) {
 
-    suspend fun insertWordPair(wordPairEntity: WordPairEntity) {
-        memoDao.insertWordPair(wordPairEntity)
+    suspend fun insertWordPair(wordPair: WordPair) {
+        memoDao.insertWordPair(wordPair.toWordPairEntity())
     }
 
     suspend fun deleteWordPairFromDb(wordPairEntity: WordPairEntity) {
         memoDao.deleteWordPairFromDb(wordPairEntity)
     }
 
-    suspend fun updateWordPairInDb(wordPairEntity: WordPairEntity) {
-        memoDao.updateWordPair(wordPairEntity)
+    suspend fun updateWordPairInDb(wordPair: WordPair) {
+        memoDao.updateWordPair(wordPair.toWordPairEntity())
     }
 
     fun getWordPairById(wpId: Long): Flow<WordPair> {

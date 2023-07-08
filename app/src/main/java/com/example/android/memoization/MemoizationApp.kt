@@ -27,7 +27,7 @@ class MemoizationApp @Inject constructor() : Application(), Configuration.Provid
 }
 
 class MemoWorkerFactory @Inject constructor(
-    val deleteStackUseCase: DeleteStackUseCase,
+    private val deleteStackUseCase: DeleteStackUseCase,
     val memoDao: MemoDao
 ) : WorkerFactory() {
     override fun createWorker(

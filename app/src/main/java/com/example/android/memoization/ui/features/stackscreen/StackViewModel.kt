@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -13,6 +14,7 @@ import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.domain.usecases.DeleteWordPairUseCase
 import com.example.android.memoization.domain.usecases.GetStackUseCase
 import com.example.android.memoization.domain.usecases.UpdateStackUseCase
+import com.example.android.memoization.ui.features.BaseViewModel
 import com.example.android.memoization.utils.LoadingState
 import com.example.android.memoization.utils.WP_ID
 import com.example.android.memoization.utils.workers.WordPairInvisibleWorker
@@ -24,44 +26,19 @@ import javax.inject.Inject
 
 @HiltViewModel
 class StackViewModel @Inject constructor(
-    private val updateStackUseCase: UpdateStackUseCase,
     private val getStackUseCase: GetStackUseCase,
-    private val workManager: WorkManager,
     private val deleteWordPairUseCase: DeleteWordPairUseCase
-) : ViewModel() {
+) : BaseViewModel<LoadingState<MemoStack>, Long>() {
+
+    private var stackId: Long? = null
 
     val showEditStackDialog = MutableStateFlow(false)
-    fun cancelDelayDeletionWork(wordPair: WordPair) {
-        workManager.cancelAllWorkByTag("${wordPair.wordPairId}")
-    }
 
-
-    fun delayDeletionWordPair(wordPair: WordPair) {
-        val inputData = Data.Builder()
-            .putLong(WP_ID, wordPair.wordPairId).build()
-        val workDelayDeleteRequest = OneTimeWorkRequestBuilder<WordPairInvisibleWorker>()
-            .addTag("${wordPair.wordPairId}")
-            .setInputData(inputData)
-            .setInitialDelay(3, TimeUnit.SECONDS)
-            .build()
-        workManager.enqueue(workDelayDeleteRequest)
-    }
 
     fun onPin() {
-//        updateStackInDb()
+//       TODO  updateStackInDb()
     }
 
-    fun onStackIdReceived(stackId: Long): Flow<LoadingState<MemoStack>> {
-        return getStackUseCase(stackId)
-    }
-
-    fun updateStackInDb(stack: MemoStack?) {
-        viewModelScope.launch {
-            stack?.let {
-                updateStackUseCase(stack)
-            }
-        }
-    }
 
     fun deleteWordPairFromDb(wordPair: WordPair) {
         viewModelScope.launch {
@@ -72,5 +49,18 @@ class StackViewModel @Inject constructor(
     fun showEditStackDialog(toShow: Boolean) {
         showEditStackDialog.value = toShow
         Log.d(TAG, "showEditStackDialog: to Show $toShow")
+    }
+
+    override fun getDataToDisplay(): Flow<LoadingState<MemoStack>> {
+        return stackId?.let {  getStackUseCase(stackId!!) }
+            ?: emptyFlow()
+    }
+
+    override fun onBackPressed(navController: NavController) {
+        navController.popBackStack()
+    }
+
+    override fun setArgs(args: Long?) {
+        stackId = args
     }
 }
