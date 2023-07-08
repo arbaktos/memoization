@@ -58,7 +58,11 @@ fun StackScreen(
 }
 
 @Composable
-fun DisplayStackState(state: LoadingState<MemoStack>, navController: NavController, viewmodel: StackViewModel = hiltViewModel()) {
+fun DisplayStackState(
+    state: LoadingState<MemoStack>,
+    navController: NavController,
+    viewmodel: StackViewModel = hiltViewModel()
+) {
     val showDialog = viewmodel.showEditStackDialog.collectAsState().value
     when (state) {
         is LoadingState.Collected<MemoStack> -> DisplayStack(
@@ -115,10 +119,6 @@ fun DisplayStack(
 
     val currentStack = loadingState.content
 
-
-    Log.d(TAG, "DisplayStack: $showDialog")
-
-
     if (showDialog) {
         AddStackAlertDialog(
             viewModel = hiltViewModel(),
@@ -138,7 +138,7 @@ fun DisplayStack(
         },
         isFloatingActionButtonDocked = false,
         floatingActionButton = {
-            Column() {
+            Column {
                 AddNewCardFab(
                     onAdd = {
                         navController
@@ -150,7 +150,6 @@ fun DisplayStack(
                             )
                     }
                 )
-
                 StackFab(navController = navController, currentStack = currentStack)
             }
         },
@@ -161,10 +160,7 @@ fun DisplayStack(
                     wordList = loadingState.content.words,
                     viewModel = viewModel,
                     navController = navController,
-                    onDelete = {},
-                    scaffoldState = scaffoldState,
                     listState = lazyListState,
-                    currentStack = currentStack
                 )
             }
         }
@@ -211,12 +207,8 @@ fun WordList(
     wordList: List<WordPair>,
     viewModel: StackViewModel,
     navController: NavController,
-    onDelete: () -> Unit,
-    scaffoldState: ScaffoldState,
     listState: LazyListState,
-    currentStack: MemoStack?
 ) {
-    val context = LocalContext.current
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth(),
@@ -240,15 +232,6 @@ fun WordList(
                 },
                 onDismiss = {
                     viewModel.deleteWordPairFromDb(wordPair)
-//                    when (scaffoldState.snackbarHostState.showOnDeleteSnackBar(wordPair, context)) {
-//                        SnackbarResult.ActionPerformed -> {
-//                            viewModel.cancelDelayDeletionWork(wordPair)
-//                            wordPair.isVisible = true
-//                            viewModel.updateStackInDb(currentStack)
-//                            onDelete()
-//                        }
-//                        SnackbarResult.Dismissed -> viewModel.delayDeletionWordPair(wordPair)
-//                    }
                 }
             )
         }
