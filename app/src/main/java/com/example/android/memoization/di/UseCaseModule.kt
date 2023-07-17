@@ -11,10 +11,6 @@ import dagger.hilt.components.SingletonComponent
 abstract class UseCaseModule {
 
     @Binds
-    abstract fun bindFoldersWithStackFromDbUseCase(useCaseImpl: GetFoldersWithStackUseCaseImpl):
-            GetFoldersWithStackUseCase
-
-    @Binds
     abstract fun bindGetStackUseCase(useCaseImpl: GetStackUseCaseImpl):
             GetStackUseCase
 

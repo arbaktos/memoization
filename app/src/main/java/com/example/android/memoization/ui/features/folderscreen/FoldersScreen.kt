@@ -1,5 +1,6 @@
 package com.example.android.memoization.ui.features.folderscreen
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -33,6 +34,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 
@@ -53,23 +55,19 @@ fun FoldersScreen(
         state = viewModel.getDataToDisplay().stateIn(this).value
     })
 
+    val toShowDialog = viewModel.showAddStackDialog.observeAsState(false)
     BackHandler {
         viewModel.onBackPressed(navController)
     }
-
-    val stackExists =
-        state is LoadingState.Collected && (state as LoadingState.Collected<List<MemoStack>>).content.isNotEmpty()
 
     MemoizationTheme {
         Scaffold(
             scaffoldState = scaffoldState,
             floatingActionButton = {
-                if (stackExists) {
-                    CustomFab(
-                        onClick = {
-                            showAddStackDialog = true
-                        })
-                }
+                CustomFab(
+                    onClick = {
+                        showAddStackDialog = true
+                    })
             },
             drawerContent = { MenuDrawer(scaffoldState) },
             topBar = {
@@ -85,10 +83,11 @@ fun FoldersScreen(
                 scaffoldState = scaffoldState,
                 state = state
             )
-            if (showAddStackDialog)
+            if (toShowDialog.value) {
                 AddStackAlertDialog(
                     viewModel = viewModel
-                ) { showAddStackDialog = false }
+                ) { viewModel.showAddSTackDialog(false) }
+            }
         }
     }
 }
@@ -101,12 +100,11 @@ fun FolderScreenBodyContent(
     scaffoldState: ScaffoldState,
     state: LoadingState<List<MemoStack>>,
 ) {
-    val listState = rememberLazyListState()
 
     when (state) {
         is LoadingState.Loading -> LoadingStackList()
         is LoadingState.Collected -> FolderColumn(
-            listState = listState,
+            listState = rememberLazyListState(),
             state = state,
             viewModel = viewModel,
             navController = navController,
@@ -122,9 +120,21 @@ private fun LoadingStackList() {
     LinearProgressIndicator()
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FolderColumn(
+    listState: LazyListState,
+    state: LoadingState.Collected<List<MemoStack>>,
+    viewModel: FolderViewModel,
+    navController: NavController,
+    scaffoldState: ScaffoldState
+) {
+    if (state.content.isEmpty()) InvitationToCreateStack { viewModel.showAddSTackDialog(true) }
+    else StackList(listState, state, viewModel, navController, scaffoldState)
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun StackList(
     listState: LazyListState,
     state: LoadingState.Collected<List<MemoStack>>,
     viewModel: FolderViewModel,
@@ -172,38 +182,42 @@ fun FolderColumn(
                     }
                 }
             )
+
         }
         item { Spacer(modifier = Modifier.padding(40.dp)) }
     }
-    if (state.content.isEmpty()) {
-        InvitationToCreateStack()
-    }
-
 }
 
 @Preview
 @Composable
-fun InvitationToCreateStack() {
-    Card(
-        elevation = 4.dp,
-        border = BorderStroke(1.dp, color = Color.Gray),
-        shape = RoundedCornerShape(8.dp)
+fun InvitationToCreateStack(onClick: () -> Unit = {}) {
+    Column(
+        modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(16.dp)
+        Card(
+            elevation = 4.dp,
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.clickable { onClick() }
         ) {
-            Text(
-                fontSize = 20.sp,
-                text = stringResource(id = R.string.create_first_stack),
-                modifier = Modifier.padding(bottom = 10.dp)
-            )
-            Image(
-                painterResource(id = R.drawable.noun_create_1202533),
-                stringResource(id = R.string.create_first_stack)
-            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(20.dp)
+            ) {
+                Text(
+                    fontSize = 20.sp,
+                    text = stringResource(id = R.string.create_first_stack),
+                    modifier = Modifier.padding(bottom = 20.dp)
+                )
+                Image(
+                    painterResource(id = R.drawable.noun_create_1202533),
+                    stringResource(id = R.string.create_first_stack)
+                )
+            }
         }
+        Spacer(modifier = Modifier.padding(40.dp))
     }
+
 }
 
 @Composable

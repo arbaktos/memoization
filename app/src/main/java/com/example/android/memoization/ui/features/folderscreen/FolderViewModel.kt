@@ -37,11 +37,17 @@ class FolderViewModel @Inject constructor(
 ) : BaseViewModel<LoadingState<List<MemoStack>>, Any>() {
 
     var languages: List<LanguageItem>? = null
+    private var _showAddStackDialog: MutableLiveData<Boolean> = MutableLiveData(false)
+    val showAddStackDialog: LiveData<Boolean> = _showAddStackDialog
 
     fun updateStack(stack: MemoStack) {
         viewModelScope.launch(Dispatchers.IO) {
             updateStackUseCase(stack)
         }
+    }
+
+    fun showAddSTackDialog(toShow: Boolean) {
+        _showAddStackDialog.postValue(toShow)
     }
 
     fun deleteStackWithDelay(stack: MemoStack) {

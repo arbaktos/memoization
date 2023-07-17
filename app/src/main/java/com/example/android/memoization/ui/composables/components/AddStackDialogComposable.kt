@@ -38,6 +38,7 @@ fun AddStackAlertDialog(
         Card(
             shape = RoundedCornerShape(4.dp),
             elevation = 4.dp,
+
         ) {
 
             Column(modifier = Modifier.padding(16.dp)) {

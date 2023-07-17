@@ -10,6 +10,6 @@ const val day_in_millis: Long = 24 * 60 * 60 * 1000
 const val to_show_notifications: String = "to_show_notifications"
 const val Db_name = "memo_database"
 const val FOLDER_TABLE = "folder_entity_table"
-const val STACK_TABLE = "stack_entity_table"
+
 const val TAG = "debug"
 const val Empty_string = ""

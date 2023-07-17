@@ -123,8 +123,8 @@ class AddNewPairViewModel @Inject constructor(
         stackId?.let {
             getStackUseCase(currentStackId!!).map { state ->
                 if (state is LoadingState.Collected<MemoStack>) {
-                    fromLanguage = state.content.fromLanguage?.codeName
-                    toLanguage = state.content.toLanguage?.codeName
+                    fromLanguage = state.content.fromLanguage
+                    toLanguage = state.content.toLanguage
                 }
             }
         }

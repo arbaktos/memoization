@@ -1,11 +1,9 @@
 package com.example.android.memoization.data.database
 
-import android.content.Context
 import androidx.room.Database
-import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.example.android.memoization.utils.Db_name
+import com.example.android.memoization.data.database.stackdb.StackEntity
 
 @Database(
     entities = [FolderEntity::class, StackEntity::class, WordPairEntity::class],
@@ -15,22 +13,4 @@ import com.example.android.memoization.utils.Db_name
 @TypeConverters(Converters::class)
 abstract class MemoDatabase : RoomDatabase() {
     abstract val memoDao: MemoDao
-
-//    companion object {
-//
-//        // For Singleton instantiation
-//        @Volatile
-//        private var instance: MemoDatabase? = null
-//
-//        fun getInstance(context: Context): MemoDatabase {
-//            if (instance == null) {
-//                instance = Room.databaseBuilder(
-//                    context,
-//                    MemoDatabase::class.java,
-//                    Db_name
-//                ).build()
-//            }
-//            return instance as MemoDatabase
-//        }
-//    }
 }

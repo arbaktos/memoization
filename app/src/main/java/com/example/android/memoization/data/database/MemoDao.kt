@@ -1,33 +1,13 @@
 package com.example.android.memoization.data.database
 
-import androidx.lifecycle.LiveData
 import androidx.room.*
+import com.example.android.memoization.data.database.stackdb.StackEntity
+import com.example.android.memoization.data.database.stackdb.StackWithWords
+import com.example.android.memoization.data.database.wordpairdb.WordPairEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MemoDao {
-
-    //folders
-    @Insert(entity = FolderEntity::class, onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertFolder(folderEntity: FolderEntity): Long
-
-    @Query("SELECT * FROM folder_entity_table")
-    suspend fun getFolders():List<FolderEntity>
-
-    @Transaction
-    @Query("SELECT * FROM folder_entity_table WHERE folderId LIKE :folderId")
-    suspend fun getSingleFolderWithStacks(folderId: Long): FolderwithStacks
-
-    @Transaction
-    @Query("SELECT * FROM folder_entity_table")
-    fun getFoldersWithStacks(): LiveData<List<FolderwithStacks>>
-
-    @Transaction
-    @Query("SELECT * FROM folder_entity_table")
-    suspend fun getFoldersWithStacks2(): List<FolderwithStacks>
-
-    @Delete
-    suspend fun deleteFolderFromDb(folderEntity: FolderEntity)
 
     //stacks
     @Insert(entity = StackEntity::class, onConflict = OnConflictStrategy.IGNORE)

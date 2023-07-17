@@ -2,8 +2,8 @@ package com.example.android.memoization.data.repository
 
 import android.util.Log
 import com.example.android.memoization.data.database.MemoDao
-import com.example.android.memoization.data.database.StackEntity
-import com.example.android.memoization.data.database.StackWithWords
+import com.example.android.memoization.data.database.stackdb.StackEntity
+import com.example.android.memoization.data.database.stackdb.StackWithWords
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
