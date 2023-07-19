@@ -23,10 +23,6 @@ abstract class UseCaseModule {
             DeleteStackUseCase
 
     @Binds
-    abstract fun bindAddStackUseCase(useCaseImpl: AddStackUseCaseImpl):
-            AddStackUseCase
-
-    @Binds
     abstract fun bindGetStacksUseCase(useCaseImpl: GetStacksWithWordsUseCaseImpl):
             GetStacksWithWordsUseCase
 

@@ -14,7 +14,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import com.example.android.memoization.R
-import com.example.android.memoization.data.model.Folder
 import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.ui.features.folderscreen.FolderViewModel
 import kotlinx.coroutines.launch
@@ -23,7 +22,6 @@ import kotlinx.coroutines.launch
 @ExperimentalComposeUiApi
 @Composable
 fun AddStack(
-    folder: Folder,
     viewModel: FolderViewModel,
     listState: LazyListState,
     position: Int,
@@ -39,7 +37,7 @@ fun AddStack(
 
     val onClick: () -> Unit = {
         onTextChange("")
-        viewModel.addStackToFolder(folder = folder, stack = MemoStack(name = text))
+        viewModel.addStack(stack = MemoStack(name = text))
         keyboardController?.hide()
         focusManager.clearFocus()
     }

@@ -34,10 +34,10 @@ interface MemoDao {
     @Insert
     suspend fun insertWordPair(wordPairEntity: WordPairEntity)
 
-    @Query("SELECT * FROM wordpairentity WHERE parentStackId LIKE :stackId")
+    @Query("SELECT * FROM wordpair_entity_table WHERE parentStackId LIKE :stackId")
     suspend fun getWordsFromStack(stackId: Long): List<WordPairEntity>
 
-    @Query("SELECT * FROM wordpairentity WHERE wordPairId LIKE :id" )
+    @Query("SELECT * FROM wordpair_entity_table WHERE wordPairId LIKE :id" )
     suspend fun findWordPairById(id: Long): WordPairEntity
 
     @Update
@@ -46,6 +46,6 @@ interface MemoDao {
     @Delete
     suspend fun deleteWordPairFromDb(wordPairEntity: WordPairEntity)
 
-    @Query("SELECT * FROM wordpairentity WHERE wordPairId LIKE :wpId")
+    @Query("SELECT * FROM wordpair_entity_table WHERE wordPairId LIKE :wpId")
     fun getWordPairByIdFlow(wpId: Long): Flow<WordPairEntity>
 }

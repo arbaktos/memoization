@@ -1,22 +1,24 @@
 package com.example.android.memoization.data.model
 
-import com.example.android.memoization.data.database.WordPairEntity
+import com.example.android.memoization.data.database.wordpairdb.WordPairEntity
 import com.example.android.memoization.utils.longToDays
 import java.util.*
 
 data class WordPair(
-    val stackId: Long,
-    var word1: String,
-    var word2: String?,
-    var lastRep: Date = Date(),
-    var wordPairId: Long = 0,
-    var levelOfKnowledge: WordStatus = WordStatus.Level1(),
-    override var isVisible: Boolean = true
-//    val language1: Language,
-//    val language2: Language,
-) : DismissableItem {
+    override val parentStackId: Long,
+    override var word1: String,
+    override var word2: String?,
+    override var lastRep: Date = Date(),
+    override var wordPairId: Long = 0,
+    override var isVisible: Boolean = true,
+    override var toShow: Boolean = false,
+    override var level: WordStatus = WordStatus.Level1()
+) : BaseWordPair, DismissableItem {
     var toLearn: Boolean = false
         get() = checkIfShow()
+
+    var levelOfKnowledge: WordStatus = WordStatus.Level1()
+        private set
 
     // to get the period of the card reps
     fun harderLevel() {
@@ -45,8 +47,8 @@ data class WordPair(
 
     fun toWordPairEntity(): WordPairEntity {
         return WordPairEntity(
-            this.stackId ?: -1,
-            this.word1 ?: "",
+            this.parentStackId ?: -1,
+            this.word1,
             this.word2 ?: "",
             this.lastRep,
             this.toLearn,

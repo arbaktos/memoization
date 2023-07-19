@@ -30,7 +30,7 @@ fun AddStackAlertDialog(
     var text by rememberSaveable { mutableStateOf(if (isEditMode) stack!!.name else "") }
     val onConfirm = {
         if (isEditMode) viewModel.updateStack(stack!!.copy(name = text))
-        else viewModel.addStackToFolder(
+        else viewModel.addStack(
             stack = MemoStack(text)
         )
     }

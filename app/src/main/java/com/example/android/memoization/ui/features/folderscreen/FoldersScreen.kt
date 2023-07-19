@@ -66,7 +66,7 @@ fun FoldersScreen(
             floatingActionButton = {
                 CustomFab(
                     onClick = {
-                        showAddStackDialog = true
+                        viewModel.showAddSTackDialog(true)
                     })
             },
             drawerContent = { MenuDrawer(scaffoldState) },

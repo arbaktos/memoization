@@ -5,7 +5,6 @@ sealed class WordStatus {
     override fun toString(): String {
         return frequency.toString()
     }
-
     class Level1: WordStatus() {
         override val frequency: Int = 1
     }
@@ -22,8 +21,4 @@ sealed class WordStatus {
         override val frequency: Int = 30
     }
 
-}
-
-enum class Frequency {
-    Daily, OneInTwo, Week, BiWeek, Month
 }

@@ -1,6 +1,6 @@
 package com.example.android.memoization.domain.usecases
 
-import com.example.android.memoization.data.database.toStack
+import com.example.android.memoization.data.database.stackdb.toMemoStack
 import com.example.android.memoization.data.repository.StackRepository
 import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.utils.LoadingState
@@ -20,7 +20,7 @@ class GetStackUseCaseImpl @Inject constructor(private val stackRepo: StackReposi
 
         return stackRepo.getStackWithWordsById(stackId)
             .map {
-                LoadingState.Collected(it.toStack())
+                LoadingState.Collected(it.toMemoStack())
             }
             .catch {
                 LoadingState.Error

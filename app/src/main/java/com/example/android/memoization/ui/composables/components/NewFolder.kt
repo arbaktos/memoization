@@ -17,13 +17,13 @@ import androidx.navigation.NavController
 fun NewFolderScreen(
     navController: NavController
 ) {
-    Scaffold(
-//        topBar = { com.example.android.memoization.ui.composables.screens.AppBar(name = "New folder") }
-    ) {
-        EtField(
-            navigate = { navController.navigate("folders") },
-        )
-    }
+//    Scaffold(
+////        topBar = { com.example.android.memoization.ui.composables.screens.AppBar(name = "New folder") }
+//    ) {
+//        EtField(
+//            navigate = { navController.navigate("folders") },
+//        )
+//    }
 }
 
 @ExperimentalComposeUiApi

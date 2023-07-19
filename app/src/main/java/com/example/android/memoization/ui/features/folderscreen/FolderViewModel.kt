@@ -1,17 +1,15 @@
 package com.example.android.memoization.ui.features.folderscreen
 
-import android.util.Log
 import androidx.lifecycle.*
 import androidx.navigation.NavController
 import androidx.work.*
-import com.example.android.memoization.data.model.Folder
+import com.example.android.memoization.data.database.stackdb.StackEntity
+import com.example.android.memoization.data.model.BaseStack
 import com.example.android.memoization.data.model.MemoStack
-import com.example.android.memoization.domain.usecases.AddStackUseCase
+import com.example.android.memoization.data.repository.StackRepository
 import com.example.android.memoization.domain.usecases.GetStacksWithWordsUseCase
 import com.example.android.memoization.domain.usecases.UpdateStackUseCase
 import com.example.android.memoization.ui.features.BaseViewModel
-import com.example.android.memoization.utils.Default_folder_ID
-import com.example.android.memoization.utils.Empty_folder_name
 import com.example.android.memoization.utils.LoadingState
 import com.example.android.memoization.utils.NewPairNavArgs
 import com.example.android.memoization.utils.STACK_ID
@@ -31,7 +29,7 @@ import javax.inject.Inject
 class FolderViewModel @Inject constructor(
     private val workManager: WorkManager,
     private val languageRepo: TranslationRepo,
-    val addStackUseCase: AddStackUseCase,
+    private var stackRepository: StackRepository,
     val getStacksWithWordsUseCase: GetStacksWithWordsUseCase,
     val updateStackUseCase: UpdateStackUseCase,
 ) : BaseViewModel<LoadingState<List<MemoStack>>, Any>() {
@@ -65,12 +63,9 @@ class FolderViewModel @Inject constructor(
         workManager.cancelAllWorkByTag(stack.stackId.toString())
     }
 
-    fun addStackToFolder(
-        folder: Folder = Folder(Empty_folder_name, folderId = Default_folder_ID),
-        stack: MemoStack
-    ) {
+    fun addStack(stack: MemoStack) {
         viewModelScope.launch {
-            addStackUseCase(folder, stack)
+            stackRepository.insertStack(StackEntity.create(stack))
         }
     }
 

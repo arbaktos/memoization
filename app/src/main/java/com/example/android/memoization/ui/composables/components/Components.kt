@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -26,7 +27,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.android.memoization.R
-import com.example.android.memoization.data.model.Folder
 import com.example.android.memoization.ui.features.folderscreen.TDEBUG
 
 @Composable
@@ -70,7 +70,6 @@ fun MemoIcon(
 @Composable
 fun SubmitIcon(
     inputName: String,
-    onAddFolder: (Folder) -> Unit = {},
     onFinish: () -> Unit
 ) {
     Icon(
@@ -85,7 +84,6 @@ fun SubmitIcon(
                 shape = RoundedCornerShape(15.dp)
             )
             .clickable(enabled = true) {
-                onAddFolder(Folder(inputName))
                 onFinish()
             }
     )
@@ -116,7 +114,6 @@ fun AddStackTextField(
     modifier: Modifier = Modifier,
     onTextChange: (String) -> Unit,
     label: String,
-    onAddFolder: (Folder) -> Unit = {},
     onFinish: () -> Unit,
     showTrailingIcon: Boolean
 ) {
@@ -134,7 +131,6 @@ fun AddStackTextField(
         keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(
             onDone = {
-                onAddFolder(Folder(text))
                 onFinish()
             }),
         placeholder = { Label(label) },
@@ -213,10 +209,11 @@ fun Fab(
 
 @Composable
 fun CustomFab(onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
     Image(
         painter = painterResource(id = R.drawable.noun_create_1202533),
         contentDescription = stringResource(R.string.add_new_stack),
-        modifier = Modifier.clickable {
+        modifier = Modifier.clickable(interactionSource = interactionSource, indication = null) {
             onClick()
         }
     )

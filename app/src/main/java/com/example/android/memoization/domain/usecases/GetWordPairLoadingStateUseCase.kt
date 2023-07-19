@@ -17,7 +17,7 @@ class GetWorPairLoadingStateUseCaseImpl @Inject constructor(private val wordPair
     override fun invoke(wpId: Long): Flow<LoadingState<WordPair>> {
         return wordPairRepo.getWordPairById(wpId)
             .map {
-                LoadingState.Collected(it)
+                LoadingState.Collected(it as WordPair)
             }
             .catch {
                 LoadingState.Error

@@ -61,7 +61,7 @@ fun FlipCard(wordPair: WordPair) {
             ) {
 
                 Text(
-                    text = if (rotated) wordPair.word1 else wordPair.word2 ?: "",
+                    text = if (rotated) wordPair.word2 ?: "" else wordPair.word1 ,
                     modifier = Modifier
                         .graphicsLayer {
                             alpha = if (rotated) animateBack else animateFront

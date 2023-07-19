@@ -87,7 +87,7 @@ class AddNewPairViewModel @Inject constructor(
         return if (currentWpId != null) getWordPairLoadingState(currentWpId!!).map {
             if (it is LoadingState.Collected<WordPair>){
                 currentWordPair = it.content
-                currentStackId = currentWordPair!!.stackId
+                currentStackId = currentWordPair!!.parentStackId
                 setLanguages(currentStackId)
             }
             it
@@ -106,7 +106,7 @@ class AddNewPairViewModel @Inject constructor(
             word2 = word2
         )
             ?: WordPair(
-                stackId = currentStackId ?: Default_folder_ID,
+                parentStackId = currentStackId ?: Default_folder_ID,
                 word1 = word1,
                 word2 = word2
             )
