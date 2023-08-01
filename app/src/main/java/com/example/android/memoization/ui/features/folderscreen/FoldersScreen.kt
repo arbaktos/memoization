@@ -47,15 +47,14 @@ fun FoldersScreen(
     viewModel: FolderViewModel = hiltViewModel()
 ) {
     val scaffoldState = rememberScaffoldState()
-    var showAddStackDialog by remember { mutableStateOf(false) } //TODO move to viewmodel
     val scope = rememberCoroutineScope()
-
     var state by remember { mutableStateOf<LoadingState<List<MemoStack>>>(LoadingState.Loading) }
+    val toShowDialog = viewModel.showAddStackDialog.observeAsState(false)
+
     LaunchedEffect(key1 = state, block = {
         state = viewModel.getDataToDisplay().stateIn(this).value
     })
 
-    val toShowDialog = viewModel.showAddStackDialog.observeAsState(false)
     BackHandler {
         viewModel.onBackPressed(navController)
     }

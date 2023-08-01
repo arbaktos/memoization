@@ -12,7 +12,7 @@ val Context.currentConnectivityState: ConnectionState
         return getCurrentConnectivityState(connectivityManager)
     }
 
-fun Context.showToast(stringId: Int?) {
+infix fun Context.showToast(stringId: Int?) {
     if (stringId != null) {
         Toast.makeText(this, this.resources.getText(stringId), Toast.LENGTH_SHORT).show()
     }

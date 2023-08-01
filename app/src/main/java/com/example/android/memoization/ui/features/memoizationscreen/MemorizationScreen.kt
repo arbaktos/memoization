@@ -11,7 +11,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.data.model.WordPair
-import com.example.android.memoization.ui.composables.FlipCard
+import com.example.android.memoization.ui.composables.components.FlipCard
 import com.example.android.memoization.ui.composables.components.MemoIcon
 import com.example.android.memoization.ui.composables.components.StackCompleteDialog
 

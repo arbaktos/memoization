@@ -1,4 +1,4 @@
-package com.example.android.memoization.ui.composables
+package com.example.android.memoization.ui.composables.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -24,17 +24,17 @@ fun FlipCard(wordPair: WordPair) {
 
     val rotation by animateFloatAsState(
         targetValue = if (rotated) 180f else 0f,
-        animationSpec = tween(500)
+        animationSpec = tween(500), label = ""
     )
 
     val animateFront by animateFloatAsState(
         targetValue = if (!rotated) 1f else 0f,
-        animationSpec = tween(500)
+        animationSpec = tween(500), label = ""
     )
 
     val animateBack by animateFloatAsState(
         targetValue = if (rotated) 1f else 0f,
-        animationSpec = tween(500)
+        animationSpec = tween(500), label = ""
     )
 
     Box(
@@ -69,7 +69,6 @@ fun FlipCard(wordPair: WordPair) {
                         },
                     fontSize = 30.sp)
             }
-
         }
     }
 }

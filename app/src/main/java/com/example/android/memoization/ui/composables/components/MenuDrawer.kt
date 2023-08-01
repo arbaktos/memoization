@@ -26,12 +26,16 @@ import kotlin.reflect.KProperty
 
 @Composable
 fun MenuDrawer(scaffoldState: ScaffoldState) {
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl ) {
+//    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         ModalDrawer(
-            drawerContent = { Text("Hello y'all drawer content") },
-            content = { NotificationsSwitch(scaffoldState) }
+            drawerContent = { },
+            content = {
+                Column() {
+                    NotificationsSwitch(scaffoldState)
+                }
+            }
         )
-    }
+//    }
 }
 
 @Composable
@@ -211,7 +215,8 @@ class BooleanPreferenceSettingValueState(
     }
 }
 
-class InMemoryBooleanSettingValueState(private val defaultValue: Boolean) : SettingValueState<Boolean> {
+class InMemoryBooleanSettingValueState(private val defaultValue: Boolean) :
+    SettingValueState<Boolean> {
     override var value: Boolean by mutableStateOf(defaultValue)
     override fun reset() {
         value = defaultValue
