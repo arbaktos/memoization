@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.android.memoization.R
+import com.example.android.memoization.data.model.BaseWordPair
 import com.example.android.memoization.extensions.checkLength
 import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.ui.composables.components.MotionAppBar
@@ -171,7 +172,7 @@ fun DisplayStack(
 fun StackFab(navController: NavController, currentStack: MemoStack?) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         currentStack?.let { stack ->
-            if (stack.words.any { it.toLearn }) {
+            if (stack.hasWordsToLearn()) {
                 ExtendedFloatingActionButton(
                     text = {
                         Text(
@@ -204,7 +205,7 @@ fun StackFab(navController: NavController, currentStack: MemoStack?) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun WordList(
-    wordList: List<WordPair>,
+    wordList: List<BaseWordPair>,
     viewModel: StackViewModel,
     navController: NavController,
     listState: LazyListState,
@@ -215,6 +216,7 @@ fun WordList(
         state = listState
     ) {
         items(wordList.reversed(), key = { it.wordPairId }) { wordPair ->
+            wordPair as WordPair
             SwipeToDismiss(
                 item = wordPair,
                 dismissContent = {

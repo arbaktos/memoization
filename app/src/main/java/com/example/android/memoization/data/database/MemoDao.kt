@@ -20,6 +20,9 @@ interface MemoDao {
     @Query("SELECT * FROM stack_entity_table")
     fun getStacksWithWords(): Flow<List<StackWithWords>>
 
+    @Query("SELECT * FROM stack_entity_table")
+    fun getStacks(): Flow<List<StackEntity>>
+
     @Transaction
     @Query("SELECT * FROM stack_entity_table WHERE stackId = :stackId")
     fun getStackWithWordsById(stackId: Long): Flow<StackWithWords>

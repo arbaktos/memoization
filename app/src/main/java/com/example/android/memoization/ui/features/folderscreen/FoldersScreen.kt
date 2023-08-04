@@ -1,6 +1,5 @@
 package com.example.android.memoization.ui.features.folderscreen
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -37,6 +36,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import com.example.android.memoization.ui.features.settings.MenuDrawer
 
 const val TDEBUG = "memoization_debug"
 
@@ -44,7 +46,8 @@ const val TDEBUG = "memoization_debug"
 @Composable
 fun FoldersScreen(
     navController: NavController,
-    viewModel: FolderViewModel = hiltViewModel()
+    viewModel: FolderViewModel = hiltViewModel(),
+    preferenceStorage: DataStore<Preferences>
 ) {
     val scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
@@ -68,7 +71,7 @@ fun FoldersScreen(
                         viewModel.showAddSTackDialog(true)
                     })
             },
-            drawerContent = { MenuDrawer(scaffoldState) },
+            drawerContent = { MenuDrawer(scaffoldState, preferenceStorage) },
             topBar = {
                 AppBar(name = stringResource(id = R.string.app_name)) {
                     scope.launch { scaffoldState.drawerState.open() }

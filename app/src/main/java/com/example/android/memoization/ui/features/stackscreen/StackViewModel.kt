@@ -1,27 +1,19 @@
 package com.example.android.memoization.ui.features.stackscreen
 
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import androidx.work.Data
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-//import com.example.android.memoization.data.SessionState.currentStack
 import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.domain.usecases.DeleteWordPairUseCase
 import com.example.android.memoization.domain.usecases.GetStackUseCase
-import com.example.android.memoization.domain.usecases.UpdateStackUseCase
 import com.example.android.memoization.ui.features.BaseViewModel
 import com.example.android.memoization.utils.LoadingState
-import com.example.android.memoization.utils.WP_ID
-import com.example.android.memoization.utils.workers.WordPairInvisibleWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltViewModel
