@@ -1,88 +1,88 @@
-package com.example.android.memoization.ui.composables.components
+package com.example.android.memoization.ui.features.settings
 
-import android.content.SharedPreferences
-import android.preference.PreferenceManager
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.core.content.edit
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import com.example.android.memoization.R
-import com.example.android.memoization.utils.to_show_notifications
+import com.example.android.memoization.utils.Datastore
+import com.example.android.memoization.utils.getValue
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import kotlin.reflect.KProperty
 
 @Composable
-fun MenuDrawer(scaffoldState: ScaffoldState) {
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl ) {
-        ModalDrawer(
-            drawerContent = { Text("Hello y'all drawer content") },
-            content = { NotificationsSwitch(scaffoldState) }
-        )
-    }
+fun MenuDrawer(scaffoldState: ScaffoldState, preferenceStorage: DataStore<Preferences>) {
+    ModalDrawer(
+        drawerContent = { },
+        content = {
+            Column() {
+                NotificationsSwitch(scaffoldState, preferenceStorage)
+            }
+        }
+    )
 }
 
 @Composable
-fun NotificationsSwitch(scaffoldState: ScaffoldState) {
+fun NotificationsSwitch(scaffoldState: ScaffoldState, preferenceStorage: DataStore<Preferences>) {
     val coroutineScope = rememberCoroutineScope()
-    val preferenceStorage = rememberPreferenceBooleanSettingState(
-        key = to_show_notifications,
-        defaultValue = true
-    )
+    val state = preferenceStorage.getValue(
+        key = Datastore.TO_SHOW_NOTIFICATIONS,
+        defaultValue = true)
+
     SettingsSwitch(
-        state = preferenceStorage,
+        state = state,
         icon = {
             Icon(
                 imageVector = Icons.Default.Notifications,
                 contentDescription = stringResource(R.string.notif_switch_desc)
             )
         },
+        initialValue = ConstantsSettings.SHOW_NOTIFICATIONS,
         title = { Text(text = stringResource(R.string.notifications)) },
         onCheckedChange = {
             scaffoldState.showChange(
                 coroutineScope = coroutineScope,
                 key = "Notifications are on",
-                state = preferenceStorage,
+                state = state,
             )
         },
     )
 }
 
-//TODO why notifications are behind the drawer, pass drawer state maybe?
 
 private fun ScaffoldState.showChange(
     coroutineScope: CoroutineScope,
     key: String,
-    state: SettingValueState<Boolean>
+    state: Flow<Boolean>
 ) {
     coroutineScope.launch {
         snackbarHostState.currentSnackbarData?.dismiss()
-        snackbarHostState.showSnackbar(message = "$key:  ${state.value}")
+//        snackbarHostState.showSnackbar(message = "$key:  ${state.collectAsState(initial = false).value}")
     }
 }
 
 @Composable
 fun SettingsSwitch(
     modifier: Modifier = Modifier,
-    state: SettingValueState<Boolean> = rememberBooleanSettingState(),
+    state: Flow<Boolean>,
     icon: @Composable (() -> Unit)? = null,
     title: @Composable () -> Unit,
+    initialValue: Boolean,
     subtitle: @Composable (() -> Unit)? = null,
     onCheckedChange: (Boolean) -> Unit = {},
 ) {
-    var storageValue by state
+    var storageValue = state.collectAsState(initial = initialValue).value
     val update: (Boolean) -> Unit = { boolean ->
         storageValue = boolean
         onCheckedChange(storageValue)
@@ -170,68 +170,3 @@ internal fun SettingsTileSubtitle(subtitle: @Composable () -> Unit) {
         )
     }
 }
-
-@Composable
-fun rememberPreferenceBooleanSettingState(
-    key: String,
-    defaultValue: Boolean,
-    preferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(LocalContext.current),
-): BooleanPreferenceSettingValueState {
-    return remember {
-        BooleanPreferenceSettingValueState(
-            preferences = preferences,
-            key = key,
-            defaultValue = defaultValue
-        )
-    }
-}
-
-@Composable
-fun rememberBooleanSettingState(defaultValue: Boolean = true): SettingValueState<Boolean> {
-    return remember { InMemoryBooleanSettingValueState(defaultValue) }
-}
-
-class BooleanPreferenceSettingValueState(
-    private val preferences: SharedPreferences,
-    val key: String,
-    val defaultValue: Boolean = true,
-) : SettingValueState<Boolean> {
-
-    private var _value by mutableStateOf(preferences.getBoolean(key, defaultValue))
-
-    override var value: Boolean
-        set(value) {
-            _value = value
-            preferences.edit { putBoolean(key, value) }
-        }
-        get() = _value
-
-    override fun reset() {
-        value = defaultValue
-    }
-}
-
-class InMemoryBooleanSettingValueState(private val defaultValue: Boolean) : SettingValueState<Boolean> {
-    override var value: Boolean by mutableStateOf(defaultValue)
-    override fun reset() {
-        value = defaultValue
-    }
-}
-
-interface SettingValueState<T> {
-    fun reset()
-    var value: T
-}
-
-@Suppress("NOTHING_TO_INLINE")
-inline operator fun <T> SettingValueState<T>.setValue(
-    thisObj: Any?,
-    property: KProperty<*>,
-    value: T
-) {
-    this.value = value
-}
-
-@Suppress("NOTHING_TO_INLINE")
-inline operator fun <T> SettingValueState<T>.getValue(thisObj: Any?, property: KProperty<*>): T =
-    value

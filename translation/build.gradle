@@ -55,6 +55,9 @@ dependencies {
 
 //    // DI
     implementation "com.google.dagger:hilt-android:$hilt_android"
+    implementation 'androidx.test:monitor:1.6.1'
+    implementation 'androidx.test.ext:junit-ktx:1.1.5'
+    androidTestImplementation 'junit:junit:4.12'
     kapt "com.google.dagger:hilt-android-compiler:$hilt_android"
 
 }

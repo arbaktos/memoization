@@ -3,6 +3,7 @@ package com.example.android.memoization.ui.features.memoizationscreen
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.android.memoization.data.model.BaseWordPair
 import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.data.repository.WordPairRepository
 import com.example.android.memoization.domain.usecases.GetStackUseCase
@@ -33,9 +34,9 @@ class MemoizationViewModel @Inject constructor(
     fun onStackIdReceived(stackId: Long) = getStackUseCase(stackId).transform { state ->
         when(state) {
             is LoadingState.Collected -> {
-                emit(state.content.prepareStack().words.filter { wordPair ->
-                    Log.d(TAG, "onStackIdReceived: wordPair $wordPair")
-                    wordPair.toLearn
+                emit(state.content.prepareStack().words.filter { it as WordPair
+                    Log.d(TAG, "onStackIdReceived: wordPair $it")
+                    it.toLearn
                 })
             }
             is LoadingState.Error -> { /*TODO*/ }
@@ -44,7 +45,8 @@ class MemoizationViewModel @Inject constructor(
 
     }
 
-    fun onBottomButtonClick(wordPair: WordPair, icon: Icon) {
+    fun onBottomButtonClick(wordPair: BaseWordPair, icon: Icon) {
+        wordPair as WordPair
         when (icon) {
             Icon.Easy -> wordPair.harderLevel()
             Icon.Hard -> wordPair.easierLevel()

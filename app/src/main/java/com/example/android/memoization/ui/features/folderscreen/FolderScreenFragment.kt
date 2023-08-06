@@ -7,13 +7,16 @@ import android.view.ViewGroup
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 
 @AndroidEntryPoint
-class FolderScreenFragment(): Fragment() {
+class FolderScreenFragment @Inject constructor(val preferenceStorage: DataStore<Preferences>): Fragment() {
     @OptIn(ExperimentalComposeUiApi::class)
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -23,7 +26,9 @@ class FolderScreenFragment(): Fragment() {
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
-                FoldersScreen(navController = findNavController())
+                FoldersScreen(
+                    navController = findNavController(),
+                    preferenceStorage = preferenceStorage)
             }
         }
     }

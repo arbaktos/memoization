@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.android.memoization.R
 import com.example.android.memoization.data.model.MemoStack
+import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.ui.features.folderscreen.getPlayIconColor
 import com.example.android.memoization.ui.theme.MemoButtonColors
 
@@ -34,7 +35,7 @@ fun StackListItem(
     onClickRow: () -> Unit = {}
 ) {
 
-    val wordsToLearn = stack.words.filter { it.toLearn }
+    val wordsToLearn = stack.words.filter { (it as WordPair).toLearn }
     val unRepeatedPercent = remember {
         wordsToLearn.size.toFloat() / stack.words.size.toFloat() * 100
     }

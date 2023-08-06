@@ -32,4 +32,7 @@ abstract class UseCaseModule {
     @Binds
     abstract fun bindGetWorPairUseCase(impl: GetWorPairLoadingStateUseCaseImpl): GetWordPairLoadingStateUseCase
 
+    @Binds
+    abstract fun bindNotifThresholdUseCase(impl: NotifThresholdCalcUseCaseImpl): NotifThresholdCalcUseCase
+
 }

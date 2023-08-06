@@ -10,8 +10,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.android.memoization.R
+import com.example.android.memoization.data.model.BaseWordPair
 import com.example.android.memoization.data.model.WordPair
-import com.example.android.memoization.ui.composables.FlipCard
+import com.example.android.memoization.ui.composables.components.FlipCard
 import com.example.android.memoization.ui.composables.components.MemoIcon
 import com.example.android.memoization.ui.composables.components.StackCompleteDialog
 
@@ -32,7 +33,7 @@ fun MemorizationScreen(
 
 @Composable
 fun FolderScreenBodyContent(
-    wordsToLearn: State<List<WordPair>>,
+    wordsToLearn: State<List<BaseWordPair>>,
     navController: NavController,
     viewModel: MemoizationViewModel
 ) {

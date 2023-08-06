@@ -73,7 +73,8 @@ fun SubmitIcon(
     onFinish: () -> Unit
 ) {
     Icon(
-        Icons.Outlined.Done, "Add a folder",
+        imageVector = Icons.Outlined.Done,
+        contentDescription = inputName,
         tint = MaterialTheme.colors.surface,
         modifier = Modifier
             .padding(8.dp)
@@ -117,7 +118,6 @@ fun AddStackTextField(
     onFinish: () -> Unit,
     showTrailingIcon: Boolean
 ) {
-
     OutlinedTextField(
         value = text,
         onValueChange = onTextChange,
