@@ -1,10 +1,13 @@
 package com.example.android.memoization.ui.features.folderscreen
 
-import androidx.lifecycle.*
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import androidx.work.*
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.android.memoization.data.database.stackdb.StackEntity
-import com.example.android.memoization.data.model.BaseStack
 import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.data.repository.StackRepository
 import com.example.android.memoization.domain.usecases.GetStacksWithWordsUseCase
@@ -34,7 +37,7 @@ class FolderViewModel @Inject constructor(
     val updateStackUseCase: UpdateStackUseCase,
 ) : BaseViewModel<LoadingState<List<MemoStack>>, Any>() {
 
-    var languages: List<LanguageItem>? = null
+    private var languages: List<LanguageItem>? = null
     private var _showAddStackDialog: MutableLiveData<Boolean> = MutableLiveData(false)
     val showAddStackDialog: LiveData<Boolean> = _showAddStackDialog
 
@@ -44,7 +47,7 @@ class FolderViewModel @Inject constructor(
         }
     }
 
-    fun showAddSTackDialog(toShow: Boolean) {
+    fun showAddStackDialog(toShow: Boolean) {
         _showAddStackDialog.postValue(toShow)
     }
 
@@ -73,7 +76,7 @@ class FolderViewModel @Inject constructor(
         viewModelScope.launch {
             val response = languageRepo.getLanguages()
             when (response) {
-                is TranslationState.Loading -> ShowLoadingLangs()
+                is TranslationState.Loading -> showLoadingLangs()
                 is TranslationState.Error -> response.errorMessage?.let {
                     updateToastMessage(
                         response.errorMessage!!
@@ -109,10 +112,14 @@ class FolderViewModel @Inject constructor(
     override fun setArgs(args: Any?) {
     }
 
-    fun ShowLoadingLangs() {}
+    private fun showLoadingLangs() {}
     fun onPlayWords(navController: NavController, stackId: Long) {
         val action = FolderScreenFragmentDirections.toMemorization(stackId)
         navController.navigate(action)
+    }
+
+    fun onPin() {
+        //TODO start animate to top, update pin param in db
     }
 
 }

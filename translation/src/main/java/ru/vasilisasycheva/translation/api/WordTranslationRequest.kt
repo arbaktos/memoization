@@ -1,4 +1,4 @@
-package com.example.android.memoization.data.api
+package ru.vasilisasycheva.translation.api
 
 import com.google.gson.annotations.SerializedName
 

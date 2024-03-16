@@ -1,111 +1,52 @@
 package com.example.android.memoization.ui.features.settings
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.ContentAlpha
+import androidx.compose.material.Icon
+import androidx.compose.material.LocalContentAlpha
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ModalDrawer
+import androidx.compose.material.ProvideTextStyle
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.example.android.memoization.R
-import com.example.android.memoization.utils.Datastore
-import com.example.android.memoization.utils.getValue
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.launch
+import com.example.android.memoization.ui.composables.labels.PrimaryBoldLabel
 
 @Composable
-fun MenuDrawer(scaffoldState: ScaffoldState, preferenceStorage: DataStore<Preferences>) {
+fun MenuDrawer(preferenceStorage: DataStore<Preferences>) {
     ModalDrawer(
-        drawerContent = { },
-        content = {
-            Column() {
-                NotificationsSwitch(scaffoldState, preferenceStorage)
+        drawerContent = {
+            Column {
+                Text("settings")
             }
-        }
+        },
+        content = { SettingsSheet(preferenceStorage = preferenceStorage) }
     )
 }
 
 @Composable
-fun NotificationsSwitch(scaffoldState: ScaffoldState, preferenceStorage: DataStore<Preferences>) {
-    val coroutineScope = rememberCoroutineScope()
-    val state = preferenceStorage.getValue(
-        key = Datastore.TO_SHOW_NOTIFICATIONS,
-        defaultValue = true)
-
-    SettingsSwitch(
-        state = state,
-        icon = {
-            Icon(
-                imageVector = Icons.Default.Notifications,
-                contentDescription = stringResource(R.string.notif_switch_desc)
-            )
-        },
-        initialValue = ConstantsSettings.SHOW_NOTIFICATIONS,
-        title = { Text(text = stringResource(R.string.notifications)) },
-        onCheckedChange = {
-            scaffoldState.showChange(
-                coroutineScope = coroutineScope,
-                key = "Notifications are on",
-                state = state,
-            )
-        },
-    )
-}
-
-
-private fun ScaffoldState.showChange(
-    coroutineScope: CoroutineScope,
-    key: String,
-    state: Flow<Boolean>
-) {
-    coroutineScope.launch {
-        snackbarHostState.currentSnackbarData?.dismiss()
-//        snackbarHostState.showSnackbar(message = "$key:  ${state.collectAsState(initial = false).value}")
-    }
-}
-
-@Composable
-fun SettingsSwitch(
-    modifier: Modifier = Modifier,
-    state: Flow<Boolean>,
-    icon: @Composable (() -> Unit)? = null,
-    title: @Composable () -> Unit,
-    initialValue: Boolean,
-    subtitle: @Composable (() -> Unit)? = null,
-    onCheckedChange: (Boolean) -> Unit = {},
-) {
-    var storageValue = state.collectAsState(initial = initialValue).value
-    val update: (Boolean) -> Unit = { boolean ->
-        storageValue = boolean
-        onCheckedChange(storageValue)
-    }
-    Surface {
-        Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .toggleable(
-                    value = storageValue,
-                    role = Role.Switch,
-                    onValueChange = { update(!storageValue) }
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            SettingsTileIcon(icon = icon)
-            SettingsTileTexts(title = title, subtitle = subtitle)
-            SettingsTileAction {
-                Switch(
-                    checked = storageValue,
-                    onCheckedChange = update
-                )
-            }
+fun SettingsSheet(modifier: Modifier = Modifier, preferenceStorage: DataStore<Preferences>) {
+    Scaffold(
+        topBar = { PrimaryBoldLabel(text = LocalContext.current.getString(R.string.settings_top_bar_label)) }
+    ) {
+        Column(modifier = modifier.padding(it)) {
+            NotificationsView(preferenceStorage = preferenceStorage)
         }
     }
 }
@@ -113,24 +54,20 @@ fun SettingsSwitch(
 @Composable
 internal fun SettingsTileIcon(
     modifier: Modifier = Modifier,
-    icon: @Composable (() -> Unit)? = null,
+    icon: ImageVector,
 ) {
     Box(
         modifier = modifier.size(64.dp),
         contentAlignment = Alignment.Center,
     ) {
-        if (icon != null) {
-            CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
-                icon()
-            }
-        }
+        Icon(imageVector = icon, contentDescription = null)
     }
 }
 
 @Composable
 internal fun RowScope.SettingsTileTexts(
-    title: @Composable () -> Unit,
-    subtitle: @Composable (() -> Unit)?,
+    title: Int,
+    subtitle: Int?,
 ) {
     Column(
         modifier = Modifier.weight(1f),
@@ -155,18 +92,18 @@ internal fun SettingsTileAction(content: @Composable () -> Unit) {
 }
 
 @Composable
-internal fun SettingsTileTitle(title: @Composable () -> Unit) {
+internal fun SettingsTileTitle(title: Int) {
     ProvideTextStyle(value = MaterialTheme.typography.subtitle1) {
-        title()
+        Text(text = stringResource(id = title))
     }
 }
 
 @Composable
-internal fun SettingsTileSubtitle(subtitle: @Composable () -> Unit) {
+internal fun SettingsTileSubtitle(subtitle: Int) {
     ProvideTextStyle(value = MaterialTheme.typography.caption) {
         CompositionLocalProvider(
             LocalContentAlpha provides ContentAlpha.medium,
-            content = subtitle
+            content = { Text(stringResource(id = subtitle)) }
         )
     }
 }
