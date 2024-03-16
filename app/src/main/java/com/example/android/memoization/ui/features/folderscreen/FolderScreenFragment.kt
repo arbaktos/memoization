@@ -16,7 +16,11 @@ import javax.inject.Inject
 
 
 @AndroidEntryPoint
-class FolderScreenFragment @Inject constructor(val preferenceStorage: DataStore<Preferences>): Fragment() {
+class FolderScreenFragment: Fragment() {
+
+    @Inject
+    lateinit var preferenceStorage: DataStore<Preferences>
+
     @OptIn(ExperimentalComposeUiApi::class)
     override fun onCreateView(
         inflater: LayoutInflater,

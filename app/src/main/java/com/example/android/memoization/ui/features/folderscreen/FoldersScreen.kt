@@ -1,44 +1,68 @@
 package com.example.android.memoization.ui.features.folderscreen
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.*
-import androidx.compose.material.MaterialTheme.colors
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Card
+import androidx.compose.material.LinearProgressIndicator
+import androidx.compose.material.Scaffold
+import androidx.compose.material.ScaffoldState
+import androidx.compose.material.SnackbarDuration
+import androidx.compose.material.SnackbarHostState
+import androidx.compose.material.SnackbarResult
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.rememberScaffoldState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.android.memoization.R
-import com.example.android.memoization.ui.theme.MemoizationTheme
 import com.example.android.memoization.data.model.MemoStack
-import com.example.android.memoization.ui.composables.*
-import com.example.android.memoization.ui.composables.components.*
+import com.example.android.memoization.ui.composables.components.AddStackAlertDialog
+import com.example.android.memoization.ui.composables.components.CustomFab
+import com.example.android.memoization.ui.composables.components.StackListItem
+import com.example.android.memoization.ui.composables.components.SwipeToDismiss
+import com.example.android.memoization.ui.composables.labels.PrimaryBoldLabel
+import com.example.android.memoization.ui.composables.labels.SimpleLabel
+import com.example.android.memoization.ui.features.settings.MenuDrawer
 import com.example.android.memoization.ui.features.stackscreen.DisplayStackError
+import com.example.android.memoization.ui.icons.ClickableVectorIcon
+import com.example.android.memoization.ui.theme.MemoizationTheme
 import com.example.android.memoization.ui.theme.PlayColors
 import com.example.android.memoization.utils.LoadingState
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import com.example.android.memoization.ui.features.settings.MenuDrawer
 
 const val TDEBUG = "memoization_debug"
 
@@ -67,28 +91,29 @@ fun FoldersScreen(
             scaffoldState = scaffoldState,
             floatingActionButton = {
                 CustomFab(
+                    isVisible = state is LoadingState.Collected && (state as LoadingState.Collected).content.isNotEmpty(),
                     onClick = {
-                        viewModel.showAddSTackDialog(true)
+                        viewModel.showAddStackDialog(true)
                     })
             },
-            drawerContent = { MenuDrawer(scaffoldState, preferenceStorage) },
+            drawerContent = { MenuDrawer(preferenceStorage = preferenceStorage) },
             topBar = {
                 AppBar(name = stringResource(id = R.string.app_name)) {
                     scope.launch { scaffoldState.drawerState.open() }
                 }
             }
-        ) { _ ->
-
+        ) { padding ->
             FolderScreenBodyContent(
                 viewModel = viewModel,
                 navController = navController,
                 scaffoldState = scaffoldState,
-                state = state
+                state = state,
+                modifier = Modifier.padding(padding)
             )
             if (toShowDialog.value) {
                 AddStackAlertDialog(
                     viewModel = viewModel
-                ) { viewModel.showAddSTackDialog(false) }
+                ) { viewModel.showAddStackDialog(false) }
             }
         }
     }
@@ -97,12 +122,12 @@ fun FoldersScreen(
 @ExperimentalComposeUiApi
 @Composable
 fun FolderScreenBodyContent(
+    modifier: Modifier,
     viewModel: FolderViewModel,
     navController: NavController,
     scaffoldState: ScaffoldState,
     state: LoadingState<List<MemoStack>>,
 ) {
-
     when (state) {
         is LoadingState.Loading -> LoadingStackList()
         is LoadingState.Collected -> FolderColumn(
@@ -130,7 +155,7 @@ fun FolderColumn(
     navController: NavController,
     scaffoldState: ScaffoldState
 ) {
-    if (state.content.isEmpty()) InvitationToCreateStack { viewModel.showAddSTackDialog(true) }
+    if (state.content.isEmpty()) InvitationToCreateStack { viewModel.showAddStackDialog(true) }
     else StackList(listState, state, viewModel, navController, scaffoldState)
 }
 
@@ -167,6 +192,7 @@ fun StackList(
                             )
                         },
                         onPlayWords = { viewModel.onPlayWords(navController, stack.stackId) },
+                        onPin = { viewModel.onPin() },
                         modifier = Modifier.animateItemPlacement()
                     )
                 },
@@ -174,10 +200,8 @@ fun StackList(
                     scope.launch {
                         val updatedStack = stack.copy(isVisible = false)
                         viewModel.updateStack(updatedStack)
-                        val snackBarResult =
-                            scaffoldState.snackbarHostState.showOnStackDeleteSnackBar(stack)
 
-                        when (snackBarResult) {
+                        when (scaffoldState.snackbarHostState.showOnStackDeleteSnackBar(stack)) {
                             SnackbarResult.ActionPerformed -> viewModel.cancelStackDeletion(stack)
                             SnackbarResult.Dismissed -> viewModel.deleteStackWithDelay(stack)
                         }
@@ -190,6 +214,8 @@ fun StackList(
     }
 }
 
+
+//TODO change design
 @Preview
 @Composable
 fun InvitationToCreateStack(onClick: () -> Unit = {}) {
@@ -206,9 +232,9 @@ fun InvitationToCreateStack(onClick: () -> Unit = {}) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(20.dp)
             ) {
-                Text(
+                SimpleLabel(
                     fontSize = 20.sp,
-                    text = stringResource(id = R.string.create_first_stack),
+                    stringId = R.string.create_first_stack,
                     modifier = Modifier.padding(bottom = 20.dp)
                 )
                 Image(
@@ -219,7 +245,6 @@ fun InvitationToCreateStack(onClick: () -> Unit = {}) {
         }
         Spacer(modifier = Modifier.padding(40.dp))
     }
-
 }
 
 @Composable
@@ -228,17 +253,15 @@ fun ShowStack(
     onPlayWords: () -> Unit,
     onNavigateToStack: () -> Unit,
     onAddNewWord: () -> Unit,
-    modifier: Modifier
+    onPin: () -> Unit,
+    modifier: Modifier,
 ) {
     StackListItem(
         stack = stack,
         modifier = modifier,
         onPlay = onPlayWords,
         onAdd = onAddNewWord,
-        onPin = {
-//            viewModel.onPin()//TODO
-            animateToTop()
-        },
+        onPin = onPin,
         onClickRow = onNavigateToStack
     )
 }
@@ -261,30 +284,27 @@ fun getPlayIconColor(unRepeatedPercent: Float): Color {
 
 @Composable
 fun AppBar(
+    modifier: Modifier = Modifier,
     name: String,
     onClick: () -> Unit
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(8.dp),
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            name,
-            fontWeight = FontWeight.Bold,
-            fontSize = 28.sp,
-            color = colors.primaryVariant,
-            modifier = Modifier.padding(12.dp)
+        PrimaryBoldLabel(text = name, size = 28.sp)
+        ClickableVectorIcon(
+            modifier = Modifier.padding(
+                end = 16.dp,
+                bottom = 14.dp
+            ),
+            imageVector = Icons . Filled . Menu,
+            onClick = onClick
         )
-        Icon(Icons.Filled.Menu,
-            stringResource(R.string.app_menu),
-            modifier = Modifier
-                .padding(end = 16.dp, bottom = 14.dp)
-                .clickable { onClick() })
     }
-
 }
 
 
@@ -295,5 +315,3 @@ suspend fun SnackbarHostState.showOnStackDeleteSnackBar(stack: MemoStack): Snack
         duration = SnackbarDuration.Short
     )
 }
-
-

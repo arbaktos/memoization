@@ -35,6 +35,20 @@
     <string name="someting_went_wrong">Something went wrong, please try again</string>
     <string name="error">Error</string>
     <string name="translation_error">Error receiving translation</string>
-    <string name="loading">Loading...</string>
+    <string name="loading">Loading…</string>
     <string name="start">Start\n</string>
+    <string name="settings_top_bar_label">Settings</string>
+    <string name="lbl_turn_on_notifications">Notifications on/off</string>
+    <string name="lbl_times_per_day">times per day:</string>
+    <string name="lbl_times_per_week">times per week:</string>
+
+    <string name="lbl_monday">M</string>
+    <string name="lbl_tuesday">TU</string>
+    <string name="lbl_wednesday">W</string>
+    <string name="lbl_thursday">TH</string>
+    <string name="lbl_friday">F</string>
+    <string name="lbl_saturday">SA</string>
+    <string name="lbl_sunday">SU</string>
+
+
 </resources>

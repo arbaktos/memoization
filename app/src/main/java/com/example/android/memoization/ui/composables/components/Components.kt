@@ -6,15 +6,31 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.material.ChipDefaults
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.FilterChip
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Text
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.outlined.Done
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -26,8 +42,13 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import com.example.android.memoization.R
 import com.example.android.memoization.ui.features.folderscreen.TDEBUG
+import com.example.android.memoization.utils.getValue
+import com.example.android.memoization.utils.putValue
+import kotlinx.coroutines.launch
 
 @Composable
 fun RowIcon(
@@ -50,6 +71,25 @@ fun RowIcon(
             .size(imageSize),
         tint = tint
     )
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun DatastoreChip(modifier: Modifier = Modifier, label: Int, dataStoreKey: Preferences.Key<Boolean>, dataStore: DataStore<Preferences>, initialSelected: Boolean = true) {
+    val savedSelected = dataStore.getValue(dataStoreKey, false).collectAsState(initial = initialSelected).value
+    var selected by remember { mutableStateOf(savedSelected) }
+    selected = savedSelected
+    val scope = rememberCoroutineScope()
+    val onClick = {
+        selected = !selected
+        scope.launch {
+            dataStore.putValue(dataStoreKey, selected)
+        }
+    }
+    FilterChip(selected = selected, onClick = { onClick() }, modifier = modifier.padding(0.dp), colors = ChipDefaults.filterChipColors(backgroundColor = Color.LightGray, selectedBackgroundColor = MaterialTheme.colors.primary)) {
+        androidx.compose.material3.Text(stringResource(id = label), color = if (selected) Color.White else Color.Black)
+    }
+
 }
 
 @Composable
@@ -87,25 +127,6 @@ fun SubmitIcon(
             .clickable(enabled = true) {
                 onFinish()
             }
-    )
-}
-
-@Composable
-fun H5TextBox(text: String, modifier: Modifier) {
-    Text(
-        modifier = modifier.padding(4.dp),
-        text = text,
-        style = MaterialTheme.typography.h5
-    )
-}
-
-@Composable
-fun H6TextBox(text: String) {
-    Text(
-        modifier = Modifier.padding(4.dp),
-        text = text,
-        style = MaterialTheme.typography.h6,
-        color = MaterialTheme.colors.primaryVariant
     )
 }
 
@@ -170,25 +191,6 @@ fun Label(text: String) {
 }
 
 @Composable
-fun OpenAndCloseIcon(
-    isOpen: Boolean,
-    onClick: () -> Unit
-) {
-    Icon(
-        painter = if (isOpen) painterResource(id = R.drawable.ic_up_24)
-        else painterResource(id = R.drawable.ic_baseline_keyboard_arrow_down_24),
-        contentDescription = "arrow down",
-        tint = MaterialTheme.colors.onSurface,
-        modifier = Modifier
-            .padding(start = 16.dp)
-            .clickable { /*shows all the stacks in the folder */
-                onClick()
-            }
-            .size(40.dp)
-    )
-}
-
-@Composable
 fun Fab(
     icon: ImageVector,
     contentDesc: String,
@@ -208,15 +210,18 @@ fun Fab(
 }
 
 @Composable
-fun CustomFab(onClick: () -> Unit) {
+fun CustomFab(modifier: Modifier = Modifier, isVisible: Boolean = true, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
-    Image(
-        painter = painterResource(id = R.drawable.noun_create_1202533),
-        contentDescription = stringResource(R.string.add_new_stack),
-        modifier = Modifier.clickable(interactionSource = interactionSource, indication = null) {
-            onClick()
-        }
-    )
+    if (isVisible) {
+        Image(
+            painter = painterResource(id = R.drawable.noun_create_1202533),
+            contentDescription = stringResource(R.string.add_new_stack),
+            modifier = modifier.clickable(interactionSource = interactionSource, indication = null) {
+                onClick()
+            }
+        )
+    }
+
 }
 
 @Composable

@@ -1,8 +1,8 @@
-package com.example.android.memoization.data.api
+package ru.vasilisasycheva.translation.api
 
+import com.example.android.memoization.data.api.ApiLanguage
 import retrofit2.Response
 import retrofit2.http.*
-import ru.vasilisasycheva.translation.api.WordTranslationResponse
 
 
 interface LinganexApi {

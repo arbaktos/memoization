@@ -1,7 +1,6 @@
 package com.example.android.memoization.notifications
 
 import android.Manifest
-import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -17,75 +16,73 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.longPreferencesKey
 import com.example.android.memoization.MainActivity
 import com.example.android.memoization.R
-import com.example.android.memoization.domain.usecases.NotifThresholdCalcUseCase
+import com.example.android.memoization.domain.usecases.NotifTimeCalcUseCase
 import com.example.android.memoization.extensions.scheduleAlarm
-import com.example.android.memoization.ui.features.settings.ConstantsSettings
-import com.example.android.memoization.utils.Datastore
-import com.example.android.memoization.utils.NOTIFICATION_ID
-import com.example.android.memoization.utils.NOTIFICATION_ID_LABEL
-import com.example.android.memoization.utils.getValue
+import com.example.android.memoization.notifications.NotificationReceiver.NotificationChannel.REMINDER_CHANNEL_DESCRIPTION
+import com.example.android.memoization.notifications.NotificationReceiver.NotificationChannel.REMINDER_CHANNEL_ID
+import com.example.android.memoization.notifications.NotificationReceiver.NotificationChannel.REMINDER_CHANNEL_NAME
+import com.example.android.memoization.utils.NotifConstants
+import com.example.android.memoization.utils.NotifConstants.NOTIFICATION_ID
+import com.example.android.memoization.utils.NotifConstants.NOTIFICATION_ID_LABEL
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.util.Calendar
+import java.text.SimpleDateFormat
+import java.util.Locale
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class NotificationReceiver : BroadcastReceiver() {
-
-    @Inject
-    lateinit var notifThresholdUseCase: NotifThresholdCalcUseCase
+class NotificationReceiver @Inject constructor() : BroadcastReceiver() {
 
     @Inject
     lateinit var dataStore: DataStore<Preferences>
+
+    @Inject
+    lateinit var notifThresholdUseCase: NotifTimeCalcUseCase
+
     override fun onReceive(context: Context?, intent: Intent?) {
-        var period = AlarmManager.INTERVAL_DAY
-        dataStore.getValue(Datastore.NOTIF_PERIOD, ConstantsSettings.NOTIFICATIONS_PERIOD).map {
-            period = it
+        Log.d(TAG, "onReceive: ")
+
+        context?.let {
+            createShortReminderNotification(
+                context,
+                context.getString(R.string.notif_title),
+                context.getString(R.string.notif_content),
+            )
         }
 
-        context.scheduleAlarm(
-            timeToTrigger = Calendar.getInstance().timeInMillis + period,
-            alarmIntent = Intent(context?.applicationContext, NotificationReceiver::class.java),
-            requestCode = 367
-        )
-        Log.d(TAG, "onReceive: ")
         CoroutineScope(Job()).launch {
-            notifThresholdUseCase().collect {
-                val (showNotif, stackId) = it
-                context?.let {
-                    if (showNotif) {
-                        createShortReminderNotification(
-                            context,
-                            context.getString(R.string.notif_title),
-                            context.getString(R.string.notif_content),
-                            stackId
-                        )
-                        this.cancel()
-                    }
+            notifThresholdUseCase().collectLatest {
+                it?.let { notifTime ->
+                    try {
+                        Log.d(TAG, "onReceive: notifTime = ${SimpleDateFormat("yyyy.MM.dd HH:mm:ss Z", Locale("KG")).format(it)}, current time = ${SimpleDateFormat("yyyy.MM.dd HH:mm:ss Z", Locale("KG")).format(System.currentTimeMillis())}")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "onReceive: ", e)}
+                    context.scheduleAlarm(
+                        timeToTrigger = notifTime,
+                        alarmIntent = Intent(context?.applicationContext, NotificationReceiver::class.java),
+                        requestCode = NotifConstants.ALARM_REQUEST_CODE
+                    )
                 }
             }
         }
     }
 
-    private val REMINDER_CHANNEL_ID = "reminder_channel"
+    object NotificationChannel {
+        const val REMINDER_CHANNEL_ID = "reminder_channel"
+        const val REMINDER_CHANNEL_NAME = "reminder_channel_name"
+        const val REMINDER_CHANNEL_DESCRIPTION = "reminder to learn the words"
+    }
 
     private fun createReminderChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // Create the NotificationChannel
-            val name = "channel_name"
-            val descriptionText = "reminder to learn the words"
             val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val mChannel = NotificationChannel(REMINDER_CHANNEL_ID, name, importance)
-            mChannel.description = descriptionText
-            // Register the channel with the system; you can't change the importance
-            // or other notification behaviors after this
+            val mChannel = NotificationChannel(REMINDER_CHANNEL_ID, REMINDER_CHANNEL_NAME, importance)
+            mChannel.description = REMINDER_CHANNEL_DESCRIPTION
             val notificationManager =
                 context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(mChannel)
@@ -95,8 +92,7 @@ class NotificationReceiver : BroadcastReceiver() {
     private fun createShortReminderNotification(
         context: Context,
         title: String,
-        content: String,
-        stackId: Long
+        content: String
     ) {
         createReminderChannel(context)
         val tapIntent = Intent(context, MainActivity::class.java).apply {
@@ -112,10 +108,7 @@ class NotificationReceiver : BroadcastReceiver() {
         val cancelPendingIntent =
             PendingIntent.getBroadcast(context, 0, cancelIntent, PendingIntent.FLAG_IMMUTABLE)
 
-        val startIntent = Intent(context, LearnBroadcastReceiver::class.java).putExtra(
-            STACK_ID_LABEL, stackId
-        )
-        Log.d(TAG, "createShortReminderNotification: stack id $stackId")
+        val startIntent = Intent(context, LearnBroadcastReceiver::class.java)
         val startPendingIntent =
             PendingIntent.getBroadcast(context, 0, startIntent, PendingIntent.FLAG_IMMUTABLE)
 

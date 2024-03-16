@@ -1,4 +1,4 @@
-package com.example.android.memoization.data.api
+package ru.vasilisasycheva.translation.api
 
 import dagger.Module
 import dagger.Provides
@@ -19,7 +19,7 @@ import javax.inject.Inject
 @Module
 @InstallIn(SingletonComponent::class)
 class Retrofit @Inject constructor(){
-    val httpLoginIntercepror = setLoginInterceptor()
+    private val httpLoggingInterceptor = setLoginInterceptor()
 
     @Provides
     fun setLoginInterceptor(): HttpLoggingInterceptor {
@@ -30,7 +30,7 @@ class Retrofit @Inject constructor(){
 
     @Provides
     fun okHttpClient() = OkHttpClient.Builder()
-        .addInterceptor(httpLoginIntercepror)
+        .addInterceptor(httpLoggingInterceptor)
         .addInterceptor { chain ->
             val request = chain.request().newBuilder()
                 .addHeader(HEADER_AUTH, API_KEY)
@@ -40,7 +40,7 @@ class Retrofit @Inject constructor(){
         .build()
 
     @Provides
-    fun retrofit() = Retrofit.Builder()
+    fun retrofit(): Retrofit = Retrofit.Builder()
         .baseUrl(BASE_URL)
         .client(okHttpClient())
         .addConverterFactory(GsonConverterFactory.create())

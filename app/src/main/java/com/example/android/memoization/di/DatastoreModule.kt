@@ -5,7 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
-import com.example.android.memoization.utils.Datastore
+import com.example.android.memoization.utils.DatastoreKey
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,7 +22,7 @@ class DatastoreModule {
     fun providePreferencesDataStore(@ApplicationContext appContext: Context): DataStore<Preferences> =
         PreferenceDataStoreFactory.create(
             produceFile = {
-                appContext.preferencesDataStoreFile(Datastore.FILE_NAME)
+                appContext.preferencesDataStoreFile(DatastoreKey.FILE_NAME)
             }
         )
 }
