@@ -20,5 +20,4 @@ abstract class BaseViewModel <T, B> : ViewModel() {
     abstract fun onBackPressed(navController: NavController)
 
 
-
 }

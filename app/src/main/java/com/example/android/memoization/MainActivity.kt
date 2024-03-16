@@ -2,67 +2,99 @@ package com.example.android.memoization
 
 import android.app.AlarmManager
 import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.SystemClock
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.fragment.app.FragmentContainerView
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.navArgument
+import com.example.android.memoization.domain.usecases.NotifTimeCalcUseCase
+import com.example.android.memoization.extensions.cancelScheduledAlarm
+import com.example.android.memoization.extensions.scheduleAlarm
 import com.example.android.memoization.notifications.NotificationReceiver
-import com.example.android.memoization.ui.composables.*
-import com.example.android.memoization.ui.composables.components.NewFolderScreen
-import com.example.android.memoization.ui.features.folderscreen.FoldersScreen
-import com.example.android.memoization.ui.features.memoizationscreen.MemorizationScreen
-import com.example.android.memoization.ui.features.addnewpair.AddNewPairScreen
-import com.example.android.memoization.ui.theme.MemoizationTheme
-import com.example.android.memoization.ui.features.folderscreen.FolderViewModel
-import com.example.android.memoization.utils.*
+import com.example.android.memoization.utils.DatastoreKey
+import com.example.android.memoization.utils.NotifConstants
+import com.example.android.memoization.utils.getValue
+import com.example.android.memoization.utils.putValue
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import java.util.*
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
+    @Inject
+    lateinit var notifTimeCalcUseCase: NotifTimeCalcUseCase
+
     private lateinit var navController: NavController
+
+    @Inject
+    lateinit var dataStore: DataStore<Preferences>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val navHost = supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
         navController = navHost.navController
+        scheduleFirstAlarm(lifecycleScope)
+        listenNotificationSettingChanges()
     }
 
-//    private fun setUpNotifications(timeToTrigger: Long, repeatInterval: Long) {
-//        val alarmMgr: AlarmManager? = this.getSystemService(ALARM_SERVICE) as? AlarmManager?
-//
-//        val requestCode = Date().time
-//        val alarmIntent = Intent(this, NotificationReceiver::class.java)
-//        val pendingIntent = PendingIntent.getBroadcast(
-//            this,
-//            requestCode.toInt(),
-//            alarmIntent,
-//            PendingIntent.FLAG_UPDATE_CURRENT
-//        )
-//
-//        alarmMgr?.setInexactRepeating(
-//            AlarmManager.ELAPSED_REALTIME_WAKEUP,
-//            timeToTrigger,
-//            repeatInterval,
-//            pendingIntent
-//        )
-//    }
-}
+    private fun listenNotificationSettingChanges() {
+        lifecycleScope.launch {
+            dataStore.data.collect { prefs ->
+                val toShow = prefs[DatastoreKey.TO_SHOW_NOTIFICATIONS] ?: true
+                Log.d(TAG, "listenNotificationSettingChanges: $toShow")
+                if (toShow) {
+                    notifTimeCalcUseCase().collectLatest { notifTime ->
+                        notifTime?.let {
+                            applicationContext.scheduleAlarm(
+                                notifTime,
+                                Intent(applicationContext, NotificationReceiver::class.java),
+                                NotifConstants.ALARM_REQUEST_CODE
+                            )
+                        }
+                    }
+                }
+                else {
+                    cancelScheduledAlarm(
+                        getSystemService(ALARM_SERVICE) as? AlarmManager?,
+                        PendingIntent.getBroadcast(
+                            applicationContext,
+                            NotifConstants.ALARM_REQUEST_CODE,
+                            Intent(applicationContext, NotificationReceiver::class.java),
+                            PendingIntent.FLAG_IMMUTABLE
+                        ))
+                }
+            }
+        }
+    }
 
+    private fun scheduleFirstAlarm(scope: CoroutineScope) {
+
+        scope.launch {
+            dataStore.getValue(DatastoreKey.FIRST_LAUNCH, true).combine(
+                notifTimeCalcUseCase()
+            ) { firstLaunch, notifTime ->
+                if (firstLaunch) notifTime?.let {
+                    scheduleAlarm(
+                        it,
+                        Intent(applicationContext, NotificationReceiver::class.java),
+                        NotifConstants.ALARM_REQUEST_CODE
+                    )
+                }
+                dataStore.putValue(DatastoreKey.FIRST_LAUNCH, false)
+            }
+        }
+    }
+
+    companion object {
+        const val TAG = "MainActivity"
+    }
+}

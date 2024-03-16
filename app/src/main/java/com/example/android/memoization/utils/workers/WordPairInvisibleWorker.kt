@@ -4,12 +4,12 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.android.memoization.data.database.MemoDao
-import com.example.android.memoization.utils.WP_ID
 import javax.inject.Inject
 
 class WordPairInvisibleWorker @Inject constructor(
     context: Context, val memoDao: MemoDao, params: WorkerParameters) : CoroutineWorker(context, params) {
 
+    val WP_ID = "wpId"
     override suspend fun doWork(): Result {
         return try {
             val wpId = inputData.getLong(WP_ID, 0)

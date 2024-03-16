@@ -13,14 +13,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.android.memoization.data.model.BaseWordPair
 import com.example.android.memoization.data.model.WordPair
 
 @Composable
-fun FlipCard(wordPair: WordPair) {
+fun FlipCard(wordPair: BaseWordPair) {
 
     var rotated by remember { mutableStateOf(false) }
     val elevation = 8.dp
-    val shape = RoundedCornerShape(15.dp)
 
     val rotation by animateFloatAsState(
         targetValue = if (rotated) 180f else 0f,

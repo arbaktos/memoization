@@ -1,6 +1,6 @@
 package com.example.android.memoization.data.model
 
-import ru.vasilisasycheva.translation.api.LanguageItem
+import android.util.Log
 import java.util.*
 
 data class MemoStack(
@@ -14,7 +14,7 @@ data class MemoStack(
     override val toLanguage: String? = null,
 ) : BaseStack, DismissableItem {
 
-    var words: MutableList<WordPair> = mutableListOf()
+    var words: MutableList<BaseWordPair> = mutableListOf()
         set(value) {
             hasWords = value.isNotEmpty()
             field = value
@@ -23,9 +23,25 @@ data class MemoStack(
     fun prepareStack(): MemoStack {
         val currentDate = Date()
         return this.apply {
-            words.forEach { wordPair ->
-                wordPair.checkIfShow(currentDate = currentDate)
+            words.forEach {it as WordPair
+                it.checkIfShow(currentDate = currentDate)
             }
         }
+    }
+
+    fun hasWordsToLearn(): Boolean {
+        return this.words.any { (it as WordPair).toLearn }
+    }
+
+    fun getStackUnrepeatedPercent(): Int {
+        val all = this.words.size
+        val unlearned = this.prepareStack().words.filter { (it as WordPair).toLearn }.size
+        val result = ((unlearned.toFloat() / all.toFloat())  * 100).toInt()
+        Log.d(TAG, "getStackUnrepeatedPercent: $result")
+        return result
+    }
+
+    companion object {
+        private val TAG = "MemoStack"
     }
 }

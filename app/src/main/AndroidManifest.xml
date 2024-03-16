@@ -39,9 +39,6 @@
             android:name=".notifications.LearnBroadcastReceiver"
             android:exported="false" />
         <receiver
-            android:name=".notifications.AlarmReceiver"
-            android:exported="false" />
-        <receiver
             android:name=".notifications.NotificationReceiver"
             android:exported="false" />
 
