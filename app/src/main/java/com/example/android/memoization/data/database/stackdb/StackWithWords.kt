@@ -21,7 +21,7 @@ fun StackWithWords.toMemoStack(): MemoStack {
         stackId = this.stack.stackId,
         hasWords = this.words.isNotEmpty(),
         isVisible = this.stack.isVisible,
-        pinned = this.stack.pinned
+        pinnedTime = this.stack.pinnedTime
     ).apply {
         words = this@toMemoStack.words.map { it.toWordPair() }.toMutableList()
     }

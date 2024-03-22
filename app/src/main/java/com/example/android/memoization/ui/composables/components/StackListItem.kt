@@ -2,12 +2,27 @@ package com.example.android.memoization.ui.composables.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.Card
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedButton
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.PlayCircleFilled
+import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,7 +80,7 @@ fun StackListItem(
                         modifier = Modifier
                     )
                 }
-                PinPushIcon() { onPin() }
+                PinPushIcon(isPinned = stack.pinnedTime != null) { onPin() }
             }
             Row(modifier = Modifier.padding(start = 8.dp)) {
                 AddIconBtn { onAdd() }
@@ -95,7 +110,8 @@ fun StackNameText(text: String, modifier: Modifier = Modifier) {
 
 @Composable
 fun PinPushIcon(
-    modifier: Modifier = Modifier, isPinned: Boolean = false,
+    modifier: Modifier = Modifier,
+    isPinned: Boolean = false,
     onPin: () -> Unit
 ) {
     val _isPinned = remember { mutableStateOf(isPinned) }

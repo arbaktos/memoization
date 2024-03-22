@@ -192,7 +192,7 @@ fun StackList(
                             )
                         },
                         onPlayWords = { viewModel.onPlayWords(navController, stack.stackId) },
-                        onPin = { viewModel.onPin() },
+                        onPin = { viewModel.onPin(stack) },
                         modifier = Modifier.animateItemPlacement()
                     )
                 },

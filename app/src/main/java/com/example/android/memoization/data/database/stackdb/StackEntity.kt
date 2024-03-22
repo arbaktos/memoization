@@ -13,9 +13,9 @@ data class StackEntity(
     override val stackId: Long = 0,
     override var hasWords: Boolean = false,
     override var isVisible: Boolean = true,
-    override var pinned: Boolean = false,
     override val fromLanguage: String? = null,
-    override val toLanguage: String? = null
+    override val toLanguage: String? = null,
+    override var pinnedTime: Long? = null
 ) : BaseStack {
 
     companion object {
@@ -25,11 +25,12 @@ data class StackEntity(
                 numRep = stack.numRep,
                 stackId = stack.stackId,
                 hasWords = stack.hasWords,
+                pinnedTime = stack.pinnedTime,
                 isVisible = stack.isVisible,
-                pinned = stack.pinned,
                 fromLanguage = stack.fromLanguage,
                 toLanguage = stack.toLanguage
             )
         }
     }
+
 }

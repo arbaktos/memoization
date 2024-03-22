@@ -1,7 +1,5 @@
 package com.example.android.memoization.data.model
 
-import ru.vasilisasycheva.translation.api.LanguageItem
-
 
 interface BaseStack {
     val name: String
@@ -9,7 +7,7 @@ interface BaseStack {
     val stackId: Long
     var hasWords: Boolean
     var isVisible: Boolean
-    var pinned: Boolean
+    var pinnedTime: Long?
     val fromLanguage: String?
     val toLanguage:String?
 }

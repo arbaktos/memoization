@@ -1,7 +1,7 @@
 package com.example.android.memoization.data.model
 
 import android.util.Log
-import java.util.*
+import java.util.Date
 
 data class MemoStack(
     override val name: String,
@@ -9,9 +9,9 @@ data class MemoStack(
     override var hasWords: Boolean = false,
     override var stackId: Long = 0,
     override var isVisible: Boolean = true,
-    override var pinned: Boolean = false,
     override val fromLanguage: String? = null,
     override val toLanguage: String? = null,
+    override var pinnedTime: Long? = null,
 ) : BaseStack, DismissableItem {
 
     var words: MutableList<BaseWordPair> = mutableListOf()

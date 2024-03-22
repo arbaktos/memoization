@@ -118,8 +118,8 @@ class FolderViewModel @Inject constructor(
         navController.navigate(action)
     }
 
-    fun onPin() {
-        //TODO start animate to top, update pin param in db
+    fun onPin(stack: MemoStack) {
+        if(stack.pinnedTime == null) updateStack(stack.copy(pinnedTime = System.currentTimeMillis()))
+        else updateStack(stack.copy(pinnedTime = null))
     }
-
 }

@@ -1,8 +1,8 @@
 package com.example.android.memoization.domain.usecases
 
 import com.example.android.memoization.data.database.stackdb.StackEntity
-import com.example.android.memoization.data.repository.StackRepository
 import com.example.android.memoization.data.model.MemoStack
+import com.example.android.memoization.data.repository.StackRepository
 import javax.inject.Inject
 
 interface UpdateStackUseCase {
@@ -17,7 +17,7 @@ class UpdateStackUseCaseImpl @Inject constructor(val repo: StackRepository): Upd
                 numRep = stack.numRep,
                 stackId = stack.stackId,
                 hasWords = stack.hasWords,
-                pinned = stack.pinned,
+                pinnedTime = stack.pinnedTime,
                 isVisible = stack.isVisible
             )
         repo.updateStack(stackEntity)
