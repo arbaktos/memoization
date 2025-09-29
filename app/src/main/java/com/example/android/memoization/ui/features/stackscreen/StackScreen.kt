@@ -45,12 +45,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.android.memoization.R
-import com.example.android.memoization.data.model.BaseWordPair
 import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.extensions.checkLength
 import com.example.android.memoization.ui.composables.components.AddNewCardFab
-import com.example.android.memoization.ui.composables.components.AddStackAlertDialog
+import com.example.android.memoization.ui.composables.dialog.AddStackAlertDialog
+import com.example.android.memoization.ui.composables.components.CustomAddFab
 import com.example.android.memoization.ui.composables.components.MotionAppBar
 import com.example.android.memoization.ui.composables.components.RowIcon
 import com.example.android.memoization.ui.composables.components.SwipeToDismiss
@@ -163,13 +163,18 @@ fun DisplayStack(
         isFloatingActionButtonDocked = false,
         floatingActionButton = {
             Column {
-                AddNewCardFab(
-                    onAdd = {
+                CustomAddFab(
+                    isVisible = true,
+                    onClick = {
                         navController
                             .navigate(
                                 StackScreenFragmentDirections
                                     .actionStackScreenFragmentToNewPairFragment(
-                                        NewPairNavArgs.NewWordPair(stackId = currentStack.stackId)
+                                        NewPairNavArgs.NewWordPair(
+                                            stackId = currentStack.stackId,
+                                            fromLanguage = currentStack.fromLanguage ?: "",
+                                            toLanguage = currentStack.toLanguage ?: ""
+                                        )
                                     )
                             )
                     }
@@ -181,7 +186,7 @@ fun DisplayStack(
         content = { innerPadding ->
             Box(modifier = Modifier.padding(innerPadding)) {
                 WordList(
-                    wordList = loadingState.content.words,
+                    stack = loadingState.content,
                     viewModel = viewModel,
                     navController = navController,
                     listState = lazyListState,
@@ -228,17 +233,17 @@ fun StackFab(navController: NavController, currentStack: MemoStack?) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun WordList(
-    wordList: List<BaseWordPair>,
     viewModel: StackViewModel,
     navController: NavController,
     listState: LazyListState,
+    stack: MemoStack,
 ) {
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth(),
         state = listState
     ) {
-        items(wordList.reversed(), key = { it.wordPairId }) { wordPair ->
+        items(stack.words.reversed(), key = { it.wordPairId }) { wordPair ->
             wordPair as WordPair
             SwipeToDismiss(
                 item = wordPair,
@@ -248,7 +253,9 @@ fun WordList(
                         onEditNavigate = {
                             navController.navigate(
                                 StackScreenFragmentDirections.actionStackScreenFragmentToNewPairFragment(
-                                    NewPairNavArgs.EditPair(wordPair.wordPairId)
+                                    NewPairNavArgs.EditPair(wordPair.wordPairId,
+                                        fromLanguage = stack.fromLanguage ?: "",
+                                        toLanguage = stack.toLanguage ?: "")
                                 )
                             )
                         },

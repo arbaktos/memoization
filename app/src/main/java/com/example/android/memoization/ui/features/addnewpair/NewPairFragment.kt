@@ -28,8 +28,8 @@ class NewPairFragment : Fragment() {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 AddNewPairScreen(
-                navController = findNavController(),
-                args = newPairNavArgs
+                    navController = findNavController(),
+                    args = newPairNavArgs
                 )
             }
         }

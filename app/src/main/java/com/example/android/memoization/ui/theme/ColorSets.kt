@@ -32,7 +32,7 @@ fun AddTextFieldColors(): TextFieldColors {
 }
 
 @Composable
-fun MemoButtonColors(): ButtonColors {
+fun memoButtonColors(): ButtonColors {
     return buttonColors(
         backgroundColor = Color.Transparent,
         contentColor = MaterialTheme.colors.primary,

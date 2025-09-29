@@ -37,7 +37,7 @@ import com.example.android.memoization.R
 import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.ui.features.folderscreen.getPlayIconColor
-import com.example.android.memoization.ui.theme.MemoButtonColors
+import com.example.android.memoization.ui.theme.memoButtonColors
 
 
 @Composable
@@ -47,7 +47,7 @@ fun StackListItem(
     onPin: () -> Unit = {},
     onAdd: () -> Unit = {},
     onPlay: () -> Unit = {},
-    onClickRow: () -> Unit = {}
+    onClick: () -> Unit = {}
 ) {
 
     val wordsToLearn = stack.words.filter { (it as WordPair).toLearn }
@@ -62,7 +62,7 @@ fun StackListItem(
             .background(Color.White)
             .padding(5.dp)
             .height(120.dp)
-            .clickable { onClickRow() }
+            .clickable { onClick() }
 
     ) {
         Column(modifier = Modifier.padding(5.dp)) {
@@ -134,7 +134,7 @@ fun AddIconBtn(modifier: Modifier = Modifier, onAdd: () -> Unit) {
     OutlinedButton(
         onClick = onAdd,
         shape = RoundedCornerShape(16.dp),
-        colors = MemoButtonColors(),
+        colors = memoButtonColors(),
         modifier = modifier
     ) {
         Icon(Icons.Outlined.Add, stringResource(R.string.add_wordpair), tint = Color.Gray)

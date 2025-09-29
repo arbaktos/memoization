@@ -3,17 +3,28 @@ package com.example.android.memoization.utils
 import android.os.Parcel
 import android.os.Parcelable
 
-sealed class NewPairNavArgs(val editMode: Boolean): Parcelable {
-    class EditPair(val wordPairId: Long, editMode: Boolean = true): NewPairNavArgs(editMode) {
+sealed class NewPairNavArgs(
+    val editMode: Boolean,
+    val fromLanguage: String,
+    val toLanguage: String
+) : Parcelable {
+    class EditPair(
+        val wordPairId: Long,
+        fromLanguage: String,
+        toLanguage: String,
+    ) :
+        NewPairNavArgs(true, fromLanguage, toLanguage) {
         constructor(parcel: Parcel) : this(
             parcel.readLong(),
-            parcel.readByte() != 0.toByte()
-        ) {
-        }
+            parcel.readString() ?: "",
+            parcel.readString() ?: "",
+        )
 
         override fun writeToParcel(parcel: Parcel, flags: Int) {
             parcel.writeLong(wordPairId)
-            parcel.writeByte(1)
+            parcel.writeString(fromLanguage)
+            parcel.writeString(toLanguage)
+
         }
 
         override fun describeContents(): Int {
@@ -31,16 +42,18 @@ sealed class NewPairNavArgs(val editMode: Boolean): Parcelable {
         }
     }
 
-    class NewWordPair(val stackId: Long, editMode: Boolean = false): NewPairNavArgs(editMode) {
+    class NewWordPair(val stackId: Long, fromLanguage: String, toLanguage: String) :
+        NewPairNavArgs(false, fromLanguage, toLanguage) {
         constructor(parcel: Parcel) : this(
             parcel.readLong(),
-            parcel.readByte() != 0.toByte()
-        ) {
-        }
+            parcel.readString() ?: "",
+            parcel.readString() ?: "",
+        )
 
         override fun writeToParcel(parcel: Parcel, flags: Int) {
             parcel.writeLong(stackId)
-            parcel.writeByte(0)
+            parcel.writeString(fromLanguage)
+            parcel.writeString(toLanguage)
         }
 
         override fun describeContents(): Int {

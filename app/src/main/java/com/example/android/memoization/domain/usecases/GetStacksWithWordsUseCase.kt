@@ -15,15 +15,14 @@ interface GetStacksWithWordsUseCase {
 
 class GetStacksWithWordsUseCaseImpl @Inject constructor(private val stackRepo: StackRepository) :
     GetStacksWithWordsUseCase {
-    private val TAG = "GetStacksWithWords"
-    override fun invoke(): Flow<LoadingState<List<MemoStack>>> {
-        return stackRepo.getStacksWithWords()
-            .map { stackList ->
-                val finalList = stackList.map { it.toMemoStack() }.filter { it.isVisible }.sortedWith(compareBy(nullsLast<Long>()) { it.pinnedTime })
-                LoadingState.Collected(finalList)
-            }
-            .catch {
-                LoadingState.Error
-            }
-    }
+    //    private val TAG = "GetStacksWithWords"
+    override fun invoke() = stackRepo.getStacksWithWords()
+        .map { stackList ->
+            val visibleSortedStacks = stackList.map { it.toMemoStack() }.filter { it.isVisible }
+                .sortedByDescending { it.pinnedTime }
+            LoadingState.Collected(visibleSortedStacks)
+        }
+        .catch {
+            LoadingState.Error
+        }
 }

@@ -44,7 +44,7 @@ class StackViewModel @Inject constructor(
     }
 
     override fun getDataToDisplay(): Flow<LoadingState<MemoStack>> {
-        return stackId?.let {  getStackUseCase(stackId!!) }
+        return stackId?.let {  getStackUseCase(it) }
             ?: emptyFlow()
     }
 

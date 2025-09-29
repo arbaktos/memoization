@@ -3,7 +3,6 @@ package com.example.android.memoization.ui.features.addnewpair
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.android.memoization.R
-import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.data.repository.WordPairRepository
 import com.example.android.memoization.domain.usecases.GetStackUseCase
@@ -14,7 +13,6 @@ import com.example.android.memoization.utils.Empty_string
 import com.example.android.memoization.utils.LoadingState
 import com.example.android.memoization.utils.NewPairNavArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
@@ -72,15 +70,21 @@ class AddNewPairViewModel @Inject constructor(
             editMode = args.editMode
             when (args) {
                 is NewPairNavArgs.NewWordPair -> {
-                    setCurrentStackId(args.stackId)
+                    currentStackId = args.stackId
                 }
 
                 is NewPairNavArgs.EditPair -> {
                     currentWpId = args.wordPairId
                 }
             }
+            fromLanguage = args.fromLanguage
+            toLanguage = args.toLanguage
         } ?: updateToastMessage(R.string.someting_went_wrong)
 
+    }
+
+    fun needsTranslation(): Boolean {
+        return !fromLanguage.isNullOrBlank() && !toLanguage.isNullOrBlank()
     }
 
     override fun getDataToDisplay(): Flow<LoadingState<WordPair>> {
@@ -88,7 +92,6 @@ class AddNewPairViewModel @Inject constructor(
             if (it is LoadingState.Collected<WordPair>){
                 currentWordPair = it.content
                 currentStackId = currentWordPair!!.parentStackId
-                setLanguages(currentStackId)
             }
             it
         }
@@ -112,29 +115,9 @@ class AddNewPairViewModel @Inject constructor(
             )
     }
 
-    private fun setCurrentStackId(stackId: Long) {
-        currentStackId = stackId
-        viewModelScope.launch(Dispatchers.IO) {
-            setLanguages(stackId)
-        }
-    }
-
-    private fun setLanguages(stackId: Long? = currentStackId) {
-        stackId?.let {
-            getStackUseCase(currentStackId!!).map { state ->
-                if (state is LoadingState.Collected<MemoStack>) {
-                    fromLanguage = state.content.fromLanguage
-                    toLanguage = state.content.toLanguage
-                }
-            }
-        }
-    }
-
     private fun clearWordPair() {
         currentWordPair = null
         word1 = Empty_string
         word2 = Empty_string
     }
-
-
 }

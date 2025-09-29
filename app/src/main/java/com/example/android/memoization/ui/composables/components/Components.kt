@@ -39,6 +39,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -210,7 +211,7 @@ fun Fab(
 }
 
 @Composable
-fun CustomFab(modifier: Modifier = Modifier, isVisible: Boolean = true, onClick: () -> Unit) {
+fun CustomAddFab(modifier: Modifier = Modifier, isVisible: Boolean = true, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     if (isVisible) {
         Image(
@@ -221,7 +222,20 @@ fun CustomFab(modifier: Modifier = Modifier, isVisible: Boolean = true, onClick:
             }
         )
     }
+}
 
+@Composable
+fun CustomDoneFab(modifier: Modifier = Modifier, isVisible: Boolean = true, onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    if (isVisible) {
+        Image(
+            painter = painterResource(id = R.drawable.tick_square_icon),
+            contentDescription = stringResource(R.string.add_new_stack),
+            modifier = modifier.clickable(interactionSource = interactionSource, indication = null) {
+                onClick()
+            }
+        )
+    }
 }
 
 @Composable
@@ -231,4 +245,10 @@ fun AddNewCardFab(onAdd: () -> Unit) {
         contentDesc = stringResource(R.string.add_new_card),
         onClick = onAdd
     )
+}
+
+@Preview
+@Composable
+fun PreviewCustomFab() {
+    CustomAddFab(isVisible = true) { }
 }

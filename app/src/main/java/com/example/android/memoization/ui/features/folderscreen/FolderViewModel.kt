@@ -93,10 +93,14 @@ class FolderViewModel @Inject constructor(
         navController.navigate(FolderScreenFragmentDirections.toStackScreen(stackId))
     }
 
-    fun onAddNewWord(navController: NavController, stackId: Long) {
+    fun onAddNewWord(navController: NavController, stack: MemoStack) {
         navController.navigate(
             FolderScreenFragmentDirections.toNewPairFragment(
-                NewPairNavArgs.NewWordPair(stackId = stackId)
+                NewPairNavArgs.NewWordPair(
+                    stackId = stack.stackId,
+                    fromLanguage = stack.fromLanguage ?: "",
+                    toLanguage = stack.toLanguage ?: ""
+                )
             )
         )
     }
@@ -119,7 +123,7 @@ class FolderViewModel @Inject constructor(
     }
 
     fun onPin(stack: MemoStack) {
-        if(stack.pinnedTime == null) updateStack(stack.copy(pinnedTime = System.currentTimeMillis()))
+        if (stack.pinnedTime == null) updateStack(stack.copy(pinnedTime = System.currentTimeMillis()))
         else updateStack(stack.copy(pinnedTime = null))
     }
 }

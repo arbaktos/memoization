@@ -7,3 +7,5 @@ fun longToDays(timeSpace: Long): Int {
     val days = (hours / 24).toInt()
     return days
 }
+
+fun Boolean.toByte(): Byte = if (this) 1 else 0

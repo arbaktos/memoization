@@ -77,7 +77,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun scheduleFirstAlarm(scope: CoroutineScope) {
-
         scope.launch {
             dataStore.getValue(DatastoreKey.FIRST_LAUNCH, true).combine(
                 notifTimeCalcUseCase()

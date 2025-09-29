@@ -4,7 +4,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
 import com.example.android.memoization.R
-import com.example.android.memoization.ui.theme.MemoButtonColors
+import com.example.android.memoization.ui.theme.memoButtonColors
 
 @Composable
 fun StackCompleteDialog(
@@ -16,7 +16,7 @@ fun StackCompleteDialog(
             Button(
                 onClick = onClick,
                 content = { Text(stringResource(R.string.ok)) },
-                colors = MemoButtonColors(),
+                colors = memoButtonColors(),
                 elevation = null
             )
         },

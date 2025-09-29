@@ -2,19 +2,29 @@ package com.example.android.memoization.ui.features.addnewpair
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.material.Card
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Translate
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -27,12 +37,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.android.memoization.ui.theme.MemoizationTheme
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.data.model.WordPair
-import com.example.android.memoization.ui.composables.*
-import com.example.android.memoization.ui.composables.components.Fab
+import com.example.android.memoization.ui.composables.components.CustomDoneFab
 import com.example.android.memoization.ui.composables.components.RowIcon
 import com.example.android.memoization.ui.composables.components.ShowToast
 import com.example.android.memoization.ui.features.stackscreen.DisplayStackError
@@ -45,7 +53,6 @@ import kotlinx.coroutines.launch
 
 private const val TAG = "AddNewPairScreen"
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun AddNewPairScreen(
     navController: NavController,
@@ -96,12 +103,14 @@ fun ShowNewPairScreenState(
             onConfirm = onAdd,
             onTranslate = onTranslate
         )
+
         is LoadingState.Collected -> DisplayWordPair(
             wordPair = state.content,
             viewModel = viewModel,
             onConfirm = onAdd,
             onTranslate = onTranslate
         )
+
         is LoadingState.Error -> DisplayStackError()
     }
 }
@@ -113,49 +122,47 @@ fun DisplayWordPair(
     onTranslate: () -> Unit,
     onConfirm: () -> Unit
 ) {
-    MemoizationTheme {
-        Scaffold(
-            floatingActionButton = {
-                Fab(
-                    icon = Icons.Filled.Done,
-                    contentDesc = "",
-                    onClick = onConfirm
-                )
-            }
-        ) { _ ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .fillMaxHeight(0.75f)
-                    .padding(start = 40.dp, end = 40.dp)
-            ) {
-                val coroutineScope = rememberCoroutineScope()
+    Scaffold(
+        floatingActionButton = {
+            CustomDoneFab(
+                isVisible = true,
+                onClick = onConfirm
+            )
+        }
+    ) { _ ->
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxHeight(0.75f)
+                .padding(start = 40.dp, end = 40.dp, top = 35.dp)
+        ) {
+            val coroutineScope = rememberCoroutineScope()
 
-                UpperField(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(top = 35.dp),
-                    viewModel = viewModel,
-                    editWord = wordPair?.word1
-                )
-                RowIcon(iconSource = Icons.Filled.Translate,
-                    contentDesc = stringResource(R.string.translate_btn_desc),
-                    onClick = {
-                        coroutineScope.launch {
-                            onTranslate()
-                        }
-                    })
-                BottomField(
-                    modifier = Modifier.weight(1f), onConfirm, viewModel, word2 =  wordPair?.word2
-                )
-            }
+            UpperField(
+                modifier = Modifier
+                    .weight(1f),
+                viewModel = viewModel,
+                editWord = wordPair?.word1,
+            )
+
+            if (viewModel.needsTranslation()) RowIcon(
+                iconSource = Icons.Filled.Translate,
+                contentDesc = stringResource(R.string.translate_btn_desc),
+                onClick = {
+                    coroutineScope.launch {
+                        onTranslate()
+                    }
+                })
+            BottomField(
+                modifier = Modifier.weight(1f), onConfirm, viewModel, word2 = wordPair?.word2
+            )
         }
     }
 }
 
 @Composable
 fun UpperField(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     viewModel: AddNewPairViewModel,
     editWord: String?
 ) {
@@ -166,7 +173,6 @@ fun UpperField(
 
     NewPairCard(
         modifier = modifier
-            .padding(bottom = 8.dp),
     ) {
         NewPairTextField(
             text = text1.value,
@@ -175,8 +181,11 @@ fun UpperField(
                 viewModel.word1 = it
             },
             label = stringResource(R.string.word_to_learn),
-            modifier = Modifier.focusRequester(focusRequester)
+            imeAction = ImeAction.Next,
+            modifier = Modifier
+                .focusRequester(focusRequester)
         )
+
     }
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
@@ -214,7 +223,7 @@ fun BottomField(
 
 @Composable
 fun NewPairCard(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
     Card(
@@ -248,6 +257,7 @@ fun NewPairTextField(
         keyboardActions = KeyboardActions(
             onDone = { onClick() }
         ),
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
     )
 }

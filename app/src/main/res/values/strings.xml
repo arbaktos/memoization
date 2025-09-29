@@ -49,6 +49,8 @@
     <string name="lbl_friday">F</string>
     <string name="lbl_saturday">SA</string>
     <string name="lbl_sunday">SU</string>
+    <string name="label_from_language">From language</string>
+    <string name="label_to_language">To language</string>
 
 
 </resources>

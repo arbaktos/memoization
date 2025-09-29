@@ -49,8 +49,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.data.model.MemoStack
-import com.example.android.memoization.ui.composables.components.AddStackAlertDialog
-import com.example.android.memoization.ui.composables.components.CustomFab
+import com.example.android.memoization.ui.composables.dialog.AddStackAlertDialog
+import com.example.android.memoization.ui.composables.components.CustomAddFab
 import com.example.android.memoization.ui.composables.components.StackListItem
 import com.example.android.memoization.ui.composables.components.SwipeToDismiss
 import com.example.android.memoization.ui.composables.labels.PrimaryBoldLabel
@@ -90,7 +90,7 @@ fun FoldersScreen(
         Scaffold(
             scaffoldState = scaffoldState,
             floatingActionButton = {
-                CustomFab(
+                CustomAddFab(
                     isVisible = state is LoadingState.Collected && (state as LoadingState.Collected).content.isNotEmpty(),
                     onClick = {
                         viewModel.showAddStackDialog(true)
@@ -122,7 +122,7 @@ fun FoldersScreen(
 @ExperimentalComposeUiApi
 @Composable
 fun FolderScreenBodyContent(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     viewModel: FolderViewModel,
     navController: NavController,
     scaffoldState: ScaffoldState,
@@ -184,7 +184,7 @@ fun StackList(
                 dismissContent = {
                     ShowStack(
                         stack = stack,
-                        onAddNewWord = { viewModel.onAddNewWord(navController, stack.stackId) },
+                        onAddNewWord = { viewModel.onAddNewWord(navController, stack) },
                         onNavigateToStack = {
                             viewModel.onNavigateTosStack(
                                 navController,
@@ -262,7 +262,7 @@ fun ShowStack(
         onPlay = onPlayWords,
         onAdd = onAddNewWord,
         onPin = onPin,
-        onClickRow = onNavigateToStack
+        onClick = onNavigateToStack
     )
 }
 

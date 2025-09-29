@@ -33,6 +33,8 @@ data class MemoStack(
         return this.words.any { (it as WordPair).toLearn }
     }
 
+    val needsTranslation = this.fromLanguage != null && this.toLanguage != null
+
     fun getStackUnrepeatedPercent(): Int {
         val all = this.words.size
         val unlearned = this.prepareStack().words.filter { (it as WordPair).toLearn }.size
