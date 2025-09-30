@@ -1,12 +1,12 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
-//    id 'kotlin-kapt'
     id 'dagger.hilt.android.plugin'
     id 'org.jetbrains.kotlin.android'
-    id 'androidx.navigation.safeargs.kotlin'
+    id 'androidx.navigation.safeargs.kotlin' //do not need after navigation change
     id 'com.google.devtools.ksp'
     id "org.jetbrains.kotlin.plugin.compose" version "2.0.0"
+    id 'org.jetbrains.kotlin.plugin.serialization' version '2.0.21'
 }
 
 android {
@@ -19,12 +19,6 @@ android {
         targetSdk 36
         versionCode 1
         versionName "1.0"
-
-//        javaCompileOptions {
-//            annotationProcessorOptions {
-//                arguments += ["room.schemaLocation": "$projectDir/schemas".toString()]
-//            }
-//        }
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -47,11 +41,6 @@ android {
     buildFeatures {
         compose true
     }
-//
-//    composeOptions {
-////        kotlinCompilerVersion "1.8.0"
-//        kotlinCompilerExtensionVersion "1.5.15"
-//    }
 
 }
 
@@ -61,7 +50,7 @@ ext {
     okHttp_version = "4.8.0"
     core_version = "1.17.0"
     hilt_android = "2.57.2"
-    nav_version = "2.6.0-rc02"
+    nav_version = "2.9.5"
     app_compat = "1.6.1"
     core_ktx = "1.9.0"
     material = "1.9.0"
@@ -124,6 +113,8 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    // Testing Navigation
+    androidTestImplementation "androidx.navigation:navigation-testing:$nav_version"
 
     //coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
@@ -154,4 +145,9 @@ dependencies {
     //datastore
     implementation "androidx.datastore:datastore-preferences:1.0.0"
     implementation "androidx.datastore:datastore:1.0.0"
+
+
+
+    // JSON serialization library, works with the Kotlin serialization plugin.
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3"
 }

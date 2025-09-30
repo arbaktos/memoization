@@ -5,11 +5,13 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation.fragment.NavHostFragment
 import com.example.android.memoization.domain.usecases.NotifTimeCalcUseCase
 import com.example.android.memoization.extensions.cancelScheduledAlarm
@@ -44,6 +46,11 @@ class MainActivity : AppCompatActivity() {
         navController = navHost.navController
         scheduleFirstAlarm(lifecycleScope)
         listenNotificationSettingChanges()
+
+        setContent {
+//            MemorizationScreen(navController = findNavController(), stackId = stackId)
+            navController = rememberNavController()
+        }
     }
 
     private fun listenNotificationSettingChanges() {
