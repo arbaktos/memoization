@@ -13,8 +13,10 @@ import com.example.android.memoization.data.repository.StackRepository
 import com.example.android.memoization.domain.usecases.GetStacksWithWordsUseCase
 import com.example.android.memoization.domain.usecases.UpdateStackUseCase
 import com.example.android.memoization.ui.features.BaseViewModel
+import com.example.android.memoization.ui.navigateToMemorization
+import com.example.android.memoization.ui.navigateToNewPair
+import com.example.android.memoization.ui.navigateToStackScreen
 import com.example.android.memoization.utils.LoadingState
-import com.example.android.memoization.utils.NewPairNavArgs
 import com.example.android.memoization.utils.STACK_ID
 import com.example.android.memoization.utils.workers.StackDeletionWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,11 +37,17 @@ class FolderViewModel @Inject constructor(
     private var stackRepository: StackRepository,
     val getStacksWithWordsUseCase: GetStacksWithWordsUseCase,
     val updateStackUseCase: UpdateStackUseCase,
-) : BaseViewModel<LoadingState<List<MemoStack>>, Any>() {
+) : BaseViewModel<LoadingState<List<MemoStack>>>() {
 
     private var languages: List<LanguageItem>? = null
     private var _showAddStackDialog: MutableLiveData<Boolean> = MutableLiveData(false)
     val showAddStackDialog: LiveData<Boolean> = _showAddStackDialog
+
+    // Built once: collectAsState keys on the flow instance, so a new one per
+    // recomposition would restart collection and recompose forever.
+    private val stacksWithWords: Flow<LoadingState<List<MemoStack>>> by lazy {
+        getStacksWithWordsUseCase()
+    }
 
     fun updateStack(stack: MemoStack) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -66,9 +74,10 @@ class FolderViewModel @Inject constructor(
         workManager.cancelAllWorkByTag(stack.stackId.toString())
     }
 
-    fun addStack(stack: MemoStack) {
+    fun addStackAndOpenIt(stack: MemoStack, navController: NavController) {
         viewModelScope.launch {
-            stackRepository.insertStack(StackEntity.create(stack))
+            val stackId = stackRepository.insertStack(StackEntity.create(stack))
+            navController.navigateToStackScreen(stackId)
         }
     }
 
@@ -89,37 +98,26 @@ class FolderViewModel @Inject constructor(
         return languages
     }
 
-    fun onNavigateTosStack(navController: NavController, stackId: Long) {
-        navController.navigate(FolderScreenFragmentDirections.toStackScreen(stackId))
+    fun onNavigateToStack(navController: NavController, stackId: Long) {
+        navController.navigateToStackScreen(stackId)
     }
 
     fun onAddNewWord(navController: NavController, stack: MemoStack) {
-        navController.navigate(
-            FolderScreenFragmentDirections.toNewPairFragment(
-                NewPairNavArgs.NewWordPair(
-                    stackId = stack.stackId,
-                    fromLanguage = stack.fromLanguage ?: "",
-                    toLanguage = stack.toLanguage ?: ""
-                )
-            )
+        navController.navigateToNewPair(
+            stackId = stack.stackId,
+            fromLanguage = stack.fromLanguage,
+            toLanguage = stack.toLanguage
         )
     }
 
     override fun getDataToDisplay(): Flow<LoadingState<List<MemoStack>>> {
-        return getStacksWithWordsUseCase()
-    }
-
-    override fun onBackPressed(navController: NavController) {
-
-    }
-
-    override fun setArgs(args: Any?) {
+        return stacksWithWords
     }
 
     private fun showLoadingLangs() {}
+
     fun onPlayWords(navController: NavController, stackId: Long) {
-        val action = FolderScreenFragmentDirections.toMemorization(stackId)
-        navController.navigate(action)
+        navController.navigateToMemorization(stackId)
     }
 
     fun onPin(stack: MemoStack) {

@@ -15,14 +15,14 @@ import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.ui.composables.components.FlipCard
 import com.example.android.memoization.ui.composables.components.MemoIcon
 import com.example.android.memoization.ui.composables.components.StackCompleteDialog
+import com.example.android.memoization.ui.navigateToFolderScreen
 
 @Composable
 fun MemorizationScreen(
     navController: NavController,
-    stackId: Long,
 ) {
     val viewModel: MemoizationViewModel = hiltViewModel()
-    val wordListToLearn = viewModel.onStackIdReceived(stackId).collectAsState(initial = emptyList())
+    val wordListToLearn = viewModel.wordsToLearn.collectAsState(initial = emptyList())
 
     FolderScreenBodyContent(
         wordsToLearn = wordListToLearn,
@@ -81,9 +81,7 @@ fun FolderScreenBodyContent(
 
     if (viewModel.clicked) {
         StackCompleteDialog(
-            onClick = {
-                navController.navigate(MemorizationFragmentDirections.toFolderScreenFragment())
-            }
+            onClick = { navController.navigateToFolderScreen() }
         )
 
     }

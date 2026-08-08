@@ -1,6 +1,5 @@
 package com.example.android.memoization.ui.composables.dialog
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
@@ -23,37 +22,126 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.android.memoization.R
 import com.example.android.memoization.data.model.MemoStack
-import com.example.android.memoization.ui.features.folderscreen.FolderViewModel
 import com.example.android.memoization.ui.theme.MemoTextFieldColors
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun AddStackAlertDialog(
-    viewModel: FolderViewModel = hiltViewModel(),
-    isEditMode: Boolean = false,
+fun AddStackDialog(
+//    viewModel: FolderViewModel = hiltViewModel(),
+//    isEditMode: Boolean = false,
+    modifier: Modifier = Modifier,
+    onStackAdded: (stack: MemoStack) -> Unit,
     stack: MemoStack? = null,
-    onClick: () -> Unit,
+    onDismiss: () -> Unit,
 ) {
-    Log.d(TAG, "AddStackAlertDialog: add stack alert dialog")
-    var text by rememberSaveable { mutableStateOf(if (isEditMode) stack?.name ?: "" else "") }
-    val onConfirm = {
-        if (isEditMode) viewModel.updateStack(stack?.copy(name = text) ?: MemoStack(""))
-        else viewModel.addStack(
-            stack = MemoStack(text)
+    ModifyStackDialog(onDismiss = onDismiss,
+        stack = stack,
+        onConfirm = onStackAdded,
+        modifier = modifier
+    )
+//    Log.d(TAG, "AddStackAlertDialog: add stack alert dialog")
+//    val isEditMode = stack != null
+//    var text by rememberSaveable { mutableStateOf(if (isEditMode) stack.name else "") }
+//    val onConfirm = {
+//        if (isEditMode) onStackUpdated(stack.copy(name = text))
+//        else onStackAdded(MemoStack(text))
+//    }
+//    OkCancelDialog(
+//        modifier = Modifier.padding(16.dp),
+//        onDismissRequest = onDismiss,
+//        onConfirm = {
+//            onStackAdded(stack)
+//            onDismiss()
+//        },
+//        okEnabled = text.isNotEmpty(),
+//        onCancel = onDismiss
+//    ) {
+//
+//        Text(
+//            text = stringResource(id = R.string.new_stack_name)
+//        )
+//        TextField(
+//            value = text, onValueChange = { text = it },
+//            colors = MemoTextFieldColors(),
+//            textStyle = MaterialTheme.typography.body1,
+//            modifier = Modifier.border(
+//                border = BorderStroke(1.dp, color = Color.Gray),
+//                shape = RoundedCornerShape(4.dp)
+//            )
+//        )
+//        var langMenuVisible by remember { mutableStateOf(false) }
+//        var chooseLanguageDialogVisible by remember { mutableStateOf(false) }
+//        Row {
+//            Chip(
+//                onClick = { langMenuVisible = !langMenuVisible },
+//                border = BorderStroke(1.dp, if (langMenuVisible) Color.Black else Color.Gray),
+//                shape = RoundedCornerShape(8.dp),
+//                colors = ChipDefaults.chipColors(
+//                    backgroundColor = Color.Transparent
+//                )
+//            ) {
+//                Text(
+//                    text = stringResource(R.string.chip_language_stack),
+//                    color = if (langMenuVisible) Color.Black else Color.Gray
+//                )
+//            }
+//            if (langMenuVisible) {
+//                ChooseLanguageMenu {
+//                    chooseLanguageDialogVisible = true
+//                }
+//            }
+//        }
+//        if (chooseLanguageDialogVisible) {
+//            ChooseLanguageDialog(
+//                onConfirm = { langMenuVisible = false },
+//                onCancel = { langMenuVisible = false },
+//                onDismissRequest = { langMenuVisible = false }
+//            )
+//        }
+//
+//    }
+}
+
+@Composable
+fun EditStackDialog(
+    stack: MemoStack,
+    onStackUpdated: (stack: MemoStack) -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    ModifyStackDialog(onDismiss = onDismiss,
+        stack = stack,
+        onConfirm = onStackUpdated,
+        modifier = modifier
         )
-    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun ModifyStackDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (stack: MemoStack) -> Unit,
+    stack: MemoStack? = null,
+//    onStackUpdated: (stack: MemoStack) -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    val isEditMode = stack != null
+    var text by rememberSaveable { mutableStateOf(if (isEditMode) stack.name else "") }
+//    val onConfirm = {
+//        if (isEditMode) onStackUpdated(stack.copy(name = text))
+//        else onConfirm(MemoStack(text))
+//    }
     OkCancelDialog(
-        modifier = Modifier.padding(16.dp),
-        onDismissRequest = onClick,
+        modifier = modifier.padding(16.dp),
+        onDismissRequest = onDismiss,
         onConfirm = {
-            onClick()
-            onConfirm()
+            onConfirm(stack?.let { stack.copy(name = text) } ?: MemoStack(text))
+            onDismiss()
         },
         okEnabled = text.isNotEmpty(),
-        onCancel = onClick
+        onCancel = onDismiss
     ) {
 
         Text(

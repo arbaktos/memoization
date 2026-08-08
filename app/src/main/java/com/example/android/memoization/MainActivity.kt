@@ -5,18 +5,16 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.fragment.NavHostFragment
 import com.example.android.memoization.domain.usecases.NotifTimeCalcUseCase
 import com.example.android.memoization.extensions.cancelScheduledAlarm
 import com.example.android.memoization.extensions.scheduleAlarm
 import com.example.android.memoization.notifications.NotificationReceiver
+import com.example.android.memoization.ui.AppComposable
 import com.example.android.memoization.utils.DatastoreKey
 import com.example.android.memoization.utils.NotifConstants
 import com.example.android.memoization.utils.getValue
@@ -29,27 +27,21 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var notifTimeCalcUseCase: NotifTimeCalcUseCase
-
-    private lateinit var navController: NavController
 
     @Inject
     lateinit var dataStore: DataStore<Preferences>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        val navHost = supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
-        navController = navHost.navController
         scheduleFirstAlarm(lifecycleScope)
         listenNotificationSettingChanges()
 
         setContent {
-//            MemorizationScreen(navController = findNavController(), stackId = stackId)
-            navController = rememberNavController()
+            AppComposable(preferenceStorage = dataStore)
         }
     }
 

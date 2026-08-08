@@ -1,7 +1,7 @@
 package com.example.android.memoization.ui.features.stackscreen
 
 import android.content.Context
-import androidx.activity.compose.BackHandler
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -14,85 +14,118 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ExtendedFloatingActionButton
-import androidx.compose.material.Icon
-import androidx.compose.material.LinearProgressIndicator
-import androidx.compose.material.ListItem
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
-import androidx.compose.material.SnackbarDuration
-import androidx.compose.material.SnackbarHostState
-import androidx.compose.material.SnackbarResult
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.rememberScaffoldState
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.extensions.checkLength
 import com.example.android.memoization.ui.composables.components.AddNewCardFab
-import com.example.android.memoization.ui.composables.dialog.AddStackAlertDialog
 import com.example.android.memoization.ui.composables.components.CustomAddFab
 import com.example.android.memoization.ui.composables.components.MotionAppBar
 import com.example.android.memoization.ui.composables.components.RowIcon
 import com.example.android.memoization.ui.composables.components.SwipeToDismiss
+import com.example.android.memoization.ui.composables.dialog.EditStackDialog
+import com.example.android.memoization.ui.features.folderscreen.TDEBUG
+import com.example.android.memoization.ui.navigateToMemorization
+import com.example.android.memoization.ui.navigateToEditPair
+import com.example.android.memoization.ui.navigateToNewPair
 import com.example.android.memoization.ui.theme.indicatorColors
 import com.example.android.memoization.utils.LoadingState
-import com.example.android.memoization.utils.NewPairNavArgs
-import kotlinx.coroutines.flow.stateIn
+
 
 const val TAG = "DisplayStack"
 
 @Composable
 fun StackScreen(
     navController: NavController,
-    stackId: Long,
     viewModel: StackViewModel = hiltViewModel()
 ) {
-    viewModel.setArgs(stackId)
-    var state by remember { mutableStateOf<LoadingState<MemoStack>>(LoadingState.Loading) }
+    Log.d(TDEBUG, "StackScreen: ")
+    val state by viewModel.getDataToDisplay().collectAsStateWithLifecycle(initialValue = LoadingState.Loading)
+    val showDialog by viewModel.showEditStackDialog.collectAsStateWithLifecycle()
 
-    LaunchedEffect(key1 = state, block = {
-        state = viewModel.getDataToDisplay().stateIn(this).value
-    })
-
-    BackHandler {
-        viewModel.onBackPressed(navController)
+    val navigateToNewPair = remember(navController) {
+        { stack: MemoStack ->
+            navController.navigateToNewPair(
+                stackId = stack.stackId,
+                fromLanguage = stack.fromLanguage,
+                toLanguage = stack.toLanguage
+            )
+        }
     }
+    val navigateToEditPair =
+        remember(navController) { { wordPair: WordPair, stack: MemoStack ->
+            navController.navigateToEditPair(
+                wordPairId = wordPair.wordPairId,
+                fromLanguage = stack.fromLanguage,
+                toLanguage = stack.toLanguage
+            )
+        } }
+    val navigateToMemorization =
+        remember(navController) { { stackId: Long -> navController.navigateToMemorization(stackId) } }
 
-    DisplayStackState(state = state, navController = navController)
+    DisplayStackState(
+        state = state,
+        showDialog = showDialog,
+        navigateToNewPair = navigateToNewPair,
+        navigateToEditPair = navigateToEditPair,
+        navigateToMemorization = navigateToMemorization,
+        updateStack = viewModel::updateStackInDb,
+        deletePair = viewModel::deletePair,
+        onDismissDialog = { viewModel.showEditStackDialog(false) })
 }
+
+
 
 @Composable
 fun DisplayStackState(
     state: LoadingState<MemoStack>,
-    navController: NavController,
-    viewmodel: StackViewModel = hiltViewModel()
+    showDialog: Boolean,
+    navigateToNewPair: (stack: MemoStack) -> Unit,
+    navigateToEditPair: (wordPair: WordPair, stack: MemoStack) -> Unit,
+    navigateToMemorization: (stackId: Long) -> Unit,
+    updateStack: (stack: MemoStack) -> Unit,
+    deletePair: (wordPair: WordPair) -> Unit,
+    onDismissDialog: () -> Unit,
 ) {
-    val showDialog = viewmodel.showEditStackDialog.collectAsState().value
+
     when (state) {
         is LoadingState.Collected<MemoStack> -> DisplayStack(
-            loadingState = state,
-            navController = navController,
-            showDialog = showDialog
+            currentStack = state.content,
+            showDialog = showDialog,
+            navigateToNewPair = navigateToNewPair,
+            navigateToEditPair = navigateToEditPair,
+            navigateToMemorization = navigateToMemorization,
+            updateStack = updateStack,
+            deletePair = deletePair,
+            onDismissDialog = onDismissDialog,
         )
 
         is LoadingState.Loading -> DisplayLoadingStack()
@@ -114,7 +147,7 @@ fun DisplayLoadingStack() {
                 stackName = stringResource(id = R.string.loading)
             )
         },
-        isFloatingActionButtonDocked = false,
+        floatingActionButtonPosition = FabPosition.End,
         floatingActionButton = {
             Column {
                 AddNewCardFab(
@@ -133,62 +166,53 @@ fun DisplayLoadingStack() {
 
 @Composable
 fun DisplayStack(
-    loadingState: LoadingState.Collected<MemoStack>,
-    navController: NavController,
-    viewModel: StackViewModel = hiltViewModel(),
-    showDialog: Boolean = false
+    currentStack: MemoStack,
+    showDialog: Boolean,
+    navigateToNewPair: (stack: MemoStack) -> Unit,
+    navigateToMemorization: (stackId: Long) -> Unit,
+    updateStack: (stack: MemoStack) -> Unit,
+    deletePair: (wordPair: WordPair) -> Unit,
+    onDismissDialog: () -> Unit,
+    navigateToEditPair: (wordPair: WordPair, stack: MemoStack) -> Unit,
 ) {
-    val scaffoldState = rememberScaffoldState()
     val lazyListState = rememberLazyListState()
 
-    val currentStack = loadingState.content
-
     if (showDialog) {
-        AddStackAlertDialog(
-            viewModel = hiltViewModel(),
-            isEditMode = true,
-            stack = loadingState.content
-        ) {
-            viewModel.showEditStackDialog(false)
-        }
+        EditStackDialog(
+            stack = currentStack,
+            onStackUpdated = updateStack,
+            onDismiss = onDismissDialog
+        )
     }
 
     Scaffold(
         topBar = {
-            MotionAppBar(
-                lazyScrollState = lazyListState,
-                stackName = loadingState.content.name
-            )
+
+            Text(text = "STACK ID ${currentStack.stackId}", fontSize = 56.sp)
+//            MotionAppBar(
+//                lazyScrollState = lazyListState,
+//                stackName = currentStack.name
+//            )
         },
-        isFloatingActionButtonDocked = false,
+        floatingActionButtonPosition = FabPosition.End,
         floatingActionButton = {
             Column {
                 CustomAddFab(
                     isVisible = true,
-                    onClick = {
-                        navController
-                            .navigate(
-                                StackScreenFragmentDirections
-                                    .actionStackScreenFragmentToNewPairFragment(
-                                        NewPairNavArgs.NewWordPair(
-                                            stackId = currentStack.stackId,
-                                            fromLanguage = currentStack.fromLanguage ?: "",
-                                            toLanguage = currentStack.toLanguage ?: ""
-                                        )
-                                    )
-                            )
-                    }
+                    onClick = { navigateToNewPair(currentStack) }
                 )
-                StackFab(navController = navController, currentStack = currentStack)
+                StackFab(
+                    { navigateToMemorization(currentStack.stackId) },
+                    hasWordsToLearn = currentStack.hasWordsToLearn()
+                )
             }
         },
-        scaffoldState = scaffoldState,
         content = { innerPadding ->
             Box(modifier = Modifier.padding(innerPadding)) {
                 WordList(
-                    stack = loadingState.content,
-                    viewModel = viewModel,
-                    navController = navController,
+                    words = currentStack.words.reversed(),
+                    navigateToEditPair = { navigateToEditPair(it, currentStack) },
+                    deletePair = deletePair,
                     listState = lazyListState,
                 )
             }
@@ -197,35 +221,27 @@ fun DisplayStack(
 }
 
 @Composable
-fun StackFab(navController: NavController, currentStack: MemoStack?) {
+fun StackFab(navigateToMemorization: () -> Unit, hasWordsToLearn: Boolean) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        currentStack?.let { stack ->
-            if (stack.hasWordsToLearn()) {
-                ExtendedFloatingActionButton(
-                    text = {
-                        Text(
-                            text = stringResource(R.string.learn),
-                            color = MaterialTheme.colors.surface
-                        )
-                    },
-                    onClick = {
-                        navController.navigate(
-                            StackScreenFragmentDirections.toMemorizationFragment(
-                                stack.stackId
-                            )
-                        )
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Filled.PlayArrow,
-                            contentDescription = stringResource(R.string.learn_this_stack),
-                            tint = MaterialTheme.colors.surface
-                        )
-                    },
-                    modifier = Modifier
-                        .padding(8.dp)
-                )
-            }
+        if (hasWordsToLearn) {
+            ExtendedFloatingActionButton(
+                text = {
+                    Text(
+                        text = stringResource(R.string.learn),
+//                            color = MaterialTheme.colors.surface
+                    )
+                },
+                onClick = navigateToMemorization,
+                icon = {
+                    Icon(
+                        imageVector = Icons.Filled.PlayArrow,
+                        contentDescription = stringResource(R.string.learn_this_stack),
+//                            tint = MaterialTheme.colors.surface
+                    )
+                },
+                modifier = Modifier
+                    .padding(8.dp)
+            )
         }
     }
 }
@@ -233,38 +249,28 @@ fun StackFab(navController: NavController, currentStack: MemoStack?) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun WordList(
-    viewModel: StackViewModel,
-    navController: NavController,
+    deletePair: (wordPair: WordPair) -> Unit,
+    navigateToEditPair: (wordPair: WordPair) -> Unit,
     listState: LazyListState,
-    stack: MemoStack,
+    words: List<WordPair>,
 ) {
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth(),
-        state = listState
+        state = listState,
+        reverseLayout = true
     ) {
-        items(stack.words.reversed(), key = { it.wordPairId }) { wordPair ->
-            wordPair as WordPair
+        items(words, key = { it.wordPairId }) { wordPair ->
             SwipeToDismiss(
                 item = wordPair,
                 dismissContent = {
                     WordPairListItem(
                         wordPair = wordPair,
-                        onEditNavigate = {
-                            navController.navigate(
-                                StackScreenFragmentDirections.actionStackScreenFragmentToNewPairFragment(
-                                    NewPairNavArgs.EditPair(wordPair.wordPairId,
-                                        fromLanguage = stack.fromLanguage ?: "",
-                                        toLanguage = stack.toLanguage ?: "")
-                                )
-                            )
-                        },
-                        modifier = Modifier.animateItemPlacement()
+                        onEditNavigate = navigateToEditPair,
+                        modifier = Modifier//.animateItemPlacement()
                     )
                 },
-                onDismiss = {
-                    viewModel.deleteWordPairFromDb(wordPair)
-                }
+                onDismiss = { deletePair(wordPair) }
             )
         }
     }
@@ -274,17 +280,17 @@ fun WordList(
 @Composable
 fun WordPairListItem(
     wordPair: WordPair,
-    onEditNavigate: () -> Unit,
+    onEditNavigate: (wordPair: WordPair) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        elevation = 4.dp,
+        elevation = CardDefaults.cardElevation(4.dp),
         modifier = modifier
             .fillMaxWidth(0.9f)
             .padding(top = 4.dp, bottom = 4.dp)
             .clickable {
-                onEditNavigate()
+                onEditNavigate(wordPair)
             }
     ) {
         Row(
@@ -299,14 +305,14 @@ fun WordPairListItem(
                 modifier = Modifier.padding(start = 10.dp)
             )
             ListItem(
-                text = {
+                headlineContent = {
                     Text(
                         wordPair.word1.checkLength(),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
                 },
-                secondaryText = {
+                supportingContent = {
                     wordPair.word2?.checkLength()
                         ?.let { Text(it, maxLines = 2, overflow = TextOverflow.Ellipsis) }
                 }

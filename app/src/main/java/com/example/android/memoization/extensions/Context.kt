@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 
 infix fun Context.showToast(stringId: Int?) {
     if (stringId != null) {
@@ -28,7 +27,7 @@ fun cancelScheduledAlarm(alarmManager: AlarmManager?, pendingIntent: PendingInte
 @SuppressLint("ScheduleExactAlarm")
 fun Context?.scheduleAlarm(timeToTrigger: Long, alarmIntent: Intent, requestCode: Int = 0) {
     this?.let {
-        val alarmMgr: AlarmManager? = this.getSystemService(AppCompatActivity.ALARM_SERVICE) as? AlarmManager?
+        val alarmMgr: AlarmManager? = this.getSystemService(Context.ALARM_SERVICE) as? AlarmManager?
 
         val pendingIntent = PendingIntent.getBroadcast(
             this,

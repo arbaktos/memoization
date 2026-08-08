@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "8a9e1fb77e0fb708ee0fb80d2ac65986",
+    "identityHash": "43c7caade340396b8d49ec4c65f12c8c",
     "entities": [
       {
         "tableName": "stack_entity_table",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `numRep` INTEGER NOT NULL, `stackId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `hasWords` INTEGER NOT NULL, `isVisible` INTEGER NOT NULL, `pinned` INTEGER NOT NULL, `fromLanguage` TEXT, `toLanguage` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `numRep` INTEGER NOT NULL, `stackId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `hasWords` INTEGER NOT NULL, `isVisible` INTEGER NOT NULL, `fromLanguage` TEXT, `toLanguage` TEXT, `pinnedTime` INTEGER)",
         "fields": [
           {
             "fieldPath": "name",
@@ -39,12 +39,6 @@
             "notNull": true
           },
           {
-            "fieldPath": "pinned",
-            "columnName": "pinned",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
             "fieldPath": "fromLanguage",
             "columnName": "fromLanguage",
             "affinity": "TEXT",
@@ -54,6 +48,12 @@
             "fieldPath": "toLanguage",
             "columnName": "toLanguage",
             "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "pinnedTime",
+            "columnName": "pinnedTime",
+            "affinity": "INTEGER",
             "notNull": false
           }
         ],
@@ -132,7 +132,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8a9e1fb77e0fb708ee0fb80d2ac65986')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '43c7caade340396b8d49ec4c65f12c8c')"
     ]
   }
 }

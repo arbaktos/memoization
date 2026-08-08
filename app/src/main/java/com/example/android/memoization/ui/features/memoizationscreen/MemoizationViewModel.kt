@@ -1,5 +1,6 @@
 package com.example.android.memoization.ui.features.memoizationscreen
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.android.memoization.data.model.BaseWordPair
@@ -8,6 +9,7 @@ import com.example.android.memoization.data.repository.WordPairRepository
 import com.example.android.memoization.domain.usecases.GetStackUseCase
 import com.example.android.memoization.utils.LoadingState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
 import java.util.Date
@@ -15,11 +17,18 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MemoizationViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     val repository: WordPairRepository,
     val getStackUseCase: GetStackUseCase
 ) : ViewModel() {
 
     var clicked = false
+
+    private val stackId: Long = savedStateHandle.get<Long>(STACK_ID_ARG) ?: NO_STACK_ID_PASSED
+
+    // Built once: collectAsState keys on the flow instance, so a new one per
+    // recomposition would restart collection and recompose forever.
+    val wordsToLearn: Flow<List<BaseWordPair>> by lazy { wordsToLearnIn(stackId) }
 
     private fun updateWordPairDateInDb(wordPair: WordPair?) {
         wordPair?.let {
@@ -29,7 +38,7 @@ class MemoizationViewModel @Inject constructor(
         }
     }
 
-    fun onStackIdReceived(stackId: Long) = getStackUseCase(stackId).transform { state ->
+    private fun wordsToLearnIn(stackId: Long) = getStackUseCase(stackId).transform { state ->
         when(state) {
             is LoadingState.Collected -> {
                 emit(state.content.prepareStack().words.filter { it as WordPair
@@ -51,5 +60,11 @@ class MemoizationViewModel @Inject constructor(
         }
         updateWordPairDateInDb(wordPair)
         clicked = true
+    }
+
+    companion object {
+        // Matches MemorizationDestination.id
+        private const val STACK_ID_ARG = "id"
+        private const val NO_STACK_ID_PASSED = -1L
     }
 }

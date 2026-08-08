@@ -2,7 +2,7 @@ package com.example.android.memoization.data.model
 
 import com.example.android.memoization.data.database.wordpairdb.WordPairEntity
 import com.example.android.memoization.utils.longToDays
-import java.util.*
+import java.util.Date
 
 data class WordPair(
     override val parentStackId: Long,
@@ -14,7 +14,7 @@ data class WordPair(
     override var toShow: Boolean = false,
     override var level: WordStatus = WordStatus.Level1()
 ) : BaseWordPair, DismissableItem {
-    var toLearn: Boolean = false
+    val toLearn: Boolean
         get() = checkIfShow()
 
     var levelOfKnowledge: WordStatus = WordStatus.Level1()
@@ -59,8 +59,8 @@ data class WordPair(
     }
 
     fun checkIfShow(currentDate: Date = Date()): Boolean {
-        val timeWithoutRepetion = currentDate.time - this.lastRep.time
-        val daysWithoutRepetition = longToDays(timeWithoutRepetion)
+        val timeWithoutRepetition = currentDate.time - this.lastRep.time
+        val daysWithoutRepetition = longToDays(timeWithoutRepetition)
         return daysWithoutRepetition > this.levelOfKnowledge.frequency
     }
 

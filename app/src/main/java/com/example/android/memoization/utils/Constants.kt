@@ -5,6 +5,11 @@ const val Default_folder_ID: Long = -1
 
 const val STACK_ID = "stackId"
 
+// Navigation argument keys - must match the destination property names
+const val WORD_PAIR_ID = "wordPairId"
+const val FROM_LANGUAGE = "fromLanguage"
+const val TO_LANGUAGE = "toLanguage"
+
 const val TAG = "debug"
 const val Empty_string = ""
 

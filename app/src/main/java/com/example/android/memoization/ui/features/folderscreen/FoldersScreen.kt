@@ -1,6 +1,6 @@
 package com.example.android.memoization.ui.features.folderscreen
 
-import androidx.activity.compose.BackHandler
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -27,13 +27,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -49,10 +46,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.data.model.MemoStack
-import com.example.android.memoization.ui.composables.dialog.AddStackAlertDialog
 import com.example.android.memoization.ui.composables.components.CustomAddFab
 import com.example.android.memoization.ui.composables.components.StackListItem
 import com.example.android.memoization.ui.composables.components.SwipeToDismiss
+import com.example.android.memoization.ui.composables.dialog.AddStackDialog
 import com.example.android.memoization.ui.composables.labels.PrimaryBoldLabel
 import com.example.android.memoization.ui.composables.labels.SimpleLabel
 import com.example.android.memoization.ui.features.settings.MenuDrawer
@@ -61,7 +58,6 @@ import com.example.android.memoization.ui.icons.ClickableVectorIcon
 import com.example.android.memoization.ui.theme.MemoizationTheme
 import com.example.android.memoization.ui.theme.PlayColors
 import com.example.android.memoization.utils.LoadingState
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 const val TDEBUG = "memoization_debug"
@@ -70,31 +66,27 @@ const val TDEBUG = "memoization_debug"
 @Composable
 fun FoldersScreen(
     navController: NavController,
+    preferenceStorage: DataStore<Preferences>,
     viewModel: FolderViewModel = hiltViewModel(),
-    preferenceStorage: DataStore<Preferences>
 ) {
+    Log.d(TDEBUG, "FoldersScreen: ")
     val scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
-    var state by remember { mutableStateOf<LoadingState<List<MemoStack>>>(LoadingState.Loading) }
+    val state by viewModel.getDataToDisplay().collectAsState(initial = LoadingState.Loading)
     val toShowDialog = viewModel.showAddStackDialog.observeAsState(false)
-
-    LaunchedEffect(key1 = state, block = {
-        state = viewModel.getDataToDisplay().stateIn(this).value
-    })
-
-    BackHandler {
-        viewModel.onBackPressed(navController)
-    }
 
     MemoizationTheme {
         Scaffold(
             scaffoldState = scaffoldState,
             floatingActionButton = {
-                CustomAddFab(
-                    isVisible = state is LoadingState.Collected && (state as LoadingState.Collected).content.isNotEmpty(),
-                    onClick = {
-                        viewModel.showAddStackDialog(true)
-                    })
+                val collectedState = state
+                if (collectedState is LoadingState.Collected) {
+                    CustomAddFab(
+                        isVisible = (collectedState.content.isNotEmpty()),
+                        onClick = {
+                            viewModel.showAddStackDialog(true)
+                        })
+                }
             },
             drawerContent = { MenuDrawer(preferenceStorage = preferenceStorage) },
             topBar = {
@@ -111,9 +103,10 @@ fun FoldersScreen(
                 modifier = Modifier.padding(padding)
             )
             if (toShowDialog.value) {
-                AddStackAlertDialog(
-                    viewModel = viewModel
-                ) { viewModel.showAddStackDialog(false) }
+                AddStackDialog(
+                    onDismiss = { viewModel.showAddStackDialog(false) },
+                    onStackAdded = { viewModel.addStackAndOpenIt(it, navController) }
+                )
             }
         }
     }
@@ -186,14 +179,14 @@ fun StackList(
                         stack = stack,
                         onAddNewWord = { viewModel.onAddNewWord(navController, stack) },
                         onNavigateToStack = {
-                            viewModel.onNavigateTosStack(
+                            viewModel.onNavigateToStack(
                                 navController,
                                 stack.stackId
                             )
                         },
                         onPlayWords = { viewModel.onPlayWords(navController, stack.stackId) },
                         onPin = { viewModel.onPin(stack) },
-                        modifier = Modifier.animateItemPlacement()
+                        modifier = Modifier//.animateItemPlacement()
                     )
                 },
                 onDismiss = {

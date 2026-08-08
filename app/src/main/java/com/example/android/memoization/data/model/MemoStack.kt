@@ -14,7 +14,7 @@ data class MemoStack(
     override var pinnedTime: Long? = null,
 ) : BaseStack, DismissableItem {
 
-    var words: MutableList<BaseWordPair> = mutableListOf()
+    var words: MutableList<WordPair> = mutableListOf()
         set(value) {
             hasWords = value.isNotEmpty()
             field = value

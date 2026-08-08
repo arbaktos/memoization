@@ -1,7 +1,7 @@
 package com.example.android.memoization.ui.features.addnewpair
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.data.repository.WordPairRepository
@@ -11,7 +11,10 @@ import com.example.android.memoization.ui.features.BaseViewModel
 import com.example.android.memoization.utils.Default_folder_ID
 import com.example.android.memoization.utils.Empty_string
 import com.example.android.memoization.utils.LoadingState
-import com.example.android.memoization.utils.NewPairNavArgs
+import com.example.android.memoization.utils.FROM_LANGUAGE
+import com.example.android.memoization.utils.STACK_ID
+import com.example.android.memoization.utils.TO_LANGUAGE
+import com.example.android.memoization.utils.WORD_PAIR_ID
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -23,23 +26,45 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddNewPairViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val repo: WordPairRepository,
     private val translationRepo: TranslationRepo,
     val getWordPairLoadingState: GetWordPairLoadingStateUseCase,
     val getStackUseCase: GetStackUseCase
-) : BaseViewModel<LoadingState<WordPair>, NewPairNavArgs>() {
+) : BaseViewModel<LoadingState<WordPair>>() {
 
     var word1 = Empty_string
     var word2 = Empty_string
     var translationLoading = false
 
-    private var currentWpId: Long? = null
+    // EditPairDestination carries a word pair id, NewPairDestination carries a stack id
+    private val currentWpId: Long? = savedStateHandle[WORD_PAIR_ID]
+    private val fromLanguage: String? = savedStateHandle[FROM_LANGUAGE]
+    private val toLanguage: String? = savedStateHandle[TO_LANGUAGE]
+    private val editMode: Boolean = currentWpId != null
+
     private var currentWordPair: WordPair? = null
-    private var currentStackId: Long? = null
-    private var fromLanguage: String? = null
-    private var toLanguage: String? = null
-    private var editMode: Boolean = false
+    private var currentStackId: Long? = savedStateHandle[STACK_ID]
     private val TAG = "AddNewPairViewModel"
+
+    // Built once: collectAsStateWithLifecycle keys on the flow instance, so a new
+    // one per recomposition would restart collection and recompose forever.
+    private val wordPairToEdit: Flow<LoadingState<WordPair>> by lazy {
+        val wordPairId = currentWpId ?: return@lazy emptyFlow()
+        getWordPairLoadingState(wordPairId).map {
+            if (it is LoadingState.Collected<WordPair>) {
+                currentWordPair = it.content
+                currentStackId = currentWordPair!!.parentStackId
+            }
+            it
+        }
+    }
+
+    init {
+        if (currentWpId == null && currentStackId == null) {
+            updateToastMessage(R.string.someting_went_wrong)
+        }
+    }
 
     fun onTranslate(
         wordToTranslate: String = word1
@@ -65,43 +90,18 @@ class AddNewPairViewModel @Inject constructor(
         clearWordPair()
     }
 
-    override fun setArgs(args: NewPairNavArgs?) {
-        args?.let {
-            editMode = args.editMode
-            when (args) {
-                is NewPairNavArgs.NewWordPair -> {
-                    currentStackId = args.stackId
-                }
-
-                is NewPairNavArgs.EditPair -> {
-                    currentWpId = args.wordPairId
-                }
-            }
-            fromLanguage = args.fromLanguage
-            toLanguage = args.toLanguage
-        } ?: updateToastMessage(R.string.someting_went_wrong)
-
-    }
-
     fun needsTranslation(): Boolean {
         return !fromLanguage.isNullOrBlank() && !toLanguage.isNullOrBlank()
     }
 
     override fun getDataToDisplay(): Flow<LoadingState<WordPair>> {
-        return if (currentWpId != null) getWordPairLoadingState(currentWpId!!).map {
-            if (it is LoadingState.Collected<WordPair>){
-                currentWordPair = it.content
-                currentStackId = currentWordPair!!.parentStackId
-            }
-            it
-        }
-        else emptyFlow()
+        return wordPairToEdit
     }
 
-    override fun onBackPressed(navController: NavController) {
-        navController.popBackStack()
-        clearWordPair()
-    }
+//    override fun onBackPressed(navController: NavController) {
+//        navController.popBackStack()
+//        clearWordPair()
+//    }
 
     private fun composeWordPairFromWords(word1: String, word2: String): WordPair {
         return currentWordPair?.copy(

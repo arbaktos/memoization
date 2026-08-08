@@ -37,6 +37,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.data.model.WordPair
@@ -47,8 +48,6 @@ import com.example.android.memoization.ui.features.stackscreen.DisplayStackError
 import com.example.android.memoization.ui.theme.AddTextFieldColors
 import com.example.android.memoization.utils.Empty_string
 import com.example.android.memoization.utils.LoadingState
-import com.example.android.memoization.utils.NewPairNavArgs
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 private const val TAG = "AddNewPairScreen"
@@ -57,14 +56,9 @@ private const val TAG = "AddNewPairScreen"
 fun AddNewPairScreen(
     navController: NavController,
     viewModel: AddNewPairViewModel = hiltViewModel(),
-    args: NewPairNavArgs
 ) {
-    viewModel.setArgs(args)
-    var state by remember { mutableStateOf<LoadingState<WordPair>>(LoadingState.Loading) }
-
-    LaunchedEffect(key1 = state, block = {
-        state = viewModel.getDataToDisplay().stateIn(this).value
-    })
+    val state by viewModel.getDataToDisplay()
+        .collectAsStateWithLifecycle(initialValue = LoadingState.Loading)
 
     val toastMessage by viewModel.toastMessage.observeAsState()
     ShowToast(text = toastMessage)
@@ -77,9 +71,9 @@ fun AddNewPairScreen(
         navController.popBackStack()
     }
 
-    BackHandler(enabled = true) {
-        viewModel.onBackPressed(navController)
-    }
+//    BackHandler(enabled = true) {
+//        viewModel.onBackPressed(navController)
+//    }
 
     ShowNewPairScreenState(
         state = state,
@@ -166,7 +160,8 @@ fun UpperField(
     viewModel: AddNewPairViewModel,
     editWord: String?
 ) {
-    val text1 = rememberSaveable { mutableStateOf(editWord ?: Empty_string) }
+    // Keyed on editWord so the field picks up the pair once it is loaded from the db
+    val text1 = rememberSaveable(editWord) { mutableStateOf(editWord ?: Empty_string) }
     viewModel.word1 = text1.value
 
     val focusRequester = remember { FocusRequester() }
@@ -201,7 +196,7 @@ fun BottomField(
     word2: String?
 ) {
     val textVal = translation ?: word2 ?: Empty_string
-    val text2 = rememberSaveable { mutableStateOf(textVal) }
+    val text2 = rememberSaveable(textVal) { mutableStateOf(textVal) }
     viewModel.word2 = text2.value
 
     NewPairCard(
