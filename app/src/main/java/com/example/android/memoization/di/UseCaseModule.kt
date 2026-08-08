@@ -33,6 +33,6 @@ abstract class UseCaseModule {
     abstract fun bindGetWorPairUseCase(impl: GetWorPairLoadingStateUseCaseImpl): GetWordPairLoadingStateUseCase
 
     @Binds
-    abstract fun bindNotifThresholdUseCase(impl: NotifTimeCalcUseCaseImpl): NotifTimeCalcUseCase
+    abstract fun bindHasWordsToRepeatUseCase(impl: HasWordsToRepeatUseCaseImpl): HasWordsToRepeatUseCase
 
 }

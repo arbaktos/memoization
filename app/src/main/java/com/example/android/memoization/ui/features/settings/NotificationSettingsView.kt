@@ -219,20 +219,22 @@ fun ClockText(modifier: Modifier = Modifier, dataStore: DataStore<Preferences>, 
 }
 
 
+// Index is the zero based position of the clock in the row, so the first clock
+// the user sees writes to the first slot the scheduler reads.
 fun getMinuteKey(index: Int): Preferences.Key<Int> {
     return when (index) {
-        1 -> DatastoreKey.NOTIF_MINUTE
-        2 -> DatastoreKey.NOTIF_MINUTE_2
-        3 -> DatastoreKey.NOTIF_MINUTE_3
+        0 -> DatastoreKey.NOTIF_MINUTE
+        1 -> DatastoreKey.NOTIF_MINUTE_2
+        2 -> DatastoreKey.NOTIF_MINUTE_3
         else -> DatastoreKey.NOTIF_MINUTE_4
     }
 }
 
 fun getHourKey(index: Int): Preferences.Key<Int> {
     return when (index) {
-        1 -> DatastoreKey.NOTIF_HOUR
-        2 -> DatastoreKey.NOTIF_HOUR_2
-        3 -> DatastoreKey.NOTIF_HOUR_3
+        0 -> DatastoreKey.NOTIF_HOUR
+        1 -> DatastoreKey.NOTIF_HOUR_2
+        2 -> DatastoreKey.NOTIF_HOUR_3
         else -> DatastoreKey.NOTIF_HOUR_4
     }
 }

@@ -75,9 +75,8 @@ fun FoldersScreen(
     val state by viewModel.getDataToDisplay().collectAsState(initial = LoadingState.Loading)
     val toShowDialog = viewModel.showAddStackDialog.observeAsState(false)
 
-    MemoizationTheme {
-        Scaffold(
-            scaffoldState = scaffoldState,
+    Scaffold(
+        scaffoldState = scaffoldState,
             floatingActionButton = {
                 val collectedState = state
                 if (collectedState is LoadingState.Collected) {
@@ -109,7 +108,6 @@ fun FoldersScreen(
                 )
             }
         }
-    }
 }
 
 @ExperimentalComposeUiApi

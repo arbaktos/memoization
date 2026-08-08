@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +19,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -36,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,11 +51,11 @@ import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.extensions.checkLength
 import com.example.android.memoization.ui.composables.components.AddNewCardFab
 import com.example.android.memoization.ui.composables.components.CustomAddFab
-import com.example.android.memoization.ui.composables.components.MotionAppBar
 import com.example.android.memoization.ui.composables.components.RowIcon
 import com.example.android.memoization.ui.composables.components.SwipeToDismiss
 import com.example.android.memoization.ui.composables.dialog.EditStackDialog
 import com.example.android.memoization.ui.features.folderscreen.TDEBUG
+import com.example.android.memoization.ui.icons.ClickableVectorIcon
 import com.example.android.memoization.ui.navigateToMemorization
 import com.example.android.memoization.ui.navigateToEditPair
 import com.example.android.memoization.ui.navigateToNewPair
@@ -99,6 +102,7 @@ fun StackScreen(
         navigateToMemorization = navigateToMemorization,
         updateStack = viewModel::updateStackInDb,
         deletePair = viewModel::deletePair,
+        onEditStack = { viewModel.showEditStackDialog(true) },
         onDismissDialog = { viewModel.showEditStackDialog(false) })
 }
 
@@ -113,6 +117,7 @@ fun DisplayStackState(
     navigateToMemorization: (stackId: Long) -> Unit,
     updateStack: (stack: MemoStack) -> Unit,
     deletePair: (wordPair: WordPair) -> Unit,
+    onEditStack: () -> Unit,
     onDismissDialog: () -> Unit,
 ) {
 
@@ -125,6 +130,7 @@ fun DisplayStackState(
             navigateToMemorization = navigateToMemorization,
             updateStack = updateStack,
             deletePair = deletePair,
+            onEditStack = onEditStack,
             onDismissDialog = onDismissDialog,
         )
 
@@ -138,15 +144,46 @@ fun DisplayStackError() {
     Text(text = "Error")
 }
 
+/**
+ * MotionAppBar leaves its children unconstrained, so the title never gets laid out -
+ * a plain bar until that motion scene is fixed.
+ */
+@Composable
+fun StackAppBar(
+    stackName: String,
+    modifier: Modifier = Modifier,
+    onEdit: (() -> Unit)? = null,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = stackName,
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f, fill = false)
+        )
+        if (onEdit != null) {
+            ClickableVectorIcon(
+                imageVector = Icons.Outlined.Edit,
+                contentDescription = R.string.edit_stack_desc,
+                onClick = onEdit,
+                modifier = Modifier.padding(start = 16.dp)
+            )
+        }
+    }
+}
+
 @Composable
 fun DisplayLoadingStack() {
     Scaffold(
-        topBar = {
-            MotionAppBar(
-                lazyScrollState = rememberLazyListState(),
-                stackName = stringResource(id = R.string.loading)
-            )
-        },
+        topBar = { StackAppBar(stackName = stringResource(id = R.string.loading)) },
         floatingActionButtonPosition = FabPosition.End,
         floatingActionButton = {
             Column {
@@ -172,6 +209,7 @@ fun DisplayStack(
     navigateToMemorization: (stackId: Long) -> Unit,
     updateStack: (stack: MemoStack) -> Unit,
     deletePair: (wordPair: WordPair) -> Unit,
+    onEditStack: () -> Unit,
     onDismissDialog: () -> Unit,
     navigateToEditPair: (wordPair: WordPair, stack: MemoStack) -> Unit,
 ) {
@@ -187,12 +225,10 @@ fun DisplayStack(
 
     Scaffold(
         topBar = {
-
-            Text(text = "STACK ID ${currentStack.stackId}", fontSize = 56.sp)
-//            MotionAppBar(
-//                lazyScrollState = lazyListState,
-//                stackName = currentStack.name
-//            )
+            StackAppBar(
+                stackName = currentStack.name,
+                onEdit = onEditStack
+            )
         },
         floatingActionButtonPosition = FabPosition.End,
         floatingActionButton = {

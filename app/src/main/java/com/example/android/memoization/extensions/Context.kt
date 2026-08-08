@@ -1,11 +1,6 @@
 package com.example.android.memoization.extensions
 
-import android.annotation.SuppressLint
-import android.app.AlarmManager
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
-import android.util.Log
 import android.widget.Toast
 
 infix fun Context.showToast(stringId: Int?) {
@@ -17,39 +12,5 @@ infix fun Context.showToast(stringId: Int?) {
 fun Context.showToast(message: String) {
     if (message.isNotBlank()) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-    }
-}
-
-fun cancelScheduledAlarm(alarmManager: AlarmManager?, pendingIntent: PendingIntent) {
-    alarmManager?.cancel(pendingIntent)
-}
-
-@SuppressLint("ScheduleExactAlarm")
-fun Context?.scheduleAlarm(timeToTrigger: Long, alarmIntent: Intent, requestCode: Int = 0) {
-    this?.let {
-        val alarmMgr: AlarmManager? = this.getSystemService(Context.ALARM_SERVICE) as? AlarmManager?
-
-        val pendingIntent = PendingIntent.getBroadcast(
-            this,
-            requestCode,
-            alarmIntent,
-            PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        cancelScheduledAlarm(alarmMgr, pendingIntent)
-
-        Log.d("scheduleAlarm", "scheduleAlarm: requestcode $requestCode")
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.M) {
-            alarmMgr?.setAlarmClock(
-                AlarmManager.AlarmClockInfo(timeToTrigger, pendingIntent),
-                pendingIntent
-            )
-        } else {
-            alarmMgr?.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                timeToTrigger,
-                pendingIntent
-            )
-        }
     }
 }

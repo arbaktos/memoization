@@ -28,8 +28,17 @@ class DatabaseModule {
         return Room.databaseBuilder(
             appContext,
             MemoDatabase::class.java,
-            "memo_dataabase"
-        ).build()
+            DATABASE_NAME
+        )
+            // Learning progress is irreplaceable: never add fallbackToDestructiveMigration
+            // here. A schema change must ship a Migration in MemoDatabase.MIGRATIONS -
+            // without one Room refuses to open the db rather than wiping it.
+            .addMigrations(*MemoDatabase.MIGRATIONS)
+            .build()
+    }
+
+    companion object {
+        const val DATABASE_NAME = "memo_dataabase"
     }
 
     @Provides

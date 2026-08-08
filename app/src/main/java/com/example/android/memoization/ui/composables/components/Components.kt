@@ -77,7 +77,7 @@ fun RowIcon(
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun DatastoreChip(modifier: Modifier = Modifier, label: Int, dataStoreKey: Preferences.Key<Boolean>, dataStore: DataStore<Preferences>, initialSelected: Boolean = true) {
-    val savedSelected = dataStore.getValue(dataStoreKey, false).collectAsState(initial = initialSelected).value
+    val savedSelected = dataStore.getValue(dataStoreKey, initialSelected).collectAsState(initial = initialSelected).value
     var selected by remember { mutableStateOf(savedSelected) }
     selected = savedSelected
     val scope = rememberCoroutineScope()

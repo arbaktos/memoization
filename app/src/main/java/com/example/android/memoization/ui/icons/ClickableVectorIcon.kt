@@ -11,10 +11,15 @@ import com.example.android.memoization.R
 
 
 @Composable
-fun ClickableVectorIcon(modifier: Modifier = Modifier, imageVector: ImageVector, onClick: () -> Unit) {
+fun ClickableVectorIcon(
+    modifier: Modifier = Modifier,
+    imageVector: ImageVector,
+    contentDescription: Int = R.string.app_menu,
+    onClick: () -> Unit
+) {
     Icon(
         imageVector = imageVector,
-        contentDescription = stringResource(R.string.app_menu),
+        contentDescription = stringResource(contentDescription),
         modifier = modifier
             .clickable { onClick() },
         tint = MaterialTheme.colors.primaryVariant)

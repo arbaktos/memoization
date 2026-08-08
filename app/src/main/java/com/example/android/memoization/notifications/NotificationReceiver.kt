@@ -18,21 +18,17 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.example.android.memoization.MainActivity
 import com.example.android.memoization.R
-import com.example.android.memoization.domain.usecases.NotifTimeCalcUseCase
-import com.example.android.memoization.extensions.scheduleAlarm
+import com.example.android.memoization.domain.usecases.HasWordsToRepeatUseCase
 import com.example.android.memoization.notifications.NotificationReceiver.NotificationChannel.REMINDER_CHANNEL_DESCRIPTION
 import com.example.android.memoization.notifications.NotificationReceiver.NotificationChannel.REMINDER_CHANNEL_ID
 import com.example.android.memoization.notifications.NotificationReceiver.NotificationChannel.REMINDER_CHANNEL_NAME
-import com.example.android.memoization.utils.NotifConstants
 import com.example.android.memoization.utils.NotifConstants.NOTIFICATION_ID
 import com.example.android.memoization.utils.NotifConstants.NOTIFICATION_ID_LABEL
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Locale
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -42,32 +38,34 @@ class NotificationReceiver @Inject constructor() : BroadcastReceiver() {
     lateinit var dataStore: DataStore<Preferences>
 
     @Inject
-    lateinit var notifThresholdUseCase: NotifTimeCalcUseCase
+    lateinit var hasWordsToRepeatUseCase: HasWordsToRepeatUseCase
+
+    @Inject
+    lateinit var notificationScheduler: NotificationScheduler
 
     override fun onReceive(context: Context?, intent: Intent?) {
         Log.d(TAG, "onReceive: ")
+        val appContext = context?.applicationContext ?: return
 
-        context?.let {
-            createShortReminderNotification(
-                context,
-                context.getString(R.string.notif_title),
-                context.getString(R.string.notif_content),
-            )
-        }
-
-        CoroutineScope(Job()).launch {
-            notifThresholdUseCase().collectLatest {
-                it?.let { notifTime ->
-                    try {
-                        Log.d(TAG, "onReceive: notifTime = ${SimpleDateFormat("yyyy.MM.dd HH:mm:ss Z", Locale("KG")).format(it)}, current time = ${SimpleDateFormat("yyyy.MM.dd HH:mm:ss Z", Locale("KG")).format(System.currentTimeMillis())}")
-                    } catch (e: Exception) {
-                        Log.e(TAG, "onReceive: ", e)}
-                    context.scheduleAlarm(
-                        timeToTrigger = notifTime,
-                        alarmIntent = Intent(context?.applicationContext, NotificationReceiver::class.java),
-                        requestCode = NotifConstants.ALARM_REQUEST_CODE
+        // The work below touches the database, so hold the broadcast open for it.
+        val pendingResult = goAsync()
+        CoroutineScope(Job() + Dispatchers.IO).launch {
+            try {
+                if (hasWordsToRepeatUseCase()) {
+                    createShortReminderNotification(
+                        appContext,
+                        appContext.getString(R.string.notif_title),
+                        appContext.getString(R.string.notif_content),
                     )
+                } else {
+                    Log.d(TAG, "onReceive: nothing to repeat today, staying quiet")
                 }
+                // One-shot alarm: line up the next one whether or not we notified.
+                notificationScheduler.reschedule()
+            } catch (e: Exception) {
+                Log.e(TAG, "onReceive: reminder failed", e)
+            } finally {
+                pendingResult.finish()
             }
         }
     }
