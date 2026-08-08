@@ -23,9 +23,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import ru.vasilisasycheva.translation.api.LanguageItem
-import ru.vasilisasycheva.translation.data.TranslationState
-import ru.vasilisasycheva.translation.domain.TranslationRepo
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -33,13 +30,11 @@ import javax.inject.Inject
 @HiltViewModel
 class FolderViewModel @Inject constructor(
     private val workManager: WorkManager,
-    private val languageRepo: TranslationRepo,
     private var stackRepository: StackRepository,
     val getStacksWithWordsUseCase: GetStacksWithWordsUseCase,
     val updateStackUseCase: UpdateStackUseCase,
 ) : BaseViewModel<LoadingState<List<MemoStack>>>() {
 
-    private var languages: List<LanguageItem>? = null
     private var _showAddStackDialog: MutableLiveData<Boolean> = MutableLiveData(false)
     val showAddStackDialog: LiveData<Boolean> = _showAddStackDialog
 
@@ -81,23 +76,6 @@ class FolderViewModel @Inject constructor(
         }
     }
 
-    fun getLanguagesList(): List<LanguageItem>? {
-        viewModelScope.launch {
-            val response = languageRepo.getLanguages()
-            when (response) {
-                is TranslationState.Loading -> showLoadingLangs()
-                is TranslationState.Error -> response.errorMessage?.let {
-                    updateToastMessage(
-                        response.errorMessage!!
-                    )
-                }
-
-                is TranslationState.Success<*> -> languages = response.content as List<LanguageItem>
-            }
-        }
-        return languages
-    }
-
     fun onNavigateToStack(navController: NavController, stackId: Long) {
         navController.navigateToStackScreen(stackId)
     }
@@ -113,8 +91,6 @@ class FolderViewModel @Inject constructor(
     override fun getDataToDisplay(): Flow<LoadingState<List<MemoStack>>> {
         return stacksWithWords
     }
-
-    private fun showLoadingLangs() {}
 
     fun onPlayWords(navController: NavController, stackId: Long) {
         navController.navigateToMemorization(stackId)

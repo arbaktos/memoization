@@ -12,14 +12,7 @@ interface UpdateStackUseCase {
 class UpdateStackUseCaseImpl @Inject constructor(val repo: StackRepository): UpdateStackUseCase {
 
     override suspend fun invoke(stack: MemoStack) {
-            val stackEntity = StackEntity(
-                name = stack.name,
-                numRep = stack.numRep,
-                stackId = stack.stackId,
-                hasWords = stack.hasWords,
-                pinnedTime = stack.pinnedTime,
-                isVisible = stack.isVisible
-            )
-        repo.updateStack(stackEntity)
+        // Via create() so every field travels - listing them here dropped the languages.
+        repo.updateStack(StackEntity.create(stack))
     }
 }

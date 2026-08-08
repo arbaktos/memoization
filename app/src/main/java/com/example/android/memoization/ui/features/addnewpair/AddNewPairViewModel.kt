@@ -17,6 +17,9 @@ import com.example.android.memoization.utils.TO_LANGUAGE
 import com.example.android.memoization.utils.WORD_PAIR_ID
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -35,7 +38,9 @@ class AddNewPairViewModel @Inject constructor(
 
     var word1 = Empty_string
     var word2 = Empty_string
-    var translationLoading = false
+
+    private val _translation = MutableStateFlow<TranslationUiState>(TranslationUiState.Idle)
+    val translation: StateFlow<TranslationUiState> = _translation.asStateFlow()
 
     // EditPairDestination carries a word pair id, NewPairDestination carries a stack id
     private val currentWpId: Long? = savedStateHandle[WORD_PAIR_ID]
@@ -66,19 +71,42 @@ class AddNewPairViewModel @Inject constructor(
         }
     }
 
-    fun onTranslate(
-        wordToTranslate: String = word1
-    ) {
-        if (fromLanguage != null && toLanguage != null) {
-            val translationState = translationRepo.getTranslation(fromLanguage!!, toLanguage!!, wordToTranslate)
-            when (translationState) {
-                is TranslationState.Loading -> translationLoading = true
-                is TranslationState.Success<*> -> word2 = translationState.content as String
-                is TranslationState.Error -> updateToastMessage(
-                    translationState.errorMessage ?: R.string.translation_error
-                )
+    /**
+     * The translated word is published as state instead of being written onto word2,
+     * because the text field owns its own text and never watched that field.
+     */
+    fun onTranslate(wordToTranslate: String = word1) {
+        val from = fromLanguage
+        val to = toLanguage
+        if (from.isNullOrBlank() || to.isNullOrBlank()) return
+        if (wordToTranslate.isBlank()) return
+
+        viewModelScope.launch {
+            _translation.value = TranslationUiState.Translating
+            when (val state = translationRepo.getTranslation(from, to, wordToTranslate)) {
+                is TranslationState.Success<*> -> {
+                    val translated = state.content as? String
+                    if (translated.isNullOrBlank()) {
+                        _translation.value = TranslationUiState.Idle
+                        updateToastMessage(R.string.translation_error)
+                    } else {
+                        _translation.value = TranslationUiState.Translated(translated)
+                    }
+                }
+
+                is TranslationState.Error -> {
+                    _translation.value = TranslationUiState.Idle
+                    updateToastMessage(state.errorMessage ?: R.string.translation_error)
+                }
+
+                is TranslationState.Loading -> _translation.value = TranslationUiState.Translating
             }
         }
+    }
+
+    /** Called once the field has taken the translation, so it is not re-applied on rotation. */
+    fun onTranslationApplied() {
+        _translation.value = TranslationUiState.Idle
     }
 
     fun onConfirm() {
@@ -90,6 +118,7 @@ class AddNewPairViewModel @Inject constructor(
         clearWordPair()
     }
 
+    /** Both languages have to be set on the stack before translating means anything. */
     fun needsTranslation(): Boolean {
         return !fromLanguage.isNullOrBlank() && !toLanguage.isNullOrBlank()
     }
@@ -120,4 +149,10 @@ class AddNewPairViewModel @Inject constructor(
         word1 = Empty_string
         word2 = Empty_string
     }
+}
+
+sealed interface TranslationUiState {
+    data object Idle : TranslationUiState
+    data object Translating : TranslationUiState
+    data class Translated(val word: String) : TranslationUiState
 }

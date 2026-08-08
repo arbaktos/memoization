@@ -53,4 +53,10 @@
     <string name="label_to_language">To language</string>
 
 
+    <string name="choose_language">Choose…</string>
+    <string name="search_language">Search language</string>
+    <string name="no_languages_found">No languages match</string>
+    <string name="languages_load_failed">Could not load the language list</string>
+    <string name="retry">Retry</string>
+    <string name="translating">Translating…</string>
 </resources>

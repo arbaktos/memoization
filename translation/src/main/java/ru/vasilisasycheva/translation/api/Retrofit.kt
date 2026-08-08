@@ -18,7 +18,7 @@ import javax.inject.Inject
 
 @Module
 @InstallIn(SingletonComponent::class)
-class Retrofit @Inject constructor(){
+class Retrofit @Inject constructor() {
     private val httpLoggingInterceptor = setLoginInterceptor()
 
     @Provides
@@ -48,6 +48,3 @@ class Retrofit @Inject constructor(){
 
     val linganexApi: LinganexApi = retrofit().create(LinganexApi::class.java)
 }
-
-
-

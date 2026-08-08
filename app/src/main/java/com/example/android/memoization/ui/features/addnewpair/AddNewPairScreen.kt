@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Card
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
@@ -37,6 +38,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.android.memoization.R
@@ -130,7 +132,7 @@ fun DisplayWordPair(
                 .fillMaxHeight(0.75f)
                 .padding(start = 40.dp, end = 40.dp, top = 35.dp)
         ) {
-            val coroutineScope = rememberCoroutineScope()
+            val translation by viewModel.translation.collectAsStateWithLifecycle()
 
             UpperField(
                 modifier = Modifier
@@ -139,16 +141,23 @@ fun DisplayWordPair(
                 editWord = wordPair?.word1,
             )
 
-            if (viewModel.needsTranslation()) RowIcon(
-                iconSource = Icons.Filled.Translate,
-                contentDesc = stringResource(R.string.translate_btn_desc),
-                onClick = {
-                    coroutineScope.launch {
-                        onTranslate()
-                    }
-                })
+            if (viewModel.needsTranslation()) {
+                if (translation is TranslationUiState.Translating) {
+                    CircularProgressIndicator(modifier = Modifier.padding(8.dp))
+                } else {
+                    RowIcon(
+                        iconSource = Icons.Filled.Translate,
+                        contentDesc = stringResource(R.string.translate_btn_desc),
+                        onClick = onTranslate
+                    )
+                }
+            }
             BottomField(
-                modifier = Modifier.weight(1f), onConfirm, viewModel, word2 = wordPair?.word2
+                modifier = Modifier.weight(1f),
+                onClick = onConfirm,
+                viewModel = viewModel,
+                word2 = wordPair?.word2,
+                translation = translation
             )
         }
     }
@@ -192,11 +201,19 @@ fun BottomField(
     modifier: Modifier,
     onClick: () -> Unit,
     viewModel: AddNewPairViewModel,
-    translation: String? = null,
-    word2: String?
+    word2: String?,
+    translation: TranslationUiState = TranslationUiState.Idle
 ) {
-    val textVal = translation ?: word2 ?: Empty_string
+    val textVal = word2 ?: Empty_string
     val text2 = rememberSaveable(textVal) { mutableStateOf(textVal) }
+
+    // A finished translation drops into the field, then is cleared so it lands only once.
+    LaunchedEffect(translation) {
+        val translated = translation as? TranslationUiState.Translated ?: return@LaunchedEffect
+        text2.value = translated.word
+        viewModel.onTranslationApplied()
+    }
+
     viewModel.word2 = text2.value
 
     NewPairCard(
