@@ -8,12 +8,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.LinearProgressIndicator
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -97,27 +100,24 @@ fun MemorizationBody(
 
 @Composable
 fun EasyIcon(onClick: () -> Unit) {
-    MemoIcon(
-        contentDesc = stringResource(id = R.string.easy),
-        tint = colorResource(R.color.teal_700),
-        onClick = onClick
-    )
+    RatingButton(label = stringResource(R.string.easy), tint = colorResource(R.color.teal_700), onClick = onClick)
 }
 
 @Composable
 fun HardIcon(onClick: () -> Unit) {
-    MemoIcon(
-        contentDesc = stringResource(R.string.hard),
-        tint = colorResource(R.color.yellow),
-        onClick = onClick
-    )
+    RatingButton(label = stringResource(R.string.hard), tint = colorResource(R.color.yellow), onClick = onClick)
 }
 
 @Composable
 fun WrongIcon(onClick: () -> Unit) {
-    MemoIcon(
-        contentDesc = stringResource(id = R.string.wrong),
-        tint = colorResource(R.color.red),
-        onClick = onClick
-    )
+    RatingButton(label = stringResource(R.string.wrong), tint = colorResource(R.color.red), onClick = onClick)
+}
+
+/** A rating circle with its name underneath, so the colours don't have to be learnt. */
+@Composable
+private fun RatingButton(label: String, tint: Color, onClick: () -> Unit) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        MemoIcon(contentDesc = label, tint = tint, onClick = onClick)
+        Text(text = label, style = MaterialTheme.typography.caption)
+    }
 }
