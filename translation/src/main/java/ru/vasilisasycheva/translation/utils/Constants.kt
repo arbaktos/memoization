@@ -1,8 +1,10 @@
 package ru.vasilisasycheva.translation.utils
 
+import ru.vasilisasycheva.translation.BuildConfig
+
 object Constants {
-    const val API_KEY =
-        "a_Qz7uHYDGMx7CHl2gml238MHFul9tlVCQEt9gnB1XmONnkrQu2rrpCKSUPeCBt9yMd9WikzwIxfNDhVHF"
+    /** Supplied at build time from LINGVANEX_API_KEY in local.properties; never committed. */
+    const val API_KEY = BuildConfig.LINGVANEX_API_KEY
     const val HEADER_AUTH = "Authorization"
     const val HEADER_ACCEPT = "accept"
     const val HEADER_ACCEPT_VALUE = "application/json"

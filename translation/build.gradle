@@ -5,6 +5,15 @@ plugins {
     id 'dagger.hilt.android.plugin'
 }
 
+// The Lingvanex key lives outside version control: LINGVANEX_API_KEY in local.properties
+// (gitignored) or an environment variable of the same name.
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withInputStream { localProperties.load(it) }
+}
+def lingvanexApiKey = localProperties.getProperty('LINGVANEX_API_KEY') ?: System.getenv('LINGVANEX_API_KEY') ?: ''
+
 android {
     namespace 'ru.vasilisasycheva.translation'
     compileSdk 32
@@ -17,6 +26,7 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField 'String', 'LINGVANEX_API_KEY', "\"${lingvanexApiKey}\""
     }
 
     buildTypes {
@@ -34,6 +44,7 @@ android {
     }
     buildFeatures {
         viewBinding true
+        buildConfig true
     }
 }
 ext {
