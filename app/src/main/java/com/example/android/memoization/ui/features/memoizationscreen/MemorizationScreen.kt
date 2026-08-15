@@ -6,8 +6,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -16,6 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -60,9 +62,15 @@ fun MemorizationBody(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(Modifier.height(24.dp))
-        Text(
-            text = stringResource(R.string.words_left, session.remaining),
-            style = MaterialTheme.typography.caption
+        // Session progress: pairs closed out of the pairs the session started with. A pair
+        // rated Again stays in the queue, so the bar holds still until it is finally recalled.
+        val progressLabel = stringResource(R.string.session_progress, session.total - session.remaining, session.total)
+        LinearProgressIndicator(
+            progress = session.progress,
+            modifier = Modifier
+                .fillMaxWidth(0.6f)
+                .padding(horizontal = 16.dp)
+                .semantics { contentDescription = progressLabel }
         )
         Spacer(Modifier.height(24.dp))
         Row(

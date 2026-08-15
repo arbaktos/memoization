@@ -55,6 +55,19 @@ class MemorizationSessionTest {
         assertTrue(s.state().isFinished)
         assertNull(s.state().current)
         assertEquals(0, s.state().remaining)
+        assertEquals(1f, s.state().progress, 0f)
+    }
+
+    @Test
+    fun `progress is closed pairs over the starting total and holds still on again`() {
+        val s = session(1, 2, 3, 4)
+        assertEquals(4, s.state().total)
+        assertEquals(0f, s.state().progress, 0f)
+
+        assertEquals(0.25f, s.rate(Rating.Good, now).state.progress, 0.001f)
+        assertEquals(0.25f, s.rate(Rating.Again, now).state.progress, 0.001f)
+        assertEquals(0.5f, s.rate(Rating.Hard, now).state.progress, 0.001f)
+        assertEquals(4, s.state().total)
     }
 
     @Test

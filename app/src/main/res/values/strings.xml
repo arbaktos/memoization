@@ -60,5 +60,5 @@
     <string name="retry">Retry</string>
     <string name="translating">Translating…</string>
     <string name="delete_word">Delete word</string>
-    <string name="words_left">%1$d left</string>
+    <string name="session_progress">%1$d of %2$d done</string>
 </resources>

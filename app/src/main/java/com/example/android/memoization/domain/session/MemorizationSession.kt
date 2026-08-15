@@ -18,10 +18,16 @@ class MemorizationSession(words: List<WordPair>, random: Random = Random.Default
         val current: WordPair?,
         /** Pairs still in the queue, the current one included. */
         val remaining: Int,
+        /** Pairs the session started with; a pair re-queued after Again is not counted twice. */
+        val total: Int,
         /** Bumped on every rating so the UI can tell "same pair, next attempt" apart. */
         val serial: Int,
     ) {
         val isFinished: Boolean get() = current == null
+
+        /** Share of the session done, 0f..1f; an empty session counts as done. */
+        val progress: Float
+            get() = if (total == 0) 1f else (total - remaining).toFloat() / total
     }
 
     data class Outcome(
@@ -31,10 +37,11 @@ class MemorizationSession(words: List<WordPair>, random: Random = Random.Default
     )
 
     private val queue = ArrayDeque(words.shuffled(random))
+    private val total = words.size
     private val lapsedIds = mutableSetOf<Long>()
     private var serial = 0
 
-    fun state(): State = State(queue.firstOrNull(), queue.size, serial)
+    fun state(): State = State(queue.firstOrNull(), queue.size, total, serial)
 
     /**
      * Again: reset to Level1 with today's date - written once, on the first lapse - and back of
