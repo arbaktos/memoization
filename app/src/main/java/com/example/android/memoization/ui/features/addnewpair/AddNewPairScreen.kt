@@ -39,7 +39,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.data.model.WordPair
@@ -228,7 +227,9 @@ fun BottomField(
             },
             label = stringResource(R.string.word2_label),
             onClick = onClick,
-            imeAction = ImeAction.Done
+            // Explanations run to several lines, so Enter inserts one instead of
+            // confirming - the done button is the fab.
+            imeAction = ImeAction.Default
         )
     }
 }

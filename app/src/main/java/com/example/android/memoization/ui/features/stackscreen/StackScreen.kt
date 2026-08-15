@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -35,8 +36,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,7 +55,7 @@ import com.example.android.memoization.extensions.checkLength
 import com.example.android.memoization.ui.composables.components.AddNewCardFab
 import com.example.android.memoization.ui.composables.components.CustomAddFab
 import com.example.android.memoization.ui.composables.components.RowIcon
-import com.example.android.memoization.ui.composables.components.SwipeToDismiss
+import com.example.android.memoization.ui.composables.components.SwipeToReveal
 import com.example.android.memoization.ui.composables.dialog.EditStackDialog
 import com.example.android.memoization.ui.features.folderscreen.TDEBUG
 import com.example.android.memoization.ui.icons.ClickableVectorIcon
@@ -61,6 +64,7 @@ import com.example.android.memoization.ui.navigateToEditPair
 import com.example.android.memoization.ui.navigateToNewPair
 import com.example.android.memoization.ui.theme.indicatorColors
 import com.example.android.memoization.utils.LoadingState
+import kotlinx.coroutines.launch
 
 
 const val TAG = "DisplayStack"
@@ -73,6 +77,19 @@ fun StackScreen(
     Log.d(TDEBUG, "StackScreen: ")
     val state by viewModel.getDataToDisplay().collectAsStateWithLifecycle(initialValue = LoadingState.Loading)
     val showDialog by viewModel.showEditStackDialog.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    // Deleting is immediate; the snackbar puts the row back if it was a mistake.
+    val deletePair: (WordPair) -> Unit = { wordPair ->
+        viewModel.deletePair(wordPair)
+        scope.launch {
+            val result = snackbarHostState.showOnDeleteSnackBar(wordPair, context)
+            Log.d(TDEBUG, "snackbar result = $result")
+            if (result == SnackbarResult.ActionPerformed) viewModel.undoDelete()
+        }
+    }
 
     val navigateToNewPair = remember(navController) {
         { stack: MemoStack ->
@@ -101,7 +118,8 @@ fun StackScreen(
         navigateToEditPair = navigateToEditPair,
         navigateToMemorization = navigateToMemorization,
         updateStack = viewModel::updateStackInDb,
-        deletePair = viewModel::deletePair,
+        deletePair = deletePair,
+        snackbarHostState = snackbarHostState,
         onEditStack = { viewModel.showEditStackDialog(true) },
         onDismissDialog = { viewModel.showEditStackDialog(false) })
 }
@@ -119,6 +137,7 @@ fun DisplayStackState(
     deletePair: (wordPair: WordPair) -> Unit,
     onEditStack: () -> Unit,
     onDismissDialog: () -> Unit,
+    snackbarHostState: SnackbarHostState,
 ) {
 
     when (state) {
@@ -132,6 +151,7 @@ fun DisplayStackState(
             deletePair = deletePair,
             onEditStack = onEditStack,
             onDismissDialog = onDismissDialog,
+            snackbarHostState = snackbarHostState,
         )
 
         is LoadingState.Loading -> DisplayLoadingStack()
@@ -205,6 +225,7 @@ fun DisplayLoadingStack() {
 fun DisplayStack(
     currentStack: MemoStack,
     showDialog: Boolean,
+    snackbarHostState: SnackbarHostState,
     navigateToNewPair: (stack: MemoStack) -> Unit,
     navigateToMemorization: (stackId: Long) -> Unit,
     updateStack: (stack: MemoStack) -> Unit,
@@ -224,6 +245,7 @@ fun DisplayStack(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             StackAppBar(
                 stackName = currentStack.name,
@@ -297,17 +319,16 @@ fun WordList(
         reverseLayout = true
     ) {
         items(words, key = { it.wordPairId }) { wordPair ->
-            SwipeToDismiss(
-                item = wordPair,
-                dismissContent = {
-                    WordPairListItem(
-                        wordPair = wordPair,
-                        onEditNavigate = navigateToEditPair,
-                        modifier = Modifier//.animateItemPlacement()
-                    )
-                },
-                onDismiss = { deletePair(wordPair) }
-            )
+            SwipeToReveal(
+                onDelete = { deletePair(wordPair) },
+                modifier = Modifier.fillMaxWidth(0.9f)
+            ) {
+                WordPairListItem(
+                    wordPair = wordPair,
+                    onEditNavigate = navigateToEditPair,
+                    modifier = Modifier//.animateItemPlacement()
+                )
+            }
         }
     }
 }
@@ -323,7 +344,7 @@ fun WordPairListItem(
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(4.dp),
         modifier = modifier
-            .fillMaxWidth(0.9f)
+            .fillMaxWidth()
             .padding(top = 4.dp, bottom = 4.dp)
             .clickable {
                 onEditNavigate(wordPair)

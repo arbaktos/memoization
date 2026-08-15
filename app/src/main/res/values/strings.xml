@@ -59,4 +59,5 @@
     <string name="languages_load_failed">Could not load the language list</string>
     <string name="retry">Retry</string>
     <string name="translating">Translating…</string>
+    <string name="delete_word">Delete word</string>
 </resources>

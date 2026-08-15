@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.data.model.WordPair
+import com.example.android.memoization.data.repository.WordPairRepository
 import com.example.android.memoization.domain.usecases.DeleteWordPairUseCase
 import com.example.android.memoization.domain.usecases.GetStackUseCase
 import com.example.android.memoization.domain.usecases.UpdateStackUseCase
@@ -21,7 +22,8 @@ class StackViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getStackUseCase: GetStackUseCase,
     private val updateStackUseCase: UpdateStackUseCase,
-    private val deleteWordPairUseCase: DeleteWordPairUseCase
+    private val deleteWordPairUseCase: DeleteWordPairUseCase,
+    private val wordPairRepository: WordPairRepository,
 ) : BaseViewModel<LoadingState<MemoStack>>() {
 
     companion object {
@@ -43,9 +45,22 @@ class StackViewModel @Inject constructor(
     }
 
 
-    fun deleteWordPairFromDb(wordPair: WordPair) {
+    /** Kept so the snackbar can put it back; the row carries its own id, so it returns intact. */
+    private var lastDeleted: WordPair? = null
+
+    fun deletePair(wordPair: WordPair) {
+        lastDeleted = wordPair
         viewModelScope.launch {
             deleteWordPairUseCase(wordPair)
+        }
+    }
+
+    fun undoDelete() {
+        Log.d(TAG, "undoDelete: called, lastDeleted=${lastDeleted?.word1}")
+        val restored = lastDeleted ?: return
+        lastDeleted = null
+        viewModelScope.launch {
+            wordPairRepository.insertWordPair(restored)
         }
     }
 
@@ -58,6 +73,4 @@ class StackViewModel @Inject constructor(
         return stackWithWords
     }
 
-    fun deletePair(it: WordPair) { //TODO
-    }
 }
