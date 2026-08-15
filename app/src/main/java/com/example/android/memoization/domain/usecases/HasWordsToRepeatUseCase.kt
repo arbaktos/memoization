@@ -17,6 +17,6 @@ class HasWordsToRepeatUseCaseImpl @Inject constructor(
         return stackRepo.getStacksWithWords().first()
             .map { it.toMemoStack() }
             .filter { it.isVisible }
-            .any { it.hasWordsToLearn() }
+            .any { it.hasDueWords() }
     }
 }

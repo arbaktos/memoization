@@ -35,7 +35,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.android.memoization.R
 import com.example.android.memoization.data.model.MemoStack
-import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.ui.features.folderscreen.getPlayIconColor
 import com.example.android.memoization.ui.theme.memoButtonColors
 
@@ -50,10 +49,10 @@ fun StackListItem(
     onClick: () -> Unit = {}
 ) {
 
-    val wordsToLearn = stack.words.filter { (it as WordPair).toLearn }
-    val unRepeatedPercent = remember {
-        wordsToLearn.size.toFloat() / stack.words.size.toFloat() * 100
-    }
+    // Not remembered: MemoStack.words sits outside the data-class constructor, so no key would
+    // ever change, and a remembered value froze at first composition.
+    val wordsToLearn = stack.dueWords()
+    val unRepeatedPercent = wordsToLearn.size.toFloat() / stack.words.size.toFloat() * 100
     Card(
         elevation = 8.dp,
         shape = RoundedCornerShape(20.dp),

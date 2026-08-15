@@ -2,7 +2,7 @@ package com.example.android.memoization.data.database
 
 import androidx.room.TypeConverter
 import com.example.android.memoization.data.model.WordStatus
-import java.util.*
+import java.util.Date
 
 class Converters {
 
@@ -13,30 +13,29 @@ class Converters {
 
     @TypeConverter
     fun dateToTimestamp(date: Date?): Long? {
-        return date?.time?.toLong()
+        return date?.time
     }
-
 
     @TypeConverter
     fun intToLevel(level: Int): WordStatus {
         return when (level) {
-            1 -> WordStatus.Level1()
-            2 -> WordStatus.Level2()
-            3 -> WordStatus.Level3()
-            4 -> WordStatus.Level4()
-            5 -> WordStatus.Learned()
-            else -> WordStatus.Level1()
+            1 -> WordStatus.Level1
+            2 -> WordStatus.Level2
+            3 -> WordStatus.Level3
+            4 -> WordStatus.Level4
+            5 -> WordStatus.Learned
+            else -> WordStatus.Level1
         }
     }
 
     @TypeConverter
     fun levelToInt(level: WordStatus): Int {
         return when (level) {
-            is WordStatus.Level1 -> 1
-            is WordStatus.Level2 -> 2
-            is WordStatus.Level3 -> 3
-            is WordStatus.Level4 -> 4
-            is WordStatus.Learned -> 5
+            WordStatus.Level1 -> 1
+            WordStatus.Level2 -> 2
+            WordStatus.Level3 -> 3
+            WordStatus.Level4 -> 4
+            WordStatus.Learned -> 5
         }
     }
 }

@@ -261,7 +261,7 @@ fun DisplayStack(
                 )
                 StackFab(
                     { navigateToMemorization(currentStack.stackId) },
-                    hasWordsToLearn = currentStack.hasWordsToLearn()
+                    hasWordsToLearn = currentStack.hasDueWords()
                 )
             }
         },
@@ -358,7 +358,7 @@ fun WordPairListItem(
             RowIcon(
                 iconSource = Icons.Filled.Circle,
                 contentDesc = stringResource(R.string.word_indicator),
-                tint = indicatorColors(wordPair.levelOfKnowledge),
+                tint = indicatorColors(wordPair.level),
                 modifier = Modifier.padding(start = 10.dp)
             )
             ListItem(

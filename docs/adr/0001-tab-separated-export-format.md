@@ -27,8 +27,10 @@ also sidesteps Excel taking its delimiter from the system locale, which in a sem
 drops a comma-separated file into a single column.
 
 Only the first two columns are required. A file with no header and two columns is read as
-word and meaning, with a generated stack id, `Level1` and a `last_rep` of now — so a plain
-Anki text export imports without any Anki-specific code. The cost is that a malformed file
+word and meaning, with a generated stack id, `Level1` and an empty `last_rep` — that is, as
+New, due in the next session — so a plain Anki text export imports without any Anki-specific
+code. The same rule holds inside a full file: an empty `last_rep` field means the pair has
+never been repeated, and export writes New pairs with the field empty. The cost is that a malformed file
 imports as nonsense rather than failing, which is why bad rows are skipped and then reported
 in a summary the learner has to dismiss.
 

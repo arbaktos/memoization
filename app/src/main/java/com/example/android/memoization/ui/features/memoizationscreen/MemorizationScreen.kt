@@ -1,7 +1,17 @@
 package com.example.android.memoization.ui.features.memoizationscreen
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
@@ -10,8 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.android.memoization.R
-import com.example.android.memoization.data.model.BaseWordPair
-import com.example.android.memoization.data.model.WordPair
+import com.example.android.memoization.data.model.Rating
+import com.example.android.memoization.domain.session.MemorizationSession
 import com.example.android.memoization.ui.composables.components.FlipCard
 import com.example.android.memoization.ui.composables.components.MemoIcon
 import com.example.android.memoization.ui.composables.components.StackCompleteDialog
@@ -22,76 +32,60 @@ fun MemorizationScreen(
     navController: NavController,
 ) {
     val viewModel: MemoizationViewModel = hiltViewModel()
-    val wordListToLearn = viewModel.wordsToLearn.collectAsState(initial = emptyList())
+    val state by viewModel.state.collectAsState()
 
-    FolderScreenBodyContent(
-        wordsToLearn = wordListToLearn,
-        navController = navController,
-        viewModel = viewModel
+    MemorizationBody(
+        state = state,
+        onRate = viewModel::onRate,
+        onComplete = { navController.navigateToFolderScreen() }
     )
 }
 
 @Composable
-fun FolderScreenBodyContent(
-    wordsToLearn: State<List<BaseWordPair>>,
-    navController: NavController,
-    viewModel: MemoizationViewModel
+fun MemorizationBody(
+    state: MemorizationSession.State?,
+    onRate: (Rating) -> Unit,
+    onComplete: () -> Unit,
 ) {
-    // One card at a time. Rating a word drops it out of wordsToLearn, so the next one
-    // simply takes its place; composing the whole list at once stacked every card on top
-    // of each other and the one underneath showed through mid-flip.
-    wordsToLearn.value.lastOrNull()?.let { wordPair ->
-        viewModel.clicked = false
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(Modifier.height(60.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                // Keyed so a fresh word starts face-up instead of inheriting the flip.
-                key(wordPair.wordPairId) {
-                    FlipCard(wordPair)
-                }
-            }
-            Spacer(Modifier.height(100.dp))
-            Row(modifier = Modifier.weight(0.3f)) {
+    // null = still loading the stack; nothing to draw yet.
+    val session = state ?: return
 
-                EasyIcon {
-                    viewModel.onBottomButtonClick(
-                        wordPair = wordPair,
-                        icon = com.example.android.memoization.ui.features.memoizationscreen.Icon.Easy
-                    )
-                }
-                HardIcon {
-                    viewModel.onBottomButtonClick(
-                        wordPair = wordPair,
-                        icon = com.example.android.memoization.ui.features.memoizationscreen.Icon.Hard
-                    )
-                }
-                WrongIcon {
-                    viewModel.onBottomButtonClick(
-                        wordPair = wordPair,
-                        icon = com.example.android.memoization.ui.features.memoizationscreen.Icon.Wrong
-                    )
-                }
+    if (session.isFinished) {
+        StackCompleteDialog(onClick = onComplete)
+        return
+    }
+    val wordPair = session.current ?: return
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(Modifier.height(24.dp))
+        Text(
+            text = stringResource(R.string.words_left, session.remaining),
+            style = MaterialTheme.typography.caption
+        )
+        Spacer(Modifier.height(24.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            // Keyed on the serial too: after an Again the same pair can come straight back
+            // (e.g. when it is the only one left) and must start face-up again.
+            key(wordPair.wordPairId, session.serial) {
+                FlipCard(wordPair)
             }
         }
+        Spacer(Modifier.height(100.dp))
+        Row(modifier = Modifier.weight(0.3f)) {
+            EasyIcon { onRate(Rating.Good) }
+            HardIcon { onRate(Rating.Hard) }
+            WrongIcon { onRate(Rating.Again) }
+        }
     }
-
-    if (viewModel.clicked) {
-        StackCompleteDialog(
-            onClick = { navController.navigateToFolderScreen() }
-        )
-
-    }
-
 }
-
 
 @Composable
 fun EasyIcon(onClick: () -> Unit) {
@@ -119,11 +113,3 @@ fun WrongIcon(onClick: () -> Unit) {
         onClick = onClick
     )
 }
-
-enum class Icon {
-    Easy, Hard, Wrong
-}
-
-
-
-

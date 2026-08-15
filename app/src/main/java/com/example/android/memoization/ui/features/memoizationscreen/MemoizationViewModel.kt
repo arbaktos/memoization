@@ -3,63 +3,54 @@ package com.example.android.memoization.ui.features.memoizationscreen
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.android.memoization.data.model.BaseWordPair
-import com.example.android.memoization.data.model.WordPair
+import com.example.android.memoization.data.model.MemoStack
+import com.example.android.memoization.data.model.Rating
 import com.example.android.memoization.data.repository.WordPairRepository
+import com.example.android.memoization.domain.session.MemorizationSession
 import com.example.android.memoization.domain.usecases.GetStackUseCase
 import com.example.android.memoization.utils.LoadingState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.transform
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
 class MemoizationViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    val repository: WordPairRepository,
-    val getStackUseCase: GetStackUseCase
+    private val repository: WordPairRepository,
+    getStackUseCase: GetStackUseCase
 ) : ViewModel() {
-
-    var clicked = false
 
     private val stackId: Long = savedStateHandle.get<Long>(STACK_ID_ARG) ?: NO_STACK_ID_PASSED
 
-    // Built once: collectAsState keys on the flow instance, so a new one per
-    // recomposition would restart collection and recompose forever.
-    val wordsToLearn: Flow<List<BaseWordPair>> by lazy { wordsToLearnIn(stackId) }
+    private var session: MemorizationSession? = null
 
-    private fun updateWordPairDateInDb(wordPair: WordPair?) {
-        wordPair?.let {
-            viewModelScope.launch {
-                repository.updateWordPairInDb(wordPair.copy(lastRep = Date(System.currentTimeMillis())))
-            }
+    /** null while the stack is loading. */
+    private val _state = MutableStateFlow<MemorizationSession.State?>(null)
+    val state: StateFlow<MemorizationSession.State?> = _state.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            // One snapshot: the session owns the queue from here on, so the database
+            // re-emitting after each rating must not reshuffle or shrink it.
+            val stack = getStackUseCase(stackId)
+                .filterIsInstance<LoadingState.Collected<MemoStack>>()
+                .first()
+                .content
+            session = MemorizationSession(stack.dueWords()).also { _state.value = it.state() }
         }
     }
 
-    private fun wordsToLearnIn(stackId: Long) = getStackUseCase(stackId).transform { state ->
-        when(state) {
-            is LoadingState.Collected -> {
-                emit(state.content.prepareStack().words.filter { it as WordPair
-                    it.toLearn
-                })
-            }
-            is LoadingState.Error -> { /*TODO*/ }
-            is LoadingState.Loading -> { /*TODO*/ }
+    fun onRate(rating: Rating) {
+        val outcome = session?.rate(rating, System.currentTimeMillis()) ?: return
+        outcome.toPersist?.let { rated ->
+            viewModelScope.launch { repository.updateWordPairInDb(rated) }
         }
-
-    }
-
-    fun onBottomButtonClick(wordPair: BaseWordPair, icon: Icon) {
-        wordPair as WordPair
-        when (icon) {
-            Icon.Easy -> wordPair.harderLevel()
-            Icon.Hard -> wordPair.easierLevel()
-            Icon.Wrong -> wordPair.toLevel1()
-        }
-        updateWordPairDateInDb(wordPair)
-        clicked = true
+        _state.value = outcome.state
     }
 
     companion object {

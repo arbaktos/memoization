@@ -14,12 +14,28 @@ One thing to recall and its answer, plus the schedule state that decides when it
 _Avoid_: card, word, translation
 
 **Level**:
-How well a word pair is known, from Level1 to Learned; it sets the gap between repetitions.
+How well a word pair is known, from Level1 (1 day) through Level2 (2), Level3 (7), Level4 (14)
+to Learned (30); it sets the gap, in calendar days, between repetitions.
 _Avoid_: score, difficulty, status
 
+**Rating**:
+The learner's answer to a card — Again, Hard or Good; Again resets the pair to Level1, Hard
+keeps its level, Good moves it one level up.
+_Avoid_: easy/wrong (button labels, not the ratings), icon, click
+
+**New**:
+A word pair that has never been rated; it is due at once, whatever its level.
+_Avoid_: fresh, unseen, just added
+
 **Due**:
-A word pair whose gap since its last repetition has exceeded its level's frequency.
+A word pair that is New, or whose last repetition was at least its level's frequency in whole
+local calendar days ago.
 _Avoid_: to learn, toShow, unrepeated
+
+**Session**:
+One sitting with a stack: its due word pairs, shuffled once on entry and shown one at a time;
+a pair rated Again returns to the back of the queue until it is rated Hard or Good.
+_Avoid_: memorization list, wordsToLearn, round
 
 **Library**:
 Every stack the learner currently has on this device.
@@ -49,7 +65,7 @@ _Avoid_: merge screen, conflict resolution
 
 **Keep progress**:
 The choice, made once per import, to honour the levels and repetition dates in the file
-rather than starting every word pair at Level1 and due today.
+rather than importing every word pair as New at Level1.
 _Avoid_: include scheduling, preserve state
 
 ## Relationships
@@ -58,6 +74,8 @@ _Avoid_: include scheduling, preserve state
 - A **Stack** holds zero or more **Word pairs**
 - A **Word pair** belongs to exactly one **Stack**
 - A **Word pair** has exactly one **Level**, which determines when it becomes **Due**
+- A **Session** holds the **Due** word pairs of exactly one **Stack**; each **Rating** given in
+  it updates one **Word pair**
 - An **Export file** holds one or more **Stacks**, chosen by **Export scope**
 - A **Stack** has exactly one **Stack id**, unique within a **Library**
 - Importing a **Stack** whose **Stack id** is already present offers replace, **Fork** or skip;
@@ -67,7 +85,7 @@ _Avoid_: include scheduling, preserve state
 
 > **Dev:** "If I export one **Stack** and you import it, do you get my **Levels**?"
 > **Learner:** "The file carries them, but they're mine, not yours. On import you decide
-> whether to **Keep progress** or start the **Word pairs** fresh at Level1."
+> whether to **Keep progress** or start the **Word pairs** fresh as **New**."
 >
 > **Dev:** "And if you already have that **Stack**?"
 > **Learner:** "Then **Import review** asks me. Replace it if it's my own backup coming home,
@@ -91,4 +109,12 @@ _Avoid_: include scheduling, preserve state
 - Anki interoperability (`.apkg`) is deferred, not rejected. The blocker is that Anki
   schedules with a continuous interval and ease per card, while a **Word pair** has one of
   five fixed **Levels** — the mapping is lossy coming back. A plain two-column Anki text
-  export already imports, since only the first two columns are required.
+  export already imports, since only the first two columns are required. ADR 0003 (proposed)
+  would remove the blocker.
+- The five fixed **Levels** are an interim scheduler. The intended replacement is FSRS with a
+  **Card** per direction of a **Word pair** (L2→L1, L1→L2 or both, chosen per **Stack**), the
+  **Level** derived from stability, and a fixed desired retention of 0.9 — see ADR 0003. A
+  retention setting is possible later.
+- A **Session** lives in memory. If the process dies mid-session the queue is rebuilt from the
+  due pairs; a pair already rated Again that day is Level1 with today's date and so returns
+  tomorrow, not later in the same sitting. Accepted for now.

@@ -6,8 +6,8 @@ interface BaseWordPair {
     val parentStackId: Long
     var word1: String
     var word2: String?
-    var lastRep: Date
-    var toShow: Boolean
+    /** When the pair was last rated; null means it is New and has never been repeated. */
+    var lastRep: Date?
     var level: WordStatus
     val wordPairId: Long
     var isVisible: Boolean

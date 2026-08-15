@@ -13,9 +13,8 @@ data class WordPairEntity(
     override val parentStackId: Long,
     override var word1: String,
     override var word2: String?,
-    override var lastRep: Date = Date(),
-    override var toShow: Boolean = false,
-    override var level: WordStatus = WordStatus.Level1(),
+    override var lastRep: Date? = null,
+    override var level: WordStatus = WordStatus.Level1,
     @PrimaryKey(autoGenerate = true)
     override val wordPairId: Long = 0,
     override var isVisible: Boolean = true
@@ -26,7 +25,6 @@ data class WordPairEntity(
             word1 = this.word1,
             word2 = this.word2,
             lastRep = this.lastRep,
-            toShow = this.toShow,
             level = this.level,
             wordPairId = this.wordPairId,
             isVisible = this.isVisible
@@ -40,7 +38,6 @@ data class WordPairEntity(
                 word1 = wordPair.word1,
                 word2 = wordPair.word2,
                 lastRep = wordPair.lastRep,
-                toShow = wordPair.toShow,
                 level = wordPair.level,
                 wordPairId = wordPair.wordPairId,
                 isVisible = wordPair.isVisible
