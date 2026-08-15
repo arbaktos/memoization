@@ -11,6 +11,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
@@ -241,7 +242,7 @@ fun NewPairCard(
 ) {
     Card(
         modifier = modifier,
-        border = BorderStroke(color = Color.Black, width = Dp.Hairline),
+        border = BorderStroke(color = MaterialTheme.colors.onSurface, width = Dp.Hairline),
         shape = RoundedCornerShape(8.dp)
     ) {
         content()

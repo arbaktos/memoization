@@ -12,7 +12,8 @@ import com.example.android.memoization.data.model.WordStatus
 @Composable
 fun MemoTextFieldColors(): TextFieldColors {
     return textFieldColors(
-        textColor = Color.DarkGray,
+        // From the theme, not a fixed grey: on a dark background the text has to turn light.
+        textColor = MaterialTheme.colors.onSurface,
         backgroundColor = Color.Transparent,
         focusedIndicatorColor = Color.Transparent,
         unfocusedIndicatorColor = Color.Transparent,
@@ -24,7 +25,9 @@ fun MemoTextFieldColors(): TextFieldColors {
 @Composable
 fun AddTextFieldColors(): TextFieldColors {
     return textFieldColors(
-        backgroundColor = Color.White,
+        // Was a fixed white: in the dark theme that left white text on a white field.
+        textColor = MaterialTheme.colors.onSurface,
+        backgroundColor = MaterialTheme.colors.surface,
         focusedIndicatorColor = Color.Transparent,
         unfocusedIndicatorColor = Color.Transparent,
         disabledIndicatorColor = Color.Transparent
