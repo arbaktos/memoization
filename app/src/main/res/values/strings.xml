@@ -24,7 +24,7 @@
     <string name="word2_label">Explanation</string>
     <string name="confirm_deletion">Do you want to delete</string>
     <string name="undo">Undo</string>
-    <string name="easy">Easy</string>
+    <string name="good">Good</string>
     <string name="hard">Hard</string>
     <string name="wrong">Forgot</string>
     <string name="edit_stack_desc">Edit memo stack</string>

@@ -47,9 +47,11 @@ stability keeps all three stable.
 ## Consequences
 
 - Desired retention is a constant 0.9 with FSRS-6 default parameters; a setting can come later.
-- Ratings stay three: Again, Hard, Good, mapped to FSRS grades 1-3. FSRS's Easy is implemented
-  but never sent - its authors report it is over-used, and a fourth button costs attention on
-  every word. The ceiling on a first interval is therefore about two days rather than eight.
+- There are three ratings and three buttons: Again, Hard, Good, which are FSRS grades 1 to 3.
+  FSRS's fourth grade has no button - its authors report it is over-used, and a fourth choice
+  costs attention on every word - so the ceiling on a first interval is about two days rather
+  than eight. The grade is still declared in code because the difficulty formula reverts
+  towards it.
 - Intervals are fuzzed as in Anki, so a batch of pairs added on one day does not keep returning
   as one lump. Due-ness is judged by calendar day, so a side rated at 23:59 is available again
   the moment the next day starts.

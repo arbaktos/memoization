@@ -38,9 +38,9 @@ A reading of a side's stability, for colour: Level1 under 2 days, Level2 under 7
 _Avoid_: score, status, stored level
 
 **Rating**:
-The learner's answer to a side - Again, Hard or Good. Again drops stability sharply but not to
-nothing, Hard grows it a little, Good grows it fully.
-_Avoid_: easy/wrong (button labels, not the ratings), icon, click
+The learner's answer to a side - Again, Hard or Good, which is also what the three buttons say.
+Again drops stability sharply but not to nothing, Hard grows it a little, Good grows it fully.
+_Avoid_: a fourth rating (FSRS has one, this app does not), icon, click
 
 **New**:
 A side that has never been rated; it is due at once, and its first rating sets its stability.

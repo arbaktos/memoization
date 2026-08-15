@@ -91,7 +91,7 @@ fun MemorizationBody(
         }
         Spacer(Modifier.height(100.dp))
         Row(modifier = Modifier.weight(0.3f)) {
-            EasyIcon { onRate(Rating.Good) }
+            GoodIcon { onRate(Rating.Good) }
             HardIcon { onRate(Rating.Hard) }
             WrongIcon { onRate(Rating.Again) }
         }
@@ -99,8 +99,8 @@ fun MemorizationBody(
 }
 
 @Composable
-fun EasyIcon(onClick: () -> Unit) {
-    RatingButton(label = stringResource(R.string.easy), tint = colorResource(R.color.teal_700), onClick = onClick)
+fun GoodIcon(onClick: () -> Unit) {
+    RatingButton(label = stringResource(R.string.good), tint = colorResource(R.color.teal_700), onClick = onClick)
 }
 
 @Composable
