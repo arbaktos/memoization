@@ -1,28 +1,40 @@
 package com.example.android.memoization.data.model
 
-import java.util.Date
 import java.util.TimeZone
 
+/**
+ * A word and its meaning. The pair itself carries no schedule - each of its [sides] is
+ * scheduled on its own, because recognising a word and producing it are separate skills.
+ */
 data class WordPair(
     override val parentStackId: Long,
     override var word1: String,
     override var word2: String?,
-    override var lastRep: Date? = null,
     override var wordPairId: Long = 0,
     override var isVisible: Boolean = true,
-    override var level: WordStatus = WordStatus.Level1
+    val sides: List<Side> = emptyList(),
 ) : BaseWordPair, DismissableItem {
 
-    /** Never rated yet - shown in the next session regardless of level. */
-    val isNew: Boolean
-        get() = lastRep == null
+    fun activeSides(practice: PracticeSides): List<Side> =
+        sides.filter { practice.includes(it.shown) }
+
+    fun dueSides(
+        practice: PracticeSides,
+        now: Long = System.currentTimeMillis(),
+        zone: TimeZone = TimeZone.getDefault(),
+    ): List<Side> = activeSides(practice).filter { it.isDue(now, zone) }
 
     fun isDue(
+        practice: PracticeSides,
         now: Long = System.currentTimeMillis(),
-        zone: TimeZone = TimeZone.getDefault()
-    ): Boolean = SpacedRepetition.isDue(level, lastRep?.time, now, zone)
+        zone: TimeZone = TimeZone.getDefault(),
+    ): Boolean = dueSides(practice, now, zone).isNotEmpty()
 
-    /** The pair as it should be persisted after one rating given at [now]. */
-    fun rated(rating: Rating, now: Long): WordPair =
-        copy(level = SpacedRepetition.rate(level, rating), lastRep = Date(now))
+    /** A pair is only as known as its weakest practised side. */
+    fun level(practice: PracticeSides): WordStatus =
+        activeSides(practice).minByOrNull { it.level.frequency }?.level ?: WordStatus.Level1
+
+    fun front(shown: Shown): String = if (shown == Shown.WORD) word1 else word2.orEmpty()
+
+    fun back(shown: Shown): String = if (shown == Shown.WORD) word2.orEmpty() else word1
 }

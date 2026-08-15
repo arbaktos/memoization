@@ -10,32 +10,56 @@ A named collection of word pairs the learner studies together, usually one langu
 _Avoid_: folder, deck, list
 
 **Word pair**:
-One thing to recall and its answer, plus the schedule state that decides when it is next due.
+One thing to recall and its answer. The pair holds the words; its sides hold the schedule.
 _Avoid_: card, word, translation
 
+**Side**:
+One direction of recall of a word pair - shown the word, recall the meaning, or the reverse -
+carrying its own stability, difficulty and due date.
+_Avoid_: card, direction, face
+
+**Practice sides**:
+The learner's choice, for the whole library, of which sides to practise: word to meaning,
+meaning to word, or both. A pair always has both sides; this decides which are scheduled.
+_Avoid_: mode, direction setting
+
+**Stability**:
+How many days a side's memory holds - the point at which recalling it would be a nine-in-ten
+chance. It is the schedule: the next repetition falls about that many days later.
+_Avoid_: interval, strength, ease
+
+**Difficulty**:
+How hard a side is for this learner, from 1 to 10; it slows how fast stability grows.
+_Avoid_: level, hardness
+
 **Level**:
-How well a word pair is known, from Level1 (1 day) through Level2 (2), Level3 (7), Level4 (14)
-to Learned (30); it sets the gap, in calendar days, between repetitions.
-_Avoid_: score, difficulty, status
+A reading of a side's stability, for colour: Level1 under 2 days, Level2 under 7, Level3 under
+14, Level4 under 30, Learned beyond. A pair shows the level of its weakest practised side.
+_Avoid_: score, status, stored level
 
 **Rating**:
-The learner's answer to a card — Again, Hard or Good; Again resets the pair to Level1, Hard
-keeps its level, Good moves it one level up.
+The learner's answer to a side - Again, Hard or Good. Again drops stability sharply but not to
+nothing, Hard grows it a little, Good grows it fully.
 _Avoid_: easy/wrong (button labels, not the ratings), icon, click
 
 **New**:
-A word pair that has never been rated; it is due at once, whatever its level.
+A side that has never been rated; it is due at once, and its first rating sets its stability.
 _Avoid_: fresh, unseen, just added
 
 **Due**:
-A word pair that is New, or whose last repetition was at least its level's frequency in whole
-local calendar days ago.
+A side that is New, or whose due date's calendar day is today or earlier. A pair is due when
+any of its practised sides is.
 _Avoid_: to learn, toShow, unrepeated
 
 **Session**:
-One sitting with a stack: its due word pairs, shuffled once on entry and shown one at a time;
-a pair rated Again returns to the back of the queue until it is rated Hard or Good.
+One sitting with a stack: its due practised sides, shuffled once on entry and shown one at a
+time; a side rated Again returns to the back of the queue until it is rated Hard or Good.
 _Avoid_: memorization list, wordsToLearn, round
+
+**Hidden**:
+A word pair or stack the learner has deleted. Nothing leaves the database - the row and its
+progress stay, so an undo, or a restore, can bring it back.
+_Avoid_: deleted, removed, trashed
 
 **Library**:
 Every stack the learner currently has on this device.
@@ -65,7 +89,7 @@ _Avoid_: merge screen, conflict resolution
 
 **Keep progress**:
 The choice, made once per import, to honour the levels and repetition dates in the file
-rather than importing every word pair as New at Level1.
+rather than importing every side as New.
 _Avoid_: include scheduling, preserve state
 
 ## Relationships
@@ -73,9 +97,11 @@ _Avoid_: include scheduling, preserve state
 - A **Library** holds zero or more **Stacks**
 - A **Stack** holds zero or more **Word pairs**
 - A **Word pair** belongs to exactly one **Stack**
-- A **Word pair** has exactly one **Level**, which determines when it becomes **Due**
-- A **Session** holds the **Due** word pairs of exactly one **Stack**; each **Rating** given in
-  it updates one **Word pair**
+- A **Word pair** has exactly two **Sides**, one per direction of recall
+- A **Side** has its own **Stability**, **Difficulty** and due date, and shows a **Level**
+- **Practice sides** decides which **Sides** of every pair are scheduled
+- A **Session** holds the **Due** practised **Sides** of exactly one **Stack**; each **Rating**
+  given in it updates one **Side**
 - An **Export file** holds one or more **Stacks**, chosen by **Export scope**
 - A **Stack** has exactly one **Stack id**, unique within a **Library**
 - Importing a **Stack** whose **Stack id** is already present offers replace, **Fork** or skip;
@@ -83,9 +109,9 @@ _Avoid_: include scheduling, preserve state
 
 ## Example dialogue
 
-> **Dev:** "If I export one **Stack** and you import it, do you get my **Levels**?"
-> **Learner:** "The file carries them, but they're mine, not yours. On import you decide
-> whether to **Keep progress** or start the **Word pairs** fresh as **New**."
+> **Dev:** "If I export one **Stack** and you import it, do you get my progress?"
+> **Learner:** "The file carries it, but it's mine, not yours. On import you decide whether to
+> **Keep progress** or start every **Side** fresh as **New**."
 >
 > **Dev:** "And if you already have that **Stack**?"
 > **Learner:** "Then **Import review** asks me. Replace it if it's my own backup coming home,
@@ -103,18 +129,20 @@ _Avoid_: include scheduling, preserve state
   still accepts comma and semicolon. See ADR 0001.
 - "add" means two things during **Import review** — resolved: adding an unseen **Stack** keeps
   the **Stack id** from the file, **Fork** mints a new one. See ADR 0002.
+- "card" is what the learner flips on screen, which is a whole **Word pair** — resolved: the
+  half of a pair that carries a schedule is a **Side**, never a card.
+- "delete" is what the swipe gesture and its snackbar say — resolved: the concept is
+  **Hidden**; nothing is removed from the database. See ADR 0003.
 
 ## Open questions
 
-- Anki interoperability (`.apkg`) is deferred, not rejected. The blocker is that Anki
-  schedules with a continuous interval and ease per card, while a **Word pair** has one of
-  five fixed **Levels** — the mapping is lossy coming back. A plain two-column Anki text
-  export already imports, since only the first two columns are required. ADR 0003 (proposed)
-  would remove the blocker.
-- The five fixed **Levels** are an interim scheduler. The intended replacement is FSRS with a
-  **Card** per direction of a **Word pair** (L2→L1, L1→L2 or both, chosen per **Stack**), the
-  **Level** derived from stability, and a fixed desired retention of 0.9 — see ADR 0003. A
-  retention setting is possible later.
+- Anki interoperability (`.apkg`) is deferred, not rejected. Both apps now schedule with
+  stability and difficulty per side, so the mapping that ADR 0001 called lossy is no longer
+  lossy by construction. A plain two-column Anki text export already imports.
+- Desired retention is fixed at 0.9 (ADR 0003). A setting is possible later, as are FSRS
+  parameters fitted to this learner's own review history.
+- **Hidden** pairs and stacks have no way back in the UI yet; a restore screen is the missing
+  half of "nothing is ever deleted".
 - A **Session** lives in memory. If the process dies mid-session the queue is rebuilt from the
-  due pairs; a pair already rated Again that day is Level1 with today's date and so returns
-  tomorrow, not later in the same sitting. Accepted for now.
+  due sides; a side already rated Again that day has been rescheduled and returns tomorrow,
+  not later in the same sitting. Accepted for now.

@@ -46,6 +46,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.data.model.MemoStack
+import com.example.android.memoization.data.model.PracticeSides
 import com.example.android.memoization.ui.composables.components.CustomAddFab
 import com.example.android.memoization.ui.composables.components.StackListItem
 import com.example.android.memoization.ui.composables.components.SwipeToDismiss
@@ -160,6 +161,7 @@ fun StackList(
     scaffoldState: ScaffoldState
 ) {
     val scope = rememberCoroutineScope()
+    val practice by viewModel.practiceSides.collectAsState()
     LazyColumn(
         state = listState,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -175,6 +177,7 @@ fun StackList(
                 dismissContent = {
                     ShowStack(
                         stack = stack,
+                        practice = practice,
                         onAddNewWord = { viewModel.onAddNewWord(navController, stack) },
                         onNavigateToStack = {
                             viewModel.onNavigateToStack(
@@ -189,12 +192,12 @@ fun StackList(
                 },
                 onDismiss = {
                     scope.launch {
-                        val updatedStack = stack.copy(isVisible = false)
-                        viewModel.updateStack(updatedStack)
-
-                        when (scaffoldState.snackbarHostState.showOnStackDeleteSnackBar(stack)) {
-                            SnackbarResult.ActionPerformed -> viewModel.cancelStackDeletion(stack)
-                            SnackbarResult.Dismissed -> viewModel.deleteStackWithDelay(stack)
+                        // Hidden, never deleted; undo just puts it back.
+                        viewModel.hideStack(stack)
+                        if (scaffoldState.snackbarHostState.showOnStackDeleteSnackBar(stack) ==
+                            SnackbarResult.ActionPerformed
+                        ) {
+                            viewModel.unhideStack(stack)
                         }
                     }
                 }
@@ -241,6 +244,7 @@ fun InvitationToCreateStack(onClick: () -> Unit = {}) {
 @Composable
 fun ShowStack(
     stack: MemoStack,
+    practice: PracticeSides,
     onPlayWords: () -> Unit,
     onNavigateToStack: () -> Unit,
     onAddNewWord: () -> Unit,
@@ -249,6 +253,7 @@ fun ShowStack(
 ) {
     StackListItem(
         stack = stack,
+        practice = practice,
         modifier = modifier,
         onPlay = onPlayWords,
         onAdd = onAddNewWord,

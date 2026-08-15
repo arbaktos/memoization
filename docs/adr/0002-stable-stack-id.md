@@ -18,7 +18,7 @@ file that came from another install.
 
 This is a migration under the rule that the learning database is never wiped
 (see `MemoDatabase.MIGRATIONS`), so it has to be written by hand — as the next version bump
-after the scheduler migration that took 1 → 2. Existing rows can be backfilled without touching
+after the sides migration that took 2 → 3. Existing rows can be backfilled without touching
 Kotlin, since SQLite can mint the ids itself:
 
 ```sql

@@ -1,8 +1,8 @@
 package com.example.android.memoization.data.model
 
 /**
- * How well a word pair is known. Each level sets the gap, in whole calendar days, before the
- * pair is due again. Objects rather than classes so two references to the same level are equal.
+ * How well a side is known, shown as a colour. It is no longer stored: the schedule lives in
+ * FSRS stability, and the level is a reading of it - roughly "how many days this memory holds".
  */
 sealed class WordStatus(val frequency: Int) {
     data object Level1 : WordStatus(1)
@@ -11,11 +11,14 @@ sealed class WordStatus(val frequency: Int) {
     data object Level4 : WordStatus(14)
     data object Learned : WordStatus(30)
 
-    /** One step up after a successful recall; Learned stays Learned. */
-    fun next(): WordStatus = when (this) {
-        Level1 -> Level2
-        Level2 -> Level3
-        Level3 -> Level4
-        Level4, Learned -> Learned
+    companion object {
+        /** A side that has never been rated (null stability) reads as Level1. */
+        fun fromStability(stability: Double?): WordStatus = when {
+            stability == null || stability < 2 -> Level1
+            stability < 7 -> Level2
+            stability < 14 -> Level3
+            stability < 30 -> Level4
+            else -> Learned
+        }
     }
 }

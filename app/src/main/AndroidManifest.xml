@@ -57,18 +57,6 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
-
-        <provider
-            android:name="androidx.startup.InitializationProvider"
-            android:authorities="${applicationId}.androidx-startup"
-            android:exported="false"
-            tools:node="merge">
-            <!-- disable default -->
-            <meta-data
-                android:name="androidx.work.WorkManagerInitializer"
-                android:value="@string/androidx_startup"
-                tools:node="remove" />
-        </provider>
     </application>
 
 </manifest>

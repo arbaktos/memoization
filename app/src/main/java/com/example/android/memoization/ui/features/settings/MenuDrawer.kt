@@ -46,6 +46,7 @@ fun SettingsSheet(modifier: Modifier = Modifier, preferenceStorage: DataStore<Pr
         topBar = { PrimaryBoldLabel(text = LocalContext.current.getString(R.string.settings_top_bar_label)) }
     ) {
         Column(modifier = modifier.padding(it)) {
+            LearningView(preferenceStorage = preferenceStorage)
             NotificationsView(preferenceStorage = preferenceStorage)
         }
     }

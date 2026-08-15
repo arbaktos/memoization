@@ -15,12 +15,8 @@ abstract class UseCaseModule {
             GetStackUseCase
 
     @Binds
-    abstract fun bindDeleteWordPairUseCase(useCaseImpl: DeleteWordPairUseCaseImpl):
-            DeleteWordPairUseCase
-
-    @Binds
-    abstract fun bindDeleteStackUseCase(useCaseImpl: DeleteStackUseCaseImpl):
-            DeleteStackUseCase
+    abstract fun bindHideWordPairUseCase(useCaseImpl: HideWordPairUseCaseImpl):
+            HideWordPairUseCase
 
     @Binds
     abstract fun bindGetStacksUseCase(useCaseImpl: GetStacksWithWordsUseCaseImpl):

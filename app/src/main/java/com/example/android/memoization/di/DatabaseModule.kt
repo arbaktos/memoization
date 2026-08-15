@@ -2,7 +2,6 @@ package com.example.android.memoization.di
 
 import android.content.Context
 import androidx.room.Room
-import androidx.work.WorkManager
 import com.example.android.memoization.data.database.MemoDao
 import com.example.android.memoization.data.database.MemoDatabase
 import dagger.Module
@@ -40,7 +39,4 @@ class DatabaseModule {
     companion object {
         const val DATABASE_NAME = "memo_dataabase"
     }
-
-    @Provides
-    fun getWorkManager(@ApplicationContext context: Context) =  WorkManager.getInstance(context)
 }

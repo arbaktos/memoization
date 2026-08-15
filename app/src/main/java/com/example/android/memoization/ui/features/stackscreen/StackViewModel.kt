@@ -5,8 +5,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.data.model.WordPair
-import com.example.android.memoization.data.repository.WordPairRepository
-import com.example.android.memoization.domain.usecases.DeleteWordPairUseCase
+import com.example.android.memoization.data.model.PracticeSides
+import com.example.android.memoization.data.repository.LearningSettingsRepository
+import com.example.android.memoization.domain.usecases.HideWordPairUseCase
 import com.example.android.memoization.domain.usecases.GetStackUseCase
 import com.example.android.memoization.domain.usecases.UpdateStackUseCase
 import com.example.android.memoization.ui.features.BaseViewModel
@@ -14,6 +15,8 @@ import com.example.android.memoization.utils.LoadingState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,17 +25,22 @@ class StackViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getStackUseCase: GetStackUseCase,
     private val updateStackUseCase: UpdateStackUseCase,
-    private val deleteWordPairUseCase: DeleteWordPairUseCase,
-    private val wordPairRepository: WordPairRepository,
+    private val hideWordPairUseCase: HideWordPairUseCase,
+    learningSettings: LearningSettingsRepository,
 ) : BaseViewModel<LoadingState<MemoStack>>() {
 
     companion object {
         private const val NO_STACK_ID_PASSED = -1L
+        private const val STOP_COLLECTING_AFTER_MS = 5_000L
     }
 
     private val stackId: Long = savedStateHandle.get<Long>("id") ?: NO_STACK_ID_PASSED
 
     val showEditStackDialog = MutableStateFlow(false)
+
+    val practiceSides = learningSettings.practiceSides.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(STOP_COLLECTING_AFTER_MS), PracticeSides.DEFAULT
+    )
 
     // Built once: collectAsStateWithLifecycle keys on the flow instance, so a new
     // one per recomposition would restart collection and recompose forever.
@@ -45,22 +53,21 @@ class StackViewModel @Inject constructor(
     }
 
 
-    /** Kept so the snackbar can put it back; the row carries its own id, so it returns intact. */
-    private var lastDeleted: WordPair? = null
+    /** Only the id is needed to bring it back: deleting hides the row, it does not remove it. */
+    private var lastDeletedId: Long? = null
 
     fun deletePair(wordPair: WordPair) {
-        lastDeleted = wordPair
+        lastDeletedId = wordPair.wordPairId
         viewModelScope.launch {
-            deleteWordPairUseCase(wordPair)
+            hideWordPairUseCase(wordPair.wordPairId)
         }
     }
 
     fun undoDelete() {
-        Log.d(TAG, "undoDelete: called, lastDeleted=${lastDeleted?.word1}")
-        val restored = lastDeleted ?: return
-        lastDeleted = null
+        val restored = lastDeletedId ?: return
+        lastDeletedId = null
         viewModelScope.launch {
-            wordPairRepository.insertWordPair(restored)
+            hideWordPairUseCase(restored, hidden = false)
         }
     }
 

@@ -1,8 +1,11 @@
 package com.example.android.memoization.domain.session
 
-import com.example.android.memoization.data.model.Rating
-import com.example.android.memoization.data.model.WordPair
-import com.example.android.memoization.data.model.WordStatus
+import com.example.android.memoization.data.model.Shown
+import com.example.android.memoization.data.model.Side
+import com.example.android.memoization.data.model.SideState
+import com.example.android.memoization.domain.scheduler.Fsrs
+import com.example.android.memoization.domain.scheduler.Rating
+import com.example.android.memoization.domain.scheduler.DAY_MILLIS
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -10,25 +13,36 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.util.Date
 import kotlin.random.Random
 
 class MemorizationSessionTest {
 
     private val now = 1_800_000_000_000L
+    private val scheduler = Fsrs(fuzz = false)
 
-    private fun pair(id: Long, level: WordStatus = WordStatus.Level2) = WordPair(
-        parentStackId = 1, word1 = "w$id", word2 = "t$id",
-        lastRep = Date(now - 10 * 86_400_000L), wordPairId = id, level = level
+    private fun side(id: Long, shown: Shown = Shown.WORD, pairId: Long = id) = Side(
+        sideId = id,
+        wordPairId = pairId,
+        shown = shown,
+        state = SideState.Review,
+        stability = 5.0,
+        difficulty = 5.0,
+        due = now - DAY_MILLIS,
+        lastReview = now - 6 * DAY_MILLIS,
+        reps = 1,
     )
 
-    private fun session(vararg ids: Long, seed: Int = 1) =
-        MemorizationSession(ids.map { pair(it) }, Random(seed))
+    private fun item(id: Long, shown: Shown = Shown.WORD, pairId: Long = id) =
+        SessionSide(side(id, shown, pairId), front = "front$id", back = "back$id")
+
+    private fun session(vararg ids: Long, seed: Int = 1) = MemorizationSession(
+        ids.map { item(it) }, Random(seed), scheduler
+    )
 
     private fun MemorizationSession.drain(): List<Long> {
         val seen = mutableListOf<Long>()
         while (!state().isFinished) {
-            seen += state().current!!.wordPairId
+            seen += state().current!!.id
             rate(Rating.Good, now)
         }
         return seen
@@ -40,7 +54,6 @@ class MemorizationSessionTest {
         val s = session(*ids, seed = 7)
 
         val first = s.state().current
-        assertEquals(first, s.state().current)
         assertEquals(first, s.state().current)
 
         val order = s.drain()
@@ -59,7 +72,20 @@ class MemorizationSessionTest {
     }
 
     @Test
-    fun `progress is closed pairs over the starting total and holds still on again`() {
+    fun `both sides of one pair are separate items`() {
+        val s = MemorizationSession(
+            listOf(item(1, Shown.WORD, pairId = 7), item(2, Shown.MEANING, pairId = 7)),
+            Random(1),
+            scheduler
+        )
+
+        assertEquals(2, s.state().total)
+        val order = s.drain()
+        assertEquals(setOf(1L, 2L), order.toSet())
+    }
+
+    @Test
+    fun `progress is closed sides over the starting total and holds still on again`() {
         val s = session(1, 2, 3, 4)
         assertEquals(4, s.state().total)
         assertEquals(0f, s.state().progress, 0f)
@@ -71,51 +97,46 @@ class MemorizationSessionTest {
     }
 
     @Test
-    fun `good removes the pair, persists it one level up and counts down`() {
+    fun `good schedules the side further out and counts down`() {
         val s = session(1, 2, 3)
         val first = s.state().current!!
 
         val outcome = s.rate(Rating.Good, now)
+        val persisted = outcome.toPersist!!
 
-        assertEquals(WordStatus.Level3, outcome.toPersist?.level)
-        assertEquals(Date(now), outcome.toPersist?.lastRep)
-        assertEquals(first.wordPairId, outcome.toPersist?.wordPairId)
+        assertEquals(first.id, persisted.sideId)
+        assertEquals(SideState.Review, persisted.state)
+        assertTrue("stability should grow", persisted.stability!! > 5.0)
+        assertEquals(now, persisted.lastReview)
+        assertTrue("due should be in the future", persisted.due!! > now)
+        assertEquals(2, persisted.reps)
+        assertEquals(0, persisted.lapses)
         assertEquals(2, outcome.state.remaining)
-        assertNotEquals(first.wordPairId, outcome.state.current?.wordPairId)
     }
 
     @Test
-    fun `hard removes the pair and persists it at the same level`() {
-        val s = session(1, 2)
-
-        val outcome = s.rate(Rating.Hard, now)
-
-        assertEquals(WordStatus.Level2, outcome.toPersist?.level)
-        assertEquals(Date(now), outcome.toPersist?.lastRep)
-        assertEquals(1, outcome.state.remaining)
-    }
-
-    @Test
-    fun `again sends the pair to the back and persists the reset once`() {
+    fun `again sends the side to the back, drops its stability and counts a lapse`() {
         val s = session(1, 2, 3)
         val lapsed = s.state().current!!
 
         val outcome = s.rate(Rating.Again, now)
+        val persisted = outcome.toPersist!!
 
-        assertEquals(WordStatus.Level1, outcome.toPersist?.level)
-        assertEquals(lapsed.wordPairId, outcome.toPersist?.wordPairId)
+        assertEquals(lapsed.id, persisted.sideId)
+        assertTrue("stability should fall", persisted.stability!! < 5.0)
+        assertEquals(1, persisted.lapses)
         assertEquals(3, outcome.state.remaining)
-        assertNotEquals(lapsed.wordPairId, outcome.state.current?.wordPairId)
+        assertNotEquals(lapsed.id, outcome.state.current?.id)
 
-        // Work through the other two; the lapsed one comes round last.
+        // Work through the other two; the lapsed side comes round last, already rescheduled.
         s.rate(Rating.Good, now)
         s.rate(Rating.Good, now)
-        assertEquals(lapsed.wordPairId, s.state().current?.wordPairId)
-        assertEquals(WordStatus.Level1, s.state().current?.level)
+        assertEquals(lapsed.id, s.state().current?.id)
+        assertEquals(persisted.stability, s.state().current?.side?.stability)
     }
 
     @Test
-    fun `a second again on the same pair persists nothing`() {
+    fun `a second again on the same side persists nothing`() {
         val s = session(1)
 
         assertNotNull(s.rate(Rating.Again, now).toPersist)
@@ -124,7 +145,7 @@ class MemorizationSessionTest {
     }
 
     @Test
-    fun `good after again closes the pair without raising its level`() {
+    fun `good after again closes the side without a new schedule`() {
         val s = session(1)
 
         s.rate(Rating.Again, now)
@@ -135,7 +156,7 @@ class MemorizationSessionTest {
     }
 
     @Test
-    fun `hard after again also closes the pair without a write`() {
+    fun `hard after again also closes the side without a write`() {
         val s = session(1)
 
         s.rate(Rating.Again, now)
@@ -158,13 +179,13 @@ class MemorizationSessionTest {
     }
 
     @Test
-    fun `serial grows on every rating so a returning pair reads as a new attempt`() {
+    fun `serial grows on every rating so a returning side reads as a new attempt`() {
         val s = session(1)
 
         assertEquals(0, s.state().serial)
         val afterAgain = s.rate(Rating.Again, now).state
         assertEquals(1, afterAgain.serial)
-        assertEquals(1L, afterAgain.current?.wordPairId)
+        assertEquals(1L, afterAgain.current?.id)
         assertEquals(2, s.rate(Rating.Again, now).state.serial)
     }
 }

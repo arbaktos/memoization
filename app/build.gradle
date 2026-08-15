@@ -41,6 +41,11 @@ android {
         arg("room.schemaLocation", "$projectDir/schemas")
     }
 
+    // The exported schemas are what MigrationTest runs the migrations against.
+    sourceSets {
+        androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
+    }
+
     buildFeatures {
         compose true
     }
@@ -59,7 +64,6 @@ ext {
     j_unit = "4.13.2"
     ext_j_unit = "1.1.5"
     espresso = "3.5.1"
-    workmanager = "2.8.1"
     preference_version = "1.2.1"
     compose_bom = "2024.02.00"
     constraint_compose = "1.1.1"
@@ -119,7 +123,7 @@ dependencies {
     implementation "androidx.room:room-runtime:$room_version"
     ksp "androidx.room:room-compiler:$room_version"
     implementation "androidx.room:room-ktx:$room_version"
-    testImplementation "androidx.room:room-testing:$room_version"  // optional - Test helpers
+    androidTestImplementation "androidx.room:room-testing:$room_version"
 
 
     //network
@@ -131,12 +135,9 @@ dependencies {
     // DI
     implementation "com.google.dagger:hilt-android:$hilt_android"
     ksp "com.google.dagger:hilt-compiler:2.57.1"   // Hilt compiler
-    implementation "androidx.hilt:hilt-work:1.0.0"
     implementation "androidx.hilt:hilt-navigation-compose:1.0.0"
 //    kapt 'androidx.hilt:hilt-compiler:1.0.0'
 
-    //workmanager
-    implementation "androidx.work:work-runtime-ktx:$workmanager"
 
     //datastore
     implementation "androidx.datastore:datastore-preferences:1.0.0"

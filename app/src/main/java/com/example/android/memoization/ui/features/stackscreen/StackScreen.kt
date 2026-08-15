@@ -50,6 +50,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.data.model.MemoStack
+import com.example.android.memoization.data.model.PracticeSides
 import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.extensions.checkLength
 import com.example.android.memoization.ui.composables.components.AddNewCardFab
@@ -76,6 +77,7 @@ fun StackScreen(
 ) {
     Log.d(TDEBUG, "StackScreen: ")
     val state by viewModel.getDataToDisplay().collectAsStateWithLifecycle(initialValue = LoadingState.Loading)
+    val practice by viewModel.practiceSides.collectAsStateWithLifecycle()
     val showDialog by viewModel.showEditStackDialog.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -119,6 +121,7 @@ fun StackScreen(
         navigateToMemorization = navigateToMemorization,
         updateStack = viewModel::updateStackInDb,
         deletePair = deletePair,
+        practice = practice,
         snackbarHostState = snackbarHostState,
         onEditStack = { viewModel.showEditStackDialog(true) },
         onDismissDialog = { viewModel.showEditStackDialog(false) })
@@ -135,6 +138,7 @@ fun DisplayStackState(
     navigateToMemorization: (stackId: Long) -> Unit,
     updateStack: (stack: MemoStack) -> Unit,
     deletePair: (wordPair: WordPair) -> Unit,
+    practice: PracticeSides,
     onEditStack: () -> Unit,
     onDismissDialog: () -> Unit,
     snackbarHostState: SnackbarHostState,
@@ -149,6 +153,7 @@ fun DisplayStackState(
             navigateToMemorization = navigateToMemorization,
             updateStack = updateStack,
             deletePair = deletePair,
+            practice = practice,
             onEditStack = onEditStack,
             onDismissDialog = onDismissDialog,
             snackbarHostState = snackbarHostState,
@@ -225,6 +230,7 @@ fun DisplayLoadingStack() {
 fun DisplayStack(
     currentStack: MemoStack,
     showDialog: Boolean,
+    practice: PracticeSides,
     snackbarHostState: SnackbarHostState,
     navigateToNewPair: (stack: MemoStack) -> Unit,
     navigateToMemorization: (stackId: Long) -> Unit,
@@ -261,7 +267,7 @@ fun DisplayStack(
                 )
                 StackFab(
                     { navigateToMemorization(currentStack.stackId) },
-                    hasWordsToLearn = currentStack.hasDueWords()
+                    hasWordsToLearn = currentStack.hasDue(practice)
                 )
             }
         },
@@ -272,6 +278,7 @@ fun DisplayStack(
                     words = currentStack.words.sortedByDescending { it.wordPairId },
                     navigateToEditPair = { navigateToEditPair(it, currentStack) },
                     deletePair = deletePair,
+                    practice = practice,
                     listState = lazyListState,
                 )
             }
@@ -309,6 +316,7 @@ fun StackFab(navigateToMemorization: () -> Unit, hasWordsToLearn: Boolean) {
 @Composable
 fun WordList(
     deletePair: (wordPair: WordPair) -> Unit,
+    practice: PracticeSides,
     navigateToEditPair: (wordPair: WordPair) -> Unit,
     listState: LazyListState,
     words: List<WordPair>,
@@ -325,6 +333,7 @@ fun WordList(
             ) {
                 WordPairListItem(
                     wordPair = wordPair,
+                    practice = practice,
                     onEditNavigate = navigateToEditPair,
                     modifier = Modifier//.animateItemPlacement()
                 )
@@ -337,6 +346,7 @@ fun WordList(
 @Composable
 fun WordPairListItem(
     wordPair: WordPair,
+    practice: PracticeSides,
     onEditNavigate: (wordPair: WordPair) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -358,7 +368,7 @@ fun WordPairListItem(
             RowIcon(
                 iconSource = Icons.Filled.Circle,
                 contentDesc = stringResource(R.string.word_indicator),
-                tint = indicatorColors(wordPair.level),
+                tint = indicatorColors(wordPair.level(practice)),
                 modifier = Modifier.padding(start = 10.dp)
             )
             ListItem(

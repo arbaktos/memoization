@@ -1,6 +1,7 @@
 package com.example.android.memoization.data.database
 
 import androidx.room.*
+import com.example.android.memoization.data.database.sidedb.SideEntity
 import com.example.android.memoization.data.database.stackdb.StackEntity
 import com.example.android.memoization.data.database.stackdb.StackWithWords
 import com.example.android.memoization.data.database.wordpairdb.WordPairEntity
@@ -30,12 +31,17 @@ interface MemoDao {
     @Update
     suspend fun updateStack(stackEntity: StackEntity)
 
-    @Query("DELETE FROM stack_entity_table WHERE stackId = :stackId")
-    suspend fun deleteStackFomDb(stackId: Long)
-
     //words
     @Insert
-    suspend fun insertWordPair(wordPairEntity: WordPairEntity)
+    suspend fun insertWordPair(wordPairEntity: WordPairEntity): Long
+
+    /** A pair is never without its sides, so the two inserts go together. */
+    @Transaction
+    suspend fun insertWordPairWithSides(wordPairEntity: WordPairEntity): Long {
+        val id = insertWordPair(wordPairEntity)
+        insertSides(SideEntity.newSidesFor(id))
+        return id
+    }
 
     @Query("SELECT * FROM wordpair_entity_table WHERE parentStackId LIKE :stackId")
     suspend fun getWordsFromStack(stackId: Long): List<WordPairEntity>
@@ -46,9 +52,20 @@ interface MemoDao {
     @Update
     suspend fun updateWordPair(wordPairEntity: WordPairEntity)
 
-    @Delete
-    suspend fun deleteWordPairFromDb(wordPairEntity: WordPairEntity)
+    /** Deleting a pair only hides it; nothing in the learning database is ever thrown away. */
+    @Query("UPDATE wordpair_entity_table SET isVisible = :visible WHERE wordPairId = :wordPairId")
+    suspend fun setWordPairVisible(wordPairId: Long, visible: Boolean)
 
     @Query("SELECT * FROM wordpair_entity_table WHERE wordPairId LIKE :wpId")
     fun getWordPairByIdFlow(wpId: Long): Flow<WordPairEntity>
+
+    //sides
+    @Insert
+    suspend fun insertSides(sides: List<SideEntity>)
+
+    @Update
+    suspend fun updateSide(side: SideEntity)
+
+    @Query("SELECT * FROM side_entity_table WHERE wordPairId = :wordPairId ORDER BY shown")
+    suspend fun getSidesForPair(wordPairId: Long): List<SideEntity>
 }

@@ -13,11 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.android.memoization.data.model.BaseWordPair
-import com.example.android.memoization.data.model.WordPair
 
+/** [front] is what the learner is shown; [back] is what they have to recall. */
 @Composable
-fun FlipCard(wordPair: BaseWordPair) {
+fun FlipCard(front: String, back: String) {
 
     var rotated by remember { mutableStateOf(false) }
     val elevation = 8.dp
@@ -61,7 +60,7 @@ fun FlipCard(wordPair: BaseWordPair) {
             ) {
 
                 Text(
-                    text = if (rotated) wordPair.word2 ?: "" else wordPair.word1 ,
+                    text = if (rotated) back else front,
                     modifier = Modifier
                         .graphicsLayer {
                             alpha = if (rotated) animateBack else animateFront

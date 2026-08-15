@@ -10,12 +10,13 @@ import javax.inject.Inject
 
 class WordPairRepository @Inject constructor(private val memoDao: MemoDao) {
 
-    suspend fun insertWordPair(wordPair: BaseWordPair) {
-        memoDao.insertWordPair(WordPairEntity.create(wordPair))
-    }
+    /** Inserts the pair together with its two sides and returns the new pair's id. */
+    suspend fun insertWordPair(wordPair: BaseWordPair): Long =
+        memoDao.insertWordPairWithSides(WordPairEntity.create(wordPair))
 
-    suspend fun deleteWordPairFromDb(wordPair: BaseWordPair) {
-        memoDao.deleteWordPairFromDb(WordPairEntity.create(wordPair))
+    /** Deleting only hides the pair; its sides and their progress stay for an undo. */
+    suspend fun setVisible(wordPairId: Long, visible: Boolean) {
+        memoDao.setWordPairVisible(wordPairId, visible)
     }
 
     suspend fun updateWordPairInDb(wordPair: BaseWordPair) {

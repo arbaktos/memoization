@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.android.memoization.R
-import com.example.android.memoization.data.model.Rating
+import com.example.android.memoization.domain.scheduler.Rating
 import com.example.android.memoization.domain.session.MemorizationSession
 import com.example.android.memoization.ui.composables.components.FlipCard
 import com.example.android.memoization.ui.composables.components.MemoIcon
@@ -59,7 +59,7 @@ fun MemorizationBody(
         StackCompleteDialog(onClick = onComplete)
         return
     }
-    val wordPair = session.current ?: return
+    val item = session.current ?: return
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
@@ -83,10 +83,10 @@ fun MemorizationBody(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            // Keyed on the serial too: after an Again the same pair can come straight back
+            // Keyed on the serial too: after an Again the same side can come straight back
             // (e.g. when it is the only one left) and must start face-up again.
-            key(wordPair.wordPairId, session.serial) {
-                FlipCard(wordPair)
+            key(item.id, session.serial) {
+                FlipCard(front = item.front, back = item.back)
             }
         }
         Spacer(Modifier.height(100.dp))

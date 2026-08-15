@@ -1,0 +1,204 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 3,
+    "identityHash": "b2afffc4168dd9caf49c4af40c2d35d3",
+    "entities": [
+      {
+        "tableName": "stack_entity_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `numRep` INTEGER NOT NULL, `stackId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `hasWords` INTEGER NOT NULL, `isVisible` INTEGER NOT NULL, `fromLanguage` TEXT, `toLanguage` TEXT, `pinnedTime` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "numRep",
+            "columnName": "numRep",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stackId",
+            "columnName": "stackId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hasWords",
+            "columnName": "hasWords",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isVisible",
+            "columnName": "isVisible",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fromLanguage",
+            "columnName": "fromLanguage",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "toLanguage",
+            "columnName": "toLanguage",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "pinnedTime",
+            "columnName": "pinnedTime",
+            "affinity": "INTEGER",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "stackId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "wordpair_entity_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`parentStackId` INTEGER NOT NULL, `word1` TEXT NOT NULL, `word2` TEXT, `wordPairId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `isVisible` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "parentStackId",
+            "columnName": "parentStackId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "word1",
+            "columnName": "word1",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "word2",
+            "columnName": "word2",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "wordPairId",
+            "columnName": "wordPairId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isVisible",
+            "columnName": "isVisible",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "wordPairId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "side_entity_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`sideId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `wordPairId` INTEGER NOT NULL, `shown` INTEGER NOT NULL, `state` INTEGER NOT NULL, `stability` REAL, `difficulty` REAL, `due` INTEGER, `lastReview` INTEGER, `reps` INTEGER NOT NULL, `lapses` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "sideId",
+            "columnName": "sideId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "wordPairId",
+            "columnName": "wordPairId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "shown",
+            "columnName": "shown",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stability",
+            "columnName": "stability",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "difficulty",
+            "columnName": "difficulty",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "due",
+            "columnName": "due",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "lastReview",
+            "columnName": "lastReview",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "reps",
+            "columnName": "reps",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lapses",
+            "columnName": "lapses",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "sideId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_side_entity_table_wordPairId",
+            "unique": false,
+            "columnNames": [
+              "wordPairId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_side_entity_table_wordPairId` ON `${TABLE_NAME}` (`wordPairId`)"
+          }
+        ],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b2afffc4168dd9caf49c4af40c2d35d3')"
+    ]
+  }
+}

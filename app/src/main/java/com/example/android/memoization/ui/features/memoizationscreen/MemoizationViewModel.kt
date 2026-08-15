@@ -4,9 +4,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.android.memoization.data.model.MemoStack
-import com.example.android.memoization.data.model.Rating
-import com.example.android.memoization.data.repository.WordPairRepository
+import com.example.android.memoization.data.repository.LearningSettingsRepository
+import com.example.android.memoization.data.repository.SideRepository
+import com.example.android.memoization.domain.scheduler.Rating
 import com.example.android.memoization.domain.session.MemorizationSession
+import com.example.android.memoization.domain.session.dueSessionSides
 import com.example.android.memoization.domain.usecases.GetStackUseCase
 import com.example.android.memoization.utils.LoadingState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,8 +23,9 @@ import javax.inject.Inject
 @HiltViewModel
 class MemoizationViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val repository: WordPairRepository,
-    getStackUseCase: GetStackUseCase
+    private val sideRepository: SideRepository,
+    getStackUseCase: GetStackUseCase,
+    learningSettings: LearningSettingsRepository,
 ) : ViewModel() {
 
     private val stackId: Long = savedStateHandle.get<Long>(STACK_ID_ARG) ?: NO_STACK_ID_PASSED
@@ -41,14 +44,16 @@ class MemoizationViewModel @Inject constructor(
                 .filterIsInstance<LoadingState.Collected<MemoStack>>()
                 .first()
                 .content
-            session = MemorizationSession(stack.dueWords()).also { _state.value = it.state() }
+            val practice = learningSettings.practiceSides.first()
+            session = MemorizationSession(stack.dueSessionSides(practice))
+                .also { _state.value = it.state() }
         }
     }
 
     fun onRate(rating: Rating) {
         val outcome = session?.rate(rating, System.currentTimeMillis()) ?: return
-        outcome.toPersist?.let { rated ->
-            viewModelScope.launch { repository.updateWordPairInDb(rated) }
+        outcome.toPersist?.let { side ->
+            viewModelScope.launch { sideRepository.updateSide(side) }
         }
         _state.value = outcome.state
     }

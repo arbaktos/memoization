@@ -4,11 +4,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import androidx.work.Data
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import com.example.android.memoization.data.database.stackdb.StackEntity
 import com.example.android.memoization.data.model.MemoStack
+import com.example.android.memoization.data.model.PracticeSides
+import com.example.android.memoization.data.repository.LearningSettingsRepository
 import com.example.android.memoization.data.repository.StackRepository
 import com.example.android.memoization.domain.usecases.GetStacksWithWordsUseCase
 import com.example.android.memoization.domain.usecases.UpdateStackUseCase
@@ -17,23 +16,26 @@ import com.example.android.memoization.ui.navigateToMemorization
 import com.example.android.memoization.ui.navigateToNewPair
 import com.example.android.memoization.ui.navigateToStackScreen
 import com.example.android.memoization.utils.LoadingState
-import com.example.android.memoization.utils.STACK_ID
-import com.example.android.memoization.utils.workers.StackDeletionWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 
 @HiltViewModel
 class FolderViewModel @Inject constructor(
-    private val workManager: WorkManager,
     private var stackRepository: StackRepository,
     val getStacksWithWordsUseCase: GetStacksWithWordsUseCase,
     val updateStackUseCase: UpdateStackUseCase,
+    learningSettings: LearningSettingsRepository,
 ) : BaseViewModel<LoadingState<List<MemoStack>>>() {
+
+    val practiceSides = learningSettings.practiceSides.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(STOP_COLLECTING_AFTER_MS), PracticeSides.DEFAULT
+    )
 
     private var _showAddStackDialog: MutableLiveData<Boolean> = MutableLiveData(false)
     val showAddStackDialog: LiveData<Boolean> = _showAddStackDialog
@@ -54,20 +56,10 @@ class FolderViewModel @Inject constructor(
         _showAddStackDialog.postValue(toShow)
     }
 
-    fun deleteStackWithDelay(stack: MemoStack) {
-        val inputData = Data.Builder()
-            .putLong(STACK_ID, stack.stackId).build()
-        val workDelayDeleteRequest = OneTimeWorkRequestBuilder<StackDeletionWorker>()
-            .addTag("${stack.stackId}")
-            .setInputData(inputData)
-            .setInitialDelay(3, TimeUnit.SECONDS) //TODO add delay to delete after snackbar
-            .build()
-        workManager.enqueue(workDelayDeleteRequest)
-    }
+    /** Deleting a stack hides it; the words stay, so an undo costs nothing. */
+    fun hideStack(stack: MemoStack) = updateStack(stack.copy(isVisible = false))
 
-    fun cancelStackDeletion(stack: MemoStack) {
-        workManager.cancelAllWorkByTag(stack.stackId.toString())
-    }
+    fun unhideStack(stack: MemoStack) = updateStack(stack.copy(isVisible = true))
 
     fun addStackAndOpenIt(stack: MemoStack, navController: NavController) {
         viewModelScope.launch {
@@ -94,6 +86,10 @@ class FolderViewModel @Inject constructor(
 
     fun onPlayWords(navController: NavController, stackId: Long) {
         navController.navigateToMemorization(stackId)
+    }
+
+    private companion object {
+        const val STOP_COLLECTING_AFTER_MS = 5_000L
     }
 
     fun onPin(stack: MemoStack) {

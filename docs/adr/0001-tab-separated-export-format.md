@@ -14,10 +14,10 @@ to do with a vocabulary list.
 **Two normalised files** (stacks + words). Correct, but sharing means keeping two files
 together or zipping them, and half of the pair is useless on its own.
 
-**Anki `.apkg`.** Real interoperability, including AnkiWeb shared decks. Rejected for now
-because Anki schedules with a continuous interval-plus-ease per card while this app has five
-fixed levels: `Level3 → 7 days` maps cleanly, `interval 37, ease 2350 → ?` does not. Deferred
-as separate work, not ruled out.
+**Anki `.apkg`.** Real interoperability, including AnkiWeb shared decks. Deferred as separate
+work, not ruled out. The reason it was rejected here - that Anki scheduled with a continuous
+interval per card while this app had five fixed levels - no longer holds: since ADR 0003 both
+sides carry stability and difficulty, the same model Anki uses.
 
 ## Consequences
 

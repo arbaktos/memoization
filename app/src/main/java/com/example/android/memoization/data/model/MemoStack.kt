@@ -17,12 +17,16 @@ data class MemoStack(
             field = value
         }
 
-    /** The pairs a session should hold right now: due ones and New ones. */
-    fun dueWords(now: Long = System.currentTimeMillis()): List<WordPair> =
-        words.filter { it.isDue(now) }
+    /** Pairs with at least one practised side to review; counted as pairs, not sides. */
+    fun duePairs(
+        practice: PracticeSides,
+        now: Long = System.currentTimeMillis(),
+    ): List<WordPair> = words.filter { it.isDue(practice, now) }
 
-    fun hasDueWords(now: Long = System.currentTimeMillis()): Boolean =
-        words.any { it.isDue(now) }
+    fun hasDue(
+        practice: PracticeSides,
+        now: Long = System.currentTimeMillis(),
+    ): Boolean = words.any { it.isDue(practice, now) }
 
     val needsTranslation = this.fromLanguage != null && this.toLanguage != null
 }

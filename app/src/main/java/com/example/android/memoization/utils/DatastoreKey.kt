@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -30,6 +31,9 @@ object DatastoreKey {
     val NOTIF_FRIDAY = booleanPreferencesKey("notif_friday")
     val NOTIF_SATURDAY = booleanPreferencesKey("notif_saturday")
     val NOTIF_SUNDAY = booleanPreferencesKey("notif_sunday")
+
+    /** Which sides of a pair to practise; stores a PracticeSides name. */
+    val PRACTICE_SIDES = stringPreferencesKey("practice_sides")
     const val FILE_NAME = "settings"
 
 }

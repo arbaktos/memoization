@@ -4,30 +4,26 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.example.android.memoization.data.database.TableNames
 import com.example.android.memoization.data.model.BaseWordPair
+import com.example.android.memoization.data.model.Side
 import com.example.android.memoization.data.model.WordPair
-import com.example.android.memoization.data.model.WordStatus
-import java.util.Date
 
 @Entity(tableName = TableNames.WORD_PAIR_TABLE)
 data class WordPairEntity(
     override val parentStackId: Long,
     override var word1: String,
     override var word2: String?,
-    override var lastRep: Date? = null,
-    override var level: WordStatus = WordStatus.Level1,
     @PrimaryKey(autoGenerate = true)
     override val wordPairId: Long = 0,
     override var isVisible: Boolean = true
 ) : BaseWordPair {
-    fun toWordPair(): WordPair {
+    fun toWordPair(sides: List<Side> = emptyList()): WordPair {
         return WordPair(
             parentStackId = this.parentStackId,
             word1 = this.word1,
             word2 = this.word2,
-            lastRep = this.lastRep,
-            level = this.level,
             wordPairId = this.wordPairId,
-            isVisible = this.isVisible
+            isVisible = this.isVisible,
+            sides = sides,
         )
     }
 
@@ -37,8 +33,6 @@ data class WordPairEntity(
                 parentStackId = wordPair.parentStackId,
                 word1 = wordPair.word1,
                 word2 = wordPair.word2,
-                lastRep = wordPair.lastRep,
-                level = wordPair.level,
                 wordPairId = wordPair.wordPairId,
                 isVisible = wordPair.isVisible
             )
