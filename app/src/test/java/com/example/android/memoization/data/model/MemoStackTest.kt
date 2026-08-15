@@ -1,6 +1,7 @@
 package com.example.android.memoization.data.model
 
 import com.example.android.memoization.domain.scheduler.DAY_MILLIS
+import com.example.android.memoization.domain.session.SessionDefaults
 import com.example.android.memoization.domain.session.dueSessionSides
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -10,6 +11,45 @@ import org.junit.Test
 class MemoStackTest {
 
     private val now = 1_800_000_000_000L
+
+    private fun overduePair(id: Long, overdueDays: Long) = WordPair(
+        parentStackId = 1,
+        word1 = "word$id",
+        word2 = "meaning$id",
+        wordPairId = id,
+        sides = listOf(
+            Side(
+                sideId = id, wordPairId = id, shown = Shown.WORD,
+                state = SideState.Review, stability = 5.0,
+                due = now - overdueDays * DAY_MILLIS,
+                lastReview = now - (overdueDays + 5) * DAY_MILLIS,
+            )
+        )
+    )
+
+    /** Answered earlier today, so already scheduled forward and no longer due. */
+    private fun answeredTodayPair(id: Long) = WordPair(
+        parentStackId = 1,
+        word1 = "word$id",
+        word2 = "meaning$id",
+        wordPairId = id,
+        sides = listOf(
+            Side(
+                sideId = id, wordPairId = id, shown = Shown.WORD,
+                state = SideState.Review, stability = 5.0,
+                due = now + 5 * DAY_MILLIS,
+                lastReview = now,
+            )
+        )
+    )
+
+    private fun newPair(id: Long) = WordPair(
+        parentStackId = 1,
+        word1 = "word$id",
+        word2 = "meaning$id",
+        wordPairId = id,
+        sides = listOf(Side(sideId = id, wordPairId = id, shown = Shown.WORD))
+    )
 
     private fun pair(id: Long, wordDueInDays: Long?, meaningDueInDays: Long?) = WordPair(
         parentStackId = 1,
@@ -72,5 +112,63 @@ class MemoStackTest {
             listOf("word1", "meaning1", "meaning2"),
             bothWays.map { it.front }
         )
+    }
+
+    // --- the day's allowance ------------------------------------------------------------
+
+    @Test
+    fun `a backlog is served the most overdue first, up to the day's limit`() {
+        val stack = stack(*(1L..50L).map { overduePair(it, overdueDays = it) }.toTypedArray())
+
+        val today = stack.dueSessionSides(PracticeSides.WORD_TO_MEANING, now, limit = 10)
+
+        assertEquals(10, today.size)
+        // The ten longest overdue are ids 41..50; the order among them is the session's business.
+        assertEquals((41L..50L).toSet(), today.map { it.side.sideId }.toSet())
+    }
+
+    @Test
+    fun `sides never practised fill what is left after the overdue ones`() {
+        val stack = stack(
+            overduePair(1, overdueDays = 5),
+            overduePair(2, overdueDays = 3),
+            newPair(3),
+            newPair(4),
+        )
+
+        val today = stack.dueSessionSides(PracticeSides.WORD_TO_MEANING, now, limit = 3)
+
+        assertEquals(listOf(1L, 2L, 3L), today.map { it.side.sideId })
+    }
+
+    @Test
+    fun `a second sitting on the same day continues the day's allowance`() {
+        val stack = stack(
+            answeredTodayPair(1),
+            answeredTodayPair(2),
+            overduePair(3, overdueDays = 3),
+            overduePair(4, overdueDays = 2),
+        )
+
+        val today = stack.dueSessionSides(PracticeSides.WORD_TO_MEANING, now, limit = 3)
+
+        // Two of the day's three were answered in the first sitting; one is left, the older one.
+        assertEquals(listOf(3L), today.map { it.side.sideId })
+    }
+
+    @Test
+    fun `nothing more is asked once the day's limit is used up`() {
+        val stack = stack(
+            answeredTodayPair(1),
+            answeredTodayPair(2),
+            overduePair(3, overdueDays = 3),
+        )
+
+        assertTrue(stack.dueSessionSides(PracticeSides.WORD_TO_MEANING, now, limit = 2).isEmpty())
+    }
+
+    @Test
+    fun `the default limit is the one the learner is testing`() {
+        assertEquals(37, SessionDefaults.DAILY_LIMIT)
     }
 }
