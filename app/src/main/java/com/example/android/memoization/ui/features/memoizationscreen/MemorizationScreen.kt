@@ -37,7 +37,10 @@ fun FolderScreenBodyContent(
     navController: NavController,
     viewModel: MemoizationViewModel
 ) {
-    wordsToLearn.value.forEach { wordPair ->
+    // One card at a time. Rating a word drops it out of wordsToLearn, so the next one
+    // simply takes its place; composing the whole list at once stacked every card on top
+    // of each other and the one underneath showed through mid-flip.
+    wordsToLearn.value.lastOrNull()?.let { wordPair ->
         viewModel.clicked = false
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
@@ -50,9 +53,10 @@ fun FolderScreenBodyContent(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-
-                FlipCard(wordPair)
-
+                // Keyed so a fresh word starts face-up instead of inheriting the flip.
+                key(wordPair.wordPairId) {
+                    FlipCard(wordPair)
+                }
             }
             Spacer(Modifier.height(100.dp))
             Row(modifier = Modifier.weight(0.3f)) {
