@@ -268,7 +268,8 @@ fun DisplayStack(
         content = { innerPadding ->
             Box(modifier = Modifier.padding(innerPadding)) {
                 WordList(
-                    words = currentStack.words.reversed(),
+                    // Newest first: ids grow with insertion, so this is "last added on top".
+                    words = currentStack.words.sortedByDescending { it.wordPairId },
                     navigateToEditPair = { navigateToEditPair(it, currentStack) },
                     deletePair = deletePair,
                     listState = lazyListState,
@@ -316,7 +317,6 @@ fun WordList(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth(),
         state = listState,
-        reverseLayout = true
     ) {
         items(words, key = { it.wordPairId }) { wordPair ->
             SwipeToReveal(
