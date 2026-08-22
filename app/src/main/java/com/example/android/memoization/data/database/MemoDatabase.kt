@@ -4,13 +4,18 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.android.memoization.data.database.logdb.ReviewLogEntity
+import com.example.android.memoization.data.database.logdb.SessionEntity
 import com.example.android.memoization.data.database.sidedb.SideEntity
 import com.example.android.memoization.data.database.stackdb.StackEntity
 import com.example.android.memoization.data.database.wordpairdb.WordPairEntity
 
 @Database(
-    entities = [StackEntity::class, WordPairEntity::class, SideEntity::class],
-    version = 3,
+    entities = [
+        StackEntity::class, WordPairEntity::class, SideEntity::class,
+        SessionEntity::class, ReviewLogEntity::class,
+    ],
+    version = 4,
     exportSchema = true
 )
 abstract class MemoDatabase : RoomDatabase() {
@@ -22,7 +27,7 @@ abstract class MemoDatabase : RoomDatabase() {
          * empty and bumping the version makes Room throw on open, which is the point:
          * a crash is recoverable, a wiped vocabulary is not.
          */
-        val MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
+        val MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
     }
 }
 
@@ -133,6 +138,47 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         )
         db.execSQL("DROP TABLE `wordpair_entity_table`")
         db.execSQL("ALTER TABLE `wordpair_entity_table_new` RENAME TO `wordpair_entity_table`")
+    }
+}
+
+/**
+ * The review log: a row per session and a row per answer, for the statistics. Purely additive -
+ * nothing existing is touched - and history starts here; answers given before this version
+ * have no rows, only the counts the sides already carry.
+ */
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `session_table` (
+                `sessionId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `stackId` INTEGER NOT NULL,
+                `startedAt` INTEGER NOT NULL,
+                `finishedAt` INTEGER,
+                `sidesOffered` INTEGER NOT NULL,
+                `sidesWaiting` INTEGER NOT NULL
+            )
+            """.trimIndent()
+        )
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `review_log_table` (
+                `reviewId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `sessionId` INTEGER NOT NULL,
+                `sideId` INTEGER NOT NULL,
+                `ratedAt` INTEGER NOT NULL,
+                `shownMs` INTEGER NOT NULL,
+                `rating` INTEGER NOT NULL,
+                `requeued` INTEGER NOT NULL,
+                `stabilityAfter` REAL,
+                `difficultyAfter` REAL,
+                `dueAfter` INTEGER
+            )
+            """.trimIndent()
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_review_log_table_sessionId` ON `review_log_table` (`sessionId`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_review_log_table_sideId` ON `review_log_table` (`sideId`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_review_log_table_ratedAt` ON `review_log_table` (`ratedAt`)")
     }
 }
 

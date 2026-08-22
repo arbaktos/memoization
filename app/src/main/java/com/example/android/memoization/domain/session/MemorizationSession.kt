@@ -46,6 +46,19 @@ class MemorizationSession(
         /** The side as it should be written to the database, or null if nothing changed. */
         val toPersist: Side?,
         val state: State,
+        /** What was answered, for the review log - every tap, scheduled or not. */
+        val answer: Answer,
+    )
+
+    /**
+     * One answer as the log wants it: [after] is the side's schedule once the answer is
+     * applied - unchanged for a [requeued] answer, which the scheduler ignores.
+     */
+    data class Answer(
+        val sideId: Long,
+        val rating: Rating,
+        val requeued: Boolean,
+        val after: Side,
     )
 
     private val queue = ArrayDeque(sides.shuffled(random))
@@ -76,6 +89,7 @@ class MemorizationSession(
             }
             else -> if (lapsed) null else scheduler.review(item.side, rating, now)
         }
-        return Outcome(toPersist, state())
+        val answer = Answer(item.id, rating, requeued = lapsed, after = toPersist ?: item.side)
+        return Outcome(toPersist, state(), answer)
     }
 }

@@ -123,12 +123,83 @@ class MigrationTest {
             )
         }
 
-        val db = helper.runMigrationsAndValidate(testDb, 3, true, *MemoDatabase.MIGRATIONS)
+        val db = helper.runMigrationsAndValidate(testDb, 4, true, *MemoDatabase.MIGRATIONS)
 
         db.query("SELECT stability FROM side_entity_table WHERE wordPairId = 1 AND shown = 0").use {
             it.moveToFirst()
             assertEquals(7.0, it.getDouble(0), 1e-9)
         }
+    }
+
+    @Test
+    fun migration3To4_addsTheReviewLogAndTouchesNothingElse() {
+        helper.createDatabase(testDb, 3).use { db ->
+            db.insert("stack_entity_table", 0, ContentValues().apply {
+                put("name", "Serbian"); put("numRep", 0); put("stackId", 1L)
+                put("hasWords", 1); put("isVisible", 1)
+            })
+            db.execSQL(
+                "INSERT INTO wordpair_entity_table (parentStackId, word1, word2, wordPairId, isVisible) " +
+                    "VALUES (1, 'kuca', 'house', 1, 1)"
+            )
+            db.execSQL(
+                "INSERT INTO side_entity_table (sideId, wordPairId, shown, state, stability, difficulty, due, lastReview, reps, lapses) " +
+                    "VALUES (1, 1, 0, 1, 7.0, 5.0, $lastRep, $lastRep, 3, 1)"
+            )
+        }
+
+        val db = helper.runMigrationsAndValidate(testDb, 4, true, MIGRATION_3_4)
+
+        // Existing rows are exactly as they were.
+        db.query("SELECT stability, reps, lapses FROM side_entity_table WHERE sideId = 1").use {
+            it.moveToFirst()
+            assertEquals(7.0, it.getDouble(0), 1e-9)
+            assertEquals(3, it.getInt(1))
+            assertEquals(1, it.getInt(2))
+        }
+        // The log starts empty: history begins with this version.
+        db.query("SELECT COUNT(*) FROM session_table").use { it.moveToFirst(); assertEquals(0, it.getInt(0)) }
+        db.query("SELECT COUNT(*) FROM review_log_table").use { it.moveToFirst(); assertEquals(0, it.getInt(0)) }
+    }
+
+    @Test
+    fun aSessionAndItsAnswersRoundTripThroughTheLog() = runBlocking {
+        val db = Room.inMemoryDatabaseBuilder(
+            InstrumentationRegistry.getInstrumentation().targetContext,
+            MemoDatabase::class.java
+        ).build()
+
+        val sessionId = db.memoDao.insertSession(
+            com.example.android.memoization.data.database.logdb.SessionEntity(
+                stackId = 1, startedAt = lastRep, sidesOffered = 2, sidesWaiting = 5
+            )
+        )
+        db.memoDao.insertReview(
+            com.example.android.memoization.data.database.logdb.ReviewLogEntity(
+                sessionId = sessionId, sideId = 1, ratedAt = lastRep + 4_000, shownMs = 4_000,
+                rating = 1, requeued = false, stabilityAfter = 0.3, difficultyAfter = 6.0,
+                dueAfter = lastRep + dayMillis,
+            )
+        )
+        db.memoDao.insertReview(
+            com.example.android.memoization.data.database.logdb.ReviewLogEntity(
+                sessionId = sessionId, sideId = 1, ratedAt = lastRep + 9_000, shownMs = 2_000,
+                rating = 3, requeued = true, stabilityAfter = 0.3, difficultyAfter = 6.0,
+                dueAfter = null,
+            )
+        )
+        db.memoDao.finishSession(sessionId, lastRep + 10_000)
+
+        val session = db.memoDao.getSession(sessionId)!!
+        assertEquals(lastRep + 10_000, session.finishedAt)
+        assertEquals(5, session.sidesWaiting)
+        val reviews = db.memoDao.getReviewsOfSession(sessionId)
+        assertEquals(2, reviews.size)
+        assertFalse(reviews[0].requeued)
+        assertTrue(reviews[1].requeued)
+        assertNull(reviews[1].dueAfter)
+        assertEquals(lastRep + dayMillis, reviews[0].dueAfter)
+        db.close()
     }
 
     @Test

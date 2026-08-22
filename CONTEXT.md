@@ -65,6 +65,38 @@ it is rated Hard or Good. The cap is per session, not per day: another sitting t
 batch.
 _Avoid_: memorization list, wordsToLearn, round, daily limit
 
+**Review log**:
+A row per answer the learner gives - every tap, including the answer to a side brought back
+after Again - with when, how long the card was on screen, the rating, and the side's schedule
+after it; plus a row per **Session** with start, end and what it was given. It is the memory
+of the **Statistics**; it starts with the version that introduced it, and nothing in it is
+ever deleted.
+_Avoid_: history table, analytics, events
+
+**Statistics**:
+What the learner sees of their own effort and progress: streak, minutes, taps, mistake rate,
+the growth of Learned sides, easiest and hardest pairs - library-wide, later per stack. Read
+from the **Review log** and the sides; never stored.
+_Avoid_: dashboard, analytics, report
+
+**Streak**:
+Consecutive **Obligation days** on each of which a **Session** was finished (its queue drained).
+Days with no obligation are skipped, not broken. Shown as current and best.
+_Avoid_: combo, chain, daily goal
+
+**Obligation day**:
+A local calendar day on which at least one scheduled side - rated before, with a due date on
+or before that day - was due. A **New** side never creates an obligation: adding words in the
+evening does not cost the streak.
+_Avoid_: active day, due day
+
+**Weekly card**:
+A dismissible card at the top of the Library on Monday, summarising last week - days
+practised of obligation days, minutes, taps, words learned - once a full week of **Review log**
+exists and the week had an obligation or a session. Its period is a setting: weekly, every two
+weeks, monthly, or never.
+_Avoid_: popup, notification, report
+
 **Hidden**:
 A word pair or stack the learner has deleted. Nothing leaves the database - the row and its
 progress stay, so an undo, or a restore, can bring it back.
@@ -112,6 +144,9 @@ _Avoid_: include scheduling, preserve state
   switch** that depends on the word side's **Level**
 - A **Session** holds the **Due** practised **Sides** of exactly one **Stack**; each **Rating**
   given in it updates one **Side**
+- Every **Rating** adds a row to the **Review log**, and every **Session** one; **Statistics**
+  and the **Weekly card** are read from the **Review log**; a **Streak** counts **Obligation
+  days** with a finished **Session**
 - An **Export file** holds one or more **Stacks**, chosen by **Export scope**
 - A **Stack** has exactly one **Stack id**, unique within a **Library**
 - Importing a **Stack** whose **Stack id** is already present offers replace, **Fork** or skip;

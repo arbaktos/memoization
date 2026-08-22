@@ -110,6 +110,27 @@ class MemorizationSessionTest {
     }
 
     @Test
+    fun `every answer is reported for the log, requeued ones with no schedule change`() {
+        val s = session(1, 2)
+        val first = s.state().current!!
+
+        val again = s.rate(Rating.Again, now)
+        assertEquals(first.id, again.answer.sideId)
+        assertEquals(Rating.Again, again.answer.rating)
+        assertFalse(again.answer.requeued)
+        assertEquals(again.toPersist, again.answer.after)
+
+        // The other side, then the lapsed one comes round: its answer is requeued and the
+        // side it reports is the one already rescheduled by the Again.
+        s.rate(Rating.Good, now)
+        val back = s.rate(Rating.Good, now)
+        assertEquals(first.id, back.answer.sideId)
+        assertTrue(back.answer.requeued)
+        assertNull(back.toPersist)
+        assertEquals(again.toPersist, back.answer.after)
+    }
+
+    @Test
     fun `good schedules the side further out and counts down`() {
         val s = session(1, 2, 3)
         val first = s.state().current!!

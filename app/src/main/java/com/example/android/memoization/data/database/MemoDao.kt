@@ -1,6 +1,8 @@
 package com.example.android.memoization.data.database
 
 import androidx.room.*
+import com.example.android.memoization.data.database.logdb.ReviewLogEntity
+import com.example.android.memoization.data.database.logdb.SessionEntity
 import com.example.android.memoization.data.database.sidedb.SideEntity
 import com.example.android.memoization.data.database.stackdb.StackEntity
 import com.example.android.memoization.data.database.stackdb.StackWithWords
@@ -68,4 +70,20 @@ interface MemoDao {
 
     @Query("SELECT * FROM side_entity_table WHERE wordPairId = :wordPairId ORDER BY shown")
     suspend fun getSidesForPair(wordPairId: Long): List<SideEntity>
+
+    //review log
+    @Insert
+    suspend fun insertSession(session: SessionEntity): Long
+
+    @Query("UPDATE session_table SET finishedAt = :finishedAt WHERE sessionId = :sessionId")
+    suspend fun finishSession(sessionId: Long, finishedAt: Long)
+
+    @Insert
+    suspend fun insertReview(review: ReviewLogEntity): Long
+
+    @Query("SELECT * FROM session_table WHERE sessionId = :sessionId")
+    suspend fun getSession(sessionId: Long): SessionEntity?
+
+    @Query("SELECT * FROM review_log_table WHERE sessionId = :sessionId ORDER BY ratedAt")
+    suspend fun getReviewsOfSession(sessionId: Long): List<ReviewLogEntity>
 }
