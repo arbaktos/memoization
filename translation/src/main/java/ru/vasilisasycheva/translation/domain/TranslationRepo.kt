@@ -23,24 +23,40 @@ class TranslationRepo @Inject constructor(private val retrofit: Retrofit) {
     private val languagesLock = Mutex()
     private var cachedLanguages: List<LanguageItem>? = null
 
+    /**
+     * A [ScriptVariant] on either side is mapped to the code the api knows, the word is
+     * transliterated into the api's script on the way there and the answer back into the
+     * learner's script.
+     */
     suspend fun getTranslation(
         fromLanguage: String,
         toLang: String,
         word: String
     ): TranslationState = withContext(Dispatchers.IO) {
+        val from = ScriptVariant.of(fromLanguage)
+        val to = ScriptVariant.of(toLang)
         request {
             retrofit.linganexApi.getTranslation(
-                WordTranslationRequest(fromLanguage, toLang, word)
-            ).map { it.translation }
+                WordTranslationRequest(
+                    from = ScriptVariant.apiCode(fromLanguage),
+                    to = ScriptVariant.apiCode(toLang),
+                    toTranslate = from?.toApi?.invoke(word) ?: word,
+                )
+            ).map { to?.fromApi?.invoke(it.translation) ?: it.translation }
         }
     }
 
-    /** The list is a 117 entry download that never changes mid-session, so fetch it once. */
+    /**
+     * The list is a 117 entry download that never changes mid-session, so fetch it once -
+     * with the script variants the api does not list added in.
+     */
     suspend fun getLanguages(): TranslationState = withContext(Dispatchers.IO) {
         cachedLanguages?.let { return@withContext TranslationState.Success(it) }
         languagesLock.withLock {
             cachedLanguages?.let { return@withLock TranslationState.Success(it) }
-            val state = request { retrofit.linganexApi.getLanguages().map { it.result } }
+            val state = request {
+                retrofit.linganexApi.getLanguages().map { ScriptVariant.withVariants(it.result) }
+            }
             if (state is TranslationState.Success<*>) {
                 @Suppress("UNCHECKED_CAST")
                 cachedLanguages = state.content as List<LanguageItem>
