@@ -59,9 +59,11 @@ any of its practised sides is.
 _Avoid_: to learn, toShow, unrepeated
 
 **Session**:
-One sitting with a stack: its due practised sides, shuffled once on entry and shown one at a
-time; a side rated Again returns to the back of the queue until it is rated Hard or Good.
-_Avoid_: memorization list, wordsToLearn, round
+One sitting with a stack: up to 37 of its due practised sides, the most overdue first, shuffled
+once on entry and shown one at a time; a side rated Again returns to the back of the queue until
+it is rated Hard or Good. The cap is per session, not per day: another sitting takes the next
+batch.
+_Avoid_: memorization list, wordsToLearn, round, daily limit
 
 **Hidden**:
 A word pair or stack the learner has deleted. Nothing leaves the database - the row and its

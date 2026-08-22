@@ -23,7 +23,7 @@ learner wanted and what the vocabulary research behind ADR 0003 suggests.
 ## Considered Options
 
 **Both sides as the default.** Simplest, but a new stack then asks for 2N New sides at once,
-and the daily limit of 37 fills with reverse sides of words that are not known yet.
+and the session limit of 37 fills with reverse sides of words that are not known yet.
 
 **Alternate directions** (both sides scheduled, one side of a pair per day, the more overdue
 one). Rejected: it hides a due side behind its twin and makes the due count a lie.
@@ -40,7 +40,7 @@ vanish from practice whenever the word side had a bad day; progress is kept, not
   `Shown` values, because Smart switch needs the word side's stability to judge the meaning side.
 - Existing installs with no stored setting move to Smart switch on update. On a library where
   the word sides already have history, meaning sides of pairs at Level3 or above become New and
-  due at once, within the daily limit.
+  due at once, within the session limit.
 - A pair's level is still that of its weakest practised side, so a pair drops to Level1 on the
   day its meaning side joins, as it would under "both sides".
 - The unlock level is a constant (`PracticeSides.UNLOCK_LEVEL`); a setting can come later.

@@ -114,17 +114,17 @@ class MemoStackTest {
         )
     }
 
-    // --- the day's allowance ------------------------------------------------------------
+    // --- the session's limit ------------------------------------------------------------
 
     @Test
-    fun `a backlog is served the most overdue first, up to the day's limit`() {
+    fun `a backlog is served the most overdue first, up to the session's limit`() {
         val stack = stack(*(1L..50L).map { overduePair(it, overdueDays = it) }.toTypedArray())
 
-        val today = stack.dueSessionSides(PracticeSides.WORD_TO_MEANING, now, limit = 10)
+        val session = stack.dueSessionSides(PracticeSides.WORD_TO_MEANING, now, limit = 10)
 
-        assertEquals(10, today.size)
+        assertEquals(10, session.size)
         // The ten longest overdue are ids 41..50; the order among them is the session's business.
-        assertEquals((41L..50L).toSet(), today.map { it.side.sideId }.toSet())
+        assertEquals((41L..50L).toSet(), session.map { it.side.sideId }.toSet())
     }
 
     @Test
@@ -136,39 +136,36 @@ class MemoStackTest {
             newPair(4),
         )
 
-        val today = stack.dueSessionSides(PracticeSides.WORD_TO_MEANING, now, limit = 3)
+        val session = stack.dueSessionSides(PracticeSides.WORD_TO_MEANING, now, limit = 3)
 
-        assertEquals(listOf(1L, 2L, 3L), today.map { it.side.sideId })
+        assertEquals(listOf(1L, 2L, 3L), session.map { it.side.sideId })
     }
 
     @Test
-    fun `a second sitting on the same day continues the day's allowance`() {
+    fun `a second sitting on the same day gets the next batch, not nothing`() {
         val stack = stack(
             answeredTodayPair(1),
             answeredTodayPair(2),
             overduePair(3, overdueDays = 3),
             overduePair(4, overdueDays = 2),
+            overduePair(5, overdueDays = 1),
         )
 
-        val today = stack.dueSessionSides(PracticeSides.WORD_TO_MEANING, now, limit = 3)
+        val session = stack.dueSessionSides(PracticeSides.WORD_TO_MEANING, now, limit = 2)
 
-        // Two of the day's three were answered in the first sitting; one is left, the older one.
-        assertEquals(listOf(3L), today.map { it.side.sideId })
+        // The two answered earlier are scheduled forward; a full new batch is offered.
+        assertEquals(listOf(3L, 4L), session.map { it.side.sideId })
     }
 
     @Test
-    fun `nothing more is asked once the day's limit is used up`() {
-        val stack = stack(
-            answeredTodayPair(1),
-            answeredTodayPair(2),
-            overduePair(3, overdueDays = 3),
-        )
+    fun `a sitting with nothing due is empty`() {
+        val stack = stack(answeredTodayPair(1), answeredTodayPair(2))
 
         assertTrue(stack.dueSessionSides(PracticeSides.WORD_TO_MEANING, now, limit = 2).isEmpty())
     }
 
     @Test
     fun `the default limit is the one the learner is testing`() {
-        assertEquals(37, SessionDefaults.DAILY_LIMIT)
+        assertEquals(37, SessionDefaults.SESSION_LIMIT)
     }
 }
