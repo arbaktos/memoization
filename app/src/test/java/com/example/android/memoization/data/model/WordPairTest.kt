@@ -33,6 +33,19 @@ class WordPairTest {
     }
 
     @Test
+    fun `smart switch practises the meaning side only once the word side is known`() {
+        val fresh = pair(side(Shown.WORD, 5.0, 3), side(Shown.MEANING, null, null))
+        val known = pair(side(Shown.WORD, 8.0, 8), side(Shown.MEANING, null, null))
+
+        assertEquals(listOf(Shown.WORD), fresh.activeSides(PracticeSides.SMART_SWITCH).map { it.shown })
+        assertFalse(fresh.isDue(PracticeSides.SMART_SWITCH, now))
+        assertEquals(2, known.activeSides(PracticeSides.SMART_SWITCH).size)
+        // The meaning side is New, so the pair is due at once and reads as its weakest side.
+        assertTrue(known.isDue(PracticeSides.SMART_SWITCH, now))
+        assertEquals(WordStatus.Level1, known.level(PracticeSides.SMART_SWITCH))
+    }
+
+    @Test
     fun `a pair is due when any practised side is due`() {
         val pair = pair(side(Shown.WORD, 5.0, 3), side(Shown.MEANING, null, null))
 

@@ -24,7 +24,8 @@ import com.example.android.memoization.utils.putValueScoped
 
 /**
  * Which sides of a pair to practise. Both sides always exist; this only decides which of them
- * are scheduled, so switching back and forth never loses progress.
+ * are scheduled, so switching back and forth never loses progress. Smart switch, the default,
+ * starts word to meaning and adds the meaning side once the word side is known.
  */
 @Composable
 fun LearningView(modifier: Modifier = Modifier, preferenceStorage: DataStore<Preferences>) {
@@ -38,6 +39,9 @@ fun LearningView(modifier: Modifier = Modifier, preferenceStorage: DataStore<Pre
         Row(modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp)) {
             SettingsTileTitle(R.string.learning_section)
         }
+        PracticeSidesOption(R.string.practice_smart_switch, PracticeSides.SMART_SWITCH, selected) {
+            preferenceStorage.putValueScoped(DatastoreKey.PRACTICE_SIDES, it.name, scope)
+        }
         PracticeSidesOption(R.string.practice_word_to_meaning, PracticeSides.WORD_TO_MEANING, selected) {
             preferenceStorage.putValueScoped(DatastoreKey.PRACTICE_SIDES, it.name, scope)
         }
@@ -48,6 +52,9 @@ fun LearningView(modifier: Modifier = Modifier, preferenceStorage: DataStore<Pre
             preferenceStorage.putValueScoped(DatastoreKey.PRACTICE_SIDES, it.name, scope)
         }
         Row(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp)) {
+            SettingsTileSubtitle(R.string.practice_smart_switch_caption)
+        }
+        Row(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 2.dp)) {
             SettingsTileSubtitle(R.string.practice_new_side_caption)
         }
     }

@@ -8,8 +8,8 @@ The five fixed levels are gone. Each **side** of a word pair - shown the word an
 meaning, or the reverse - carries its own FSRS state (stability, difficulty, due, last review,
 reps, lapses) in a new `side_entity_table`. The **level** shown in the UI is a reading of
 stability rather than a stored fact, and a pair shows the level of its weakest practised side.
-Which sides are practised is one setting for the whole library: word to meaning (the default),
-meaning to word, or both.
+Which sides are practised is one setting for the whole library: word to meaning (the default
+at the time; see ADR 0004 for Smart switch), meaning to word, or both.
 
 ## Why
 

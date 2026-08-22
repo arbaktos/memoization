@@ -15,8 +15,7 @@ data class WordPair(
     val sides: List<Side> = emptyList(),
 ) : BaseWordPair, DismissableItem {
 
-    fun activeSides(practice: PracticeSides): List<Side> =
-        sides.filter { practice.includes(it.shown) }
+    fun activeSides(practice: PracticeSides): List<Side> = practice.practised(sides)
 
     fun dueSides(
         practice: PracticeSides,

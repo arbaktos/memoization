@@ -19,9 +19,16 @@ carrying its own stability, difficulty and due date.
 _Avoid_: card, direction, face
 
 **Practice sides**:
-The learner's choice, for the whole library, of which sides to practise: word to meaning,
-meaning to word, or both. A pair always has both sides; this decides which are scheduled.
+The learner's choice, for the whole library, of which sides to practise: **Smart switch** (the
+default), word to meaning, meaning to word, or both. A pair always has both sides; this decides
+which are scheduled.
 _Avoid_: mode, direction setting
+
+**Smart switch**:
+The default practice sides: a pair is practised word to meaning first, and its meaning side
+joins the schedule, as **New**, once the word side reaches Level3 - a memory holding a week.
+A meaning side that has been rated stays practised even if the word side lapses below that.
+_Avoid_: auto mode, adaptive, unlock
 
 **Stability**:
 How many days a side's memory holds - the point at which recalling it would be a nine-in-ten
@@ -99,7 +106,8 @@ _Avoid_: include scheduling, preserve state
 - A **Word pair** belongs to exactly one **Stack**
 - A **Word pair** has exactly two **Sides**, one per direction of recall
 - A **Side** has its own **Stability**, **Difficulty** and due date, and shows a **Level**
-- **Practice sides** decides which **Sides** of every pair are scheduled
+- **Practice sides** decides which **Sides** of every pair are scheduled; under **Smart
+  switch** that depends on the word side's **Level**
 - A **Session** holds the **Due** practised **Sides** of exactly one **Stack**; each **Rating**
   given in it updates one **Side**
 - An **Export file** holds one or more **Stacks**, chosen by **Export scope**
