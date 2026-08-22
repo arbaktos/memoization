@@ -16,6 +16,8 @@ class MemorizationSession(
     sides: List<SessionSide>,
     random: Random = Random.Default,
     private val scheduler: Fsrs = Fsrs(random = random),
+    /** Due sides of the stack that did not fit this session; they are still there after it. */
+    private val waiting: Int = 0,
 ) {
 
     data class State(
@@ -27,8 +29,13 @@ class MemorizationSession(
         val total: Int,
         /** Bumped on every rating so the UI can tell "same side, next attempt" apart. */
         val serial: Int,
+        /** Due sides of the stack left out of this session; another sitting would take them. */
+        val waiting: Int,
     ) {
         val isFinished: Boolean get() = current == null
+
+        /** True once the queue is empty and nothing else in the stack is due. */
+        val isDoneForToday: Boolean get() = isFinished && waiting == 0
 
         /** Share of the session done, 0f..1f; an empty session counts as done. */
         val progress: Float
@@ -46,7 +53,7 @@ class MemorizationSession(
     private val lapsedIds = mutableSetOf<Long>()
     private var serial = 0
 
-    fun state(): State = State(queue.firstOrNull(), queue.size, total, serial)
+    fun state(): State = State(queue.firstOrNull(), queue.size, total, serial, waiting)
 
     /**
      * Again: the schedule is rewritten once, on the first lapse, and the side goes to the back

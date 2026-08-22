@@ -166,7 +166,7 @@ fun DisplayStackState(
 
 @Composable
 fun DisplayStackError() {
-    Text(text = "Error")
+    Text(text = stringResource(R.string.error))
 }
 
 /**

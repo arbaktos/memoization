@@ -66,9 +66,22 @@ class MemorizationSessionTest {
         val s = MemorizationSession(emptyList())
 
         assertTrue(s.state().isFinished)
+        assertTrue(s.state().isDoneForToday)
         assertNull(s.state().current)
         assertEquals(0, s.state().remaining)
         assertEquals(1f, s.state().progress, 0f)
+    }
+
+    @Test
+    fun `a session that left sides waiting is finished but not done for today`() {
+        val s = MemorizationSession(listOf(item(1)), Random(1), scheduler, waiting = 12)
+
+        assertEquals(12, s.state().waiting)
+        assertFalse(s.state().isFinished)
+        s.rate(Rating.Good, now)
+        assertTrue(s.state().isFinished)
+        assertFalse(s.state().isDoneForToday)
+        assertEquals(12, s.state().waiting)
     }
 
     @Test

@@ -9,6 +9,7 @@ import com.example.android.memoization.data.repository.SideRepository
 import com.example.android.memoization.domain.scheduler.Rating
 import com.example.android.memoization.domain.session.MemorizationSession
 import com.example.android.memoization.domain.session.dueSessionSides
+import com.example.android.memoization.domain.session.dueSideCount
 import com.example.android.memoization.domain.usecases.GetStackUseCase
 import com.example.android.memoization.utils.LoadingState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -45,7 +46,9 @@ class MemoizationViewModel @Inject constructor(
                 .first()
                 .content
             val practice = learningSettings.practiceSides.first()
-            session = MemorizationSession(stack.dueSessionSides(practice))
+            val batch = stack.dueSessionSides(practice)
+            val waiting = stack.dueSideCount(practice) - batch.size
+            session = MemorizationSession(batch, waiting = waiting)
                 .also { _state.value = it.state() }
         }
     }

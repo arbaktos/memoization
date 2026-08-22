@@ -15,6 +15,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.android.memoization.data.model.DismissableItem
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.example.android.memoization.R
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -52,7 +54,7 @@ fun SwipeToDismiss(
             ) {
                 Icon(
                     Icons.Default.Delete,
-                    contentDescription = "Localized description",
+                    contentDescription = stringResource(R.string.delete),
                     tint = Color.Red
                 )
             }

@@ -33,7 +33,7 @@ fun MenuDrawer(preferenceStorage: DataStore<Preferences>) {
     ModalDrawer(
         drawerContent = {
             Column {
-                Text("settings")
+                Text(stringResource(R.string.settings_top_bar_label))
             }
         },
         content = { SettingsSheet(preferenceStorage = preferenceStorage) }

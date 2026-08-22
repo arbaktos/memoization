@@ -56,7 +56,7 @@ fun MemorizationBody(
     val session = state ?: return
 
     if (session.isFinished) {
-        StackCompleteDialog(onClick = onComplete)
+        StackCompleteDialog(waiting = session.waiting, onClick = onComplete)
         return
     }
     val item = session.current ?: return

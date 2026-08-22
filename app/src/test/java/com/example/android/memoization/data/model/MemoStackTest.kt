@@ -3,6 +3,7 @@ package com.example.android.memoization.data.model
 import com.example.android.memoization.domain.scheduler.DAY_MILLIS
 import com.example.android.memoization.domain.session.SessionDefaults
 import com.example.android.memoization.domain.session.dueSessionSides
+import com.example.android.memoization.domain.session.dueSideCount
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -155,6 +156,20 @@ class MemoStackTest {
 
         // The two answered earlier are scheduled forward; a full new batch is offered.
         assertEquals(listOf(3L, 4L), session.map { it.side.sideId })
+    }
+
+    @Test
+    fun `the due count tells how many sides one session leaves waiting`() {
+        val stack = stack(
+            answeredTodayPair(1),
+            overduePair(2, overdueDays = 3),
+            overduePair(3, overdueDays = 2),
+            newPair(4),
+        )
+
+        assertEquals(3, stack.dueSideCount(PracticeSides.WORD_TO_MEANING, now))
+        assertEquals(1, stack.dueSideCount(PracticeSides.WORD_TO_MEANING, now)
+            - stack.dueSessionSides(PracticeSides.WORD_TO_MEANING, now, limit = 2).size)
     }
 
     @Test

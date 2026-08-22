@@ -159,7 +159,7 @@ fun AddStackTextField(
         leadingIcon = {
             Icon(
                 imageVector = Icons.Filled.Add,
-                contentDescription = "Add a stack",
+                contentDescription = stringResource(R.string.add_new_stack),
                 tint = MaterialTheme.colors.onSurface
             )
         },

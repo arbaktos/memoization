@@ -48,3 +48,10 @@ fun MemoStack.dueSessionSides(
         // Earliest due date first; sides never practised have no due date and fill what is left.
         .sortedWith(compareBy(nullsLast()) { it.side.due })
         .take(limit)
+
+/** Every practised side of this stack that is due now, whether or not it fits one session. */
+fun MemoStack.dueSideCount(
+    practice: PracticeSides,
+    now: Long = System.currentTimeMillis(),
+    zone: TimeZone = TimeZone.getDefault(),
+): Int = words.sumOf { it.dueSides(practice, now, zone).size }

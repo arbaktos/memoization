@@ -6,6 +6,10 @@
     <string name="cancel">Cancel</string>
     <string name="new_stack_name">New stack name</string>
     <string name="stack_complete">Done for today</string>
+    <plurals name="session_complete_waiting">
+        <item quantity="one">Session done \u2014 %d more waiting</item>
+        <item quantity="other">Session done \u2014 %d more waiting</item>
+    </plurals>
     <string name="pin_stack">Pin this stack</string>
     <string name="add_wordpair">Add new wordpair</string>
     <string name="wrods_to_learn">Words to repeat: </string>
@@ -60,6 +64,7 @@
     <string name="retry">Retry</string>
     <string name="translating">Translating…</string>
     <string name="delete_word">Delete word</string>
+    <string name="delete">Delete</string>
     <string name="learning_section">Learning</string>
     <string name="practice_smart_switch">Smart switch</string>
     <string name="practice_word_to_meaning">Word \u2192 meaning</string>
