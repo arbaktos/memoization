@@ -34,6 +34,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.intl.Locale
+import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
@@ -186,6 +188,7 @@ fun UpperField(
             },
             label = stringResource(R.string.word_to_learn),
             imeAction = ImeAction.Next,
+            hintLocale = viewModel.wordKeyboardLocale,
             modifier = Modifier
                 .focusRequester(focusRequester)
         )
@@ -230,7 +233,8 @@ fun BottomField(
             onClick = onClick,
             // Explanations run to several lines, so Enter inserts one instead of
             // confirming - the done button is the fab.
-            imeAction = ImeAction.Default
+            imeAction = ImeAction.Default,
+            hintLocale = viewModel.meaningKeyboardLocale,
         )
     }
 }
@@ -256,6 +260,8 @@ fun NewPairTextField(
     label: String,
     onClick: () -> Unit = {},
     imeAction: ImeAction = ImeAction.Default,
+    /** BCP 47 tag of the language this field is typed in; the keyboard is asked to switch. */
+    hintLocale: String? = null,
     modifier: Modifier = Modifier
 ) {
     OutlinedTextField(
@@ -267,6 +273,7 @@ fun NewPairTextField(
             capitalization = KeyboardCapitalization.None,
             keyboardType = KeyboardType.Text,
             imeAction = imeAction,
+            hintLocales = hintLocale?.let { LocaleList(Locale(it)) },
         ),
         keyboardActions = KeyboardActions(
             onDone = { onClick() }

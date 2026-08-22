@@ -46,6 +46,10 @@ class AddNewPairViewModel @Inject constructor(
     private val currentWpId: Long? = savedStateHandle[WORD_PAIR_ID]
     private val fromLanguage: String? = savedStateHandle[FROM_LANGUAGE]
     private val toLanguage: String? = savedStateHandle[TO_LANGUAGE]
+
+    /** Keyboard language hints for the two fields; null when the stack names no language. */
+    val wordKeyboardLocale: String? = keyboardLocaleTag(fromLanguage)
+    val meaningKeyboardLocale: String? = keyboardLocaleTag(toLanguage)
     private val editMode: Boolean = currentWpId != null
 
     private var currentWordPair: WordPair? = null
