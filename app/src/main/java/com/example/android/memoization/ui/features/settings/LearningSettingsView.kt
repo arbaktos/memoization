@@ -25,7 +25,8 @@ import com.example.android.memoization.utils.putValueScoped
 /**
  * Which sides of a pair to practise. Both sides always exist; this only decides which of them
  * are scheduled, so switching back and forth never loses progress. Smart switch, the default,
- * starts word to meaning and adds the meaning side once the word side is known.
+ * starts word to meaning and hands over to the meaning side once the word side is known -
+ * one side of a pair at a time; Both sides is the setting that schedules the two together.
  */
 @Composable
 fun LearningView(modifier: Modifier = Modifier, preferenceStorage: DataStore<Preferences>) {

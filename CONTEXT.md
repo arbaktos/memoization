@@ -25,9 +25,11 @@ which are scheduled.
 _Avoid_: mode, direction setting
 
 **Smart switch**:
-The default practice sides: a pair is practised word to meaning first, and its meaning side
-joins the schedule, as **New**, once the word side reaches Level3 - a memory holding a week.
-A meaning side that has been rated stays practised even if the word side lapses below that.
+The default practice sides: one side of a pair at a time. A pair is practised word to meaning
+first; once the word side reaches Level3 - a memory holding a week - the pair hands over to its
+meaning side, which enters as **New**, and the word side is no longer scheduled. A meaning side
+that has been rated keeps the pair even if the word side lapses below that. Both sides at once
+is what **Both sides** is for.
 _Avoid_: auto mode, adaptive, unlock
 
 **Stability**:

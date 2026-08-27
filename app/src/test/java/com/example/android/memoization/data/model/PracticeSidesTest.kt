@@ -48,17 +48,17 @@ class PracticeSidesTest {
     }
 
     @Test
-    fun `smart switch adds the meaning side once the word side reaches level three`() {
+    fun `smart switch hands over to the meaning side once the word side reaches level three`() {
         assertEquals(
-            listOf(Shown.WORD, Shown.MEANING),
+            listOf(Shown.MEANING),
             shownOf(PracticeSides.SMART_SWITCH, side(Shown.WORD, 7.0), side(Shown.MEANING)),
         )
     }
 
     @Test
-    fun `smart switch keeps a meaning side that has been practised even after the word side lapses`() {
+    fun `smart switch keeps the meaning side alone after the word side lapses`() {
         assertEquals(
-            listOf(Shown.WORD, Shown.MEANING),
+            listOf(Shown.MEANING),
             shownOf(PracticeSides.SMART_SWITCH, side(Shown.WORD, 0.5), side(Shown.MEANING, 1.0)),
         )
     }
@@ -66,8 +66,19 @@ class PracticeSidesTest {
     @Test
     fun `smart switch does not mind the order of the sides`() {
         assertEquals(
-            listOf(Shown.MEANING, Shown.WORD),
+            listOf(Shown.MEANING),
             shownOf(PracticeSides.SMART_SWITCH, side(Shown.MEANING), side(Shown.WORD, 10.0)),
         )
+        assertEquals(
+            listOf(Shown.WORD),
+            shownOf(PracticeSides.SMART_SWITCH, side(Shown.MEANING), side(Shown.WORD)),
+        )
+    }
+
+    @Test
+    fun `smart switch practises the only side a pair has`() {
+        assertEquals(listOf(Shown.WORD), shownOf(PracticeSides.SMART_SWITCH, side(Shown.WORD)))
+        assertEquals(listOf(Shown.MEANING), shownOf(PracticeSides.SMART_SWITCH, side(Shown.MEANING)))
+        assertEquals(emptyList<Shown>(), shownOf(PracticeSides.SMART_SWITCH))
     }
 }
