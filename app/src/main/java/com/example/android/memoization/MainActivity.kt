@@ -16,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.android.memoization.notifications.NotificationScheduler
 import com.example.android.memoization.ui.AppComposable
+import com.example.android.memoization.ui.features.share.sharedWord
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -39,8 +40,12 @@ class MainActivity : ComponentActivity() {
         askForNotificationPermission()
         keepReminderInSyncWithSettings()
 
+        // A word shared in from another app opens the picker for it; a plain launch is null
+        // here and the app starts on the library as usual.
+        val sharedWord = intent?.sharedWord()
+
         setContent {
-            AppComposable(preferenceStorage = dataStore)
+            AppComposable(preferenceStorage = dataStore, sharedWord = sharedWord)
         }
     }
 

@@ -9,6 +9,7 @@ const val STACK_ID = "stackId"
 const val WORD_PAIR_ID = "wordPairId"
 const val FROM_LANGUAGE = "fromLanguage"
 const val TO_LANGUAGE = "toLanguage"
+const val WORD = "word"
 
 const val TAG = "debug"
 const val Empty_string = ""

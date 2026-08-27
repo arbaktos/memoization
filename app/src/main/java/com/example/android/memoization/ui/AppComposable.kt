@@ -14,17 +14,23 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.createGraph
 import com.example.android.memoization.ui.theme.MemoizationTheme
 
+/**
+ * [sharedWord] is a word another app shared into Memoization; the app then opens on the stack
+ * picker for it instead of the library, and closes back into that app when the pair is saved.
+ */
 @Composable
-fun AppComposable(preferenceStorage: DataStore<Preferences>) {
+fun AppComposable(preferenceStorage: DataStore<Preferences>, sharedWord: String? = null) {
 
     val navController = rememberNavController()
 
-    val navGraph = remember(navController) {
-        navController.createGraph(startDestination = FolderDestination) {
+    val navGraph = remember(navController, sharedWord) {
+        val start = if (sharedWord == null) FolderDestination else SharedWordDestination(sharedWord)
+        navController.createGraph(startDestination = start) {
             stackScreenDestination(navController)
             folderScreenDestination(navController, preferenceStorage)
             memorizationDestination(navController)
             newPairDestination(navController)
+            sharedWordDestination(navController)
         }
     }
 

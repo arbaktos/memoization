@@ -73,4 +73,9 @@
     <string name="practice_new_side_caption">A new side starts from scratch</string>
     <string name="practice_smart_switch_caption">Smart switch: word \u2192 meaning first; once a word is known the pair switches to meaning \u2192 word instead</string>
     <string name="session_progress">%1$d of %2$d done</string>
+    <string name="share_pick_stack">Which stack does it go to?</string>
+    <plurals name="stack_word_count">
+        <item quantity="one">%d word</item>
+        <item quantity="other">%d words</item>
+    </plurals>
 </resources>

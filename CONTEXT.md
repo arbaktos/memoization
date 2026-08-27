@@ -99,6 +99,12 @@ exists and the week had an obligation or a session. Its period is a setting: wee
 weeks, monthly, or never.
 _Avoid_: popup, notification, report
 
+**Shared word**:
+A word another app hands to Memoization through the system share sheet - a selection in a
+browser, a reader or a chat. It arrives with no stack of its own, so the learner picks one and
+it opens as a new **Word pair** with the word already in the field.
+_Avoid_: intent, quick add, import
+
 **Hidden**:
 A word pair or stack the learner has deleted. Nothing leaves the database - the row and its
 progress stay, so an undo, or a restore, can bring it back.
@@ -149,6 +155,7 @@ _Avoid_: include scheduling, preserve state
 - Every **Rating** adds a row to the **Review log**, and every **Session** one; **Statistics**
   and the **Weekly card** are read from the **Review log**; a **Streak** counts **Obligation
   days** with a finished **Session**
+- A **Shared word** becomes a **Word pair** in the **Stack** the learner picks for it
 - An **Export file** holds one or more **Stacks**, chosen by **Export scope**
 - A **Stack** has exactly one **Stack id**, unique within a **Library**
 - Importing a **Stack** whose **Stack id** is already present offers replace, **Fork** or skip;
