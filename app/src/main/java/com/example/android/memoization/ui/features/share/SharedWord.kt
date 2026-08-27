@@ -3,9 +3,10 @@ package com.example.android.memoization.ui.features.share
 import android.content.Intent
 
 /**
- * A word sent to the app from another one - a selection shared out of a browser, a reader or a
- * chat. The share arrives as plain text and lands in the word field of a new pair, so it is
- * tidied first: a selection usually carries the spaces and quotation marks around the word.
+ * A word sent to the app from another one - a selection in a browser, a reader or a chat, handed
+ * over through the share sheet or straight from the selection menu. It arrives as plain text and
+ * lands in the word field of a new pair, so it is tidied first: a selection usually carries the
+ * spaces and quotation marks around the word.
  */
 object SharedWord {
 
@@ -29,12 +30,18 @@ object SharedWord {
 }
 
 /**
- * The word this intent shares into the app, or null if it is not a text share - a plain launch,
- * or a notification tap.
+ * The word this intent hands to the app, or null if it hands over no text - a plain launch, or
+ * a notification tap. Both ways in are the same word: the share sheet sends the selection as
+ * ACTION_SEND, the selection menu sends it as ACTION_PROCESS_TEXT.
+ *
+ * A selection travels as a CharSequence, so it is read as one; getStringExtra returns null for
+ * a styled selection, which is most of what a web page gives.
  */
-fun Intent.sharedWord(): String? {
-    if (action != Intent.ACTION_SEND) return null
-    if (type?.startsWith("text/") != true) return null
-    // A selection is shared as a CharSequence; getStringExtra would drop a styled one.
-    return SharedWord.from(getCharSequenceExtra(Intent.EXTRA_TEXT))
+fun Intent.sharedWord(): String? = when (action) {
+    Intent.ACTION_SEND ->
+        if (type?.startsWith("text/") == true) SharedWord.from(getCharSequenceExtra(Intent.EXTRA_TEXT))
+        else null
+    // The read-only flag is not asked for: the word is copied into a pair, never edited back.
+    Intent.ACTION_PROCESS_TEXT -> SharedWord.from(getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT))
+    else -> null
 }

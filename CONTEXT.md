@@ -100,9 +100,10 @@ weeks, monthly, or never.
 _Avoid_: popup, notification, report
 
 **Shared word**:
-A word another app hands to Memoization through the system share sheet - a selection in a
-browser, a reader or a chat. It arrives with no stack of its own, so the learner picks one and
-it opens as a new **Word pair** with the word already in the field.
+A word another app hands to Memoization - a selection in a browser, a reader or a chat, sent
+through the share sheet or straight from the selection menu. It arrives with no stack of its
+own, so the learner picks one and it opens as a new **Word pair** with the word already in the
+field.
 _Avoid_: intent, quick add, import
 
 **Hidden**:
