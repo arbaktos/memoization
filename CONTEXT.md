@@ -103,7 +103,8 @@ _Avoid_: popup, notification, report
 A word another app hands to Memoization - a selection in a browser, a reader or a chat, sent
 through the share sheet or straight from the selection menu. It arrives with no stack of its
 own, so the learner picks one and it opens as a new **Word pair** with the word already in the
-field.
+field - unless the share named a stack itself: the stacks in daily use stand in the share sheet
+as targets of their own, and sharing to one goes straight to the pair.
 _Avoid_: intent, quick add, import
 
 **Hidden**:

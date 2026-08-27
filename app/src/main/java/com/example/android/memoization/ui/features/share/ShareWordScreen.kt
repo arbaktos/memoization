@@ -12,6 +12,7 @@ import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +45,19 @@ fun ShareWordScreen(
 ) {
     val state by viewModel.getDataToDisplay().collectAsState(initial = LoadingState.Loading)
     var toShowDialog by rememberSaveable { mutableStateOf(false) }
+    // Once, even if the library re-emits: the screen is on its way out by then.
+    var passedThrough by rememberSaveable { mutableStateOf(false) }
+
+    val stacks = (state as? LoadingState.Collected)?.content
+    LaunchedEffect(stacks) {
+        if (passedThrough) return@LaunchedEffect
+        val chosen = viewModel.chosenStackId ?: return@LaunchedEffect
+        // The stack could have been deleted since the share sheet learnt about it; then there
+        // is nothing to pass through to and the picker stands as it is.
+        val stack = stacks?.firstOrNull { it.stackId == chosen } ?: return@LaunchedEffect
+        passedThrough = true
+        viewModel.onStackChosen(navController, stack)
+    }
 
     ShareWordBody(
         word = viewModel.word,

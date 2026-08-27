@@ -7,6 +7,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.example.android.memoization.navigation.MemoDestination
+import com.example.android.memoization.utils.NO_STACK_ID
 import com.example.android.memoization.ui.features.addnewpair.AddNewPairScreen
 import com.example.android.memoization.ui.features.folderscreen.FoldersScreen
 import com.example.android.memoization.ui.features.memoizationscreen.MemorizationScreen
@@ -43,9 +44,16 @@ internal data class EditPairDestination(
 @Serializable
 internal data class MemorizationDestination(val id: Long) : MemoDestination
 
-/** Where a share from another app lands: the word, waiting for a stack to go into. */
+/**
+ * Where a share from another app lands: the word, waiting for a stack to go into. [stackId] is
+ * set when the share sheet already named one - the learner shared to that stack itself - and is
+ * [NO_STACK_ID] when the stack is still to be picked.
+ */
 @Serializable
-internal data class SharedWordDestination(val word: String) : MemoDestination
+internal data class SharedWordDestination(
+    val word: String,
+    val stackId: Long = NO_STACK_ID,
+) : MemoDestination
 
 fun NavGraphBuilder.stackScreenDestination(
     navController: NavController
