@@ -18,6 +18,21 @@ fun NavController.navigateToNewPair(
     navigate(route = NewPairDestination(stackId, fromLanguage, toLanguage))
 }
 
+/**
+ * The pair a shared word opens; the picker behind it is dropped, so a back press hands the
+ * learner straight back to the app the word came from.
+ */
+fun NavController.navigateFromShareToNewPair(
+    stackId: Long,
+    fromLanguage: String?,
+    toLanguage: String?,
+    word: String,
+) {
+    navigate(route = NewPairDestination(stackId, fromLanguage, toLanguage, word)) {
+        popUpTo<SharedWordDestination> { inclusive = true }
+    }
+}
+
 fun NavController.navigateToEditPair(
     wordPairId: Long,
     fromLanguage: String?,

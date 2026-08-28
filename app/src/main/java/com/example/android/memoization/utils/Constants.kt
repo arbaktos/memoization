@@ -9,6 +9,13 @@ const val STACK_ID = "stackId"
 const val WORD_PAIR_ID = "wordPairId"
 const val FROM_LANGUAGE = "fromLanguage"
 const val TO_LANGUAGE = "toLanguage"
+const val WORD = "word"
+
+/**
+ * "No stack named" in a navigation argument: a route argument is a primitive, and a nullable
+ * Long is not one of the types navigation knows how to carry.
+ */
+const val NO_STACK_ID = -1L
 
 const val TAG = "debug"
 const val Empty_string = ""

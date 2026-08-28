@@ -13,18 +13,35 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.createGraph
 import com.example.android.memoization.ui.theme.MemoizationTheme
+import com.example.android.memoization.utils.NO_STACK_ID
 
+/**
+ * [sharedWord] is a word another app shared into Memoization; the app then opens on the stack
+ * picker for it instead of the library, and closes back into that app when the pair is saved.
+ * [stackId] is the stack the way in already named - a share straight to one of the stacks the
+ * share sheet offers, or a shortcut tapped in the launcher, which opens that stack.
+ */
 @Composable
-fun AppComposable(preferenceStorage: DataStore<Preferences>) {
+fun AppComposable(
+    preferenceStorage: DataStore<Preferences>,
+    sharedWord: String? = null,
+    stackId: Long? = null,
+) {
 
     val navController = rememberNavController()
 
-    val navGraph = remember(navController) {
-        navController.createGraph(startDestination = FolderDestination) {
+    val navGraph = remember(navController, sharedWord, stackId) {
+        val start = when {
+            sharedWord != null -> SharedWordDestination(sharedWord, stackId ?: NO_STACK_ID)
+            stackId != null -> StackDestination(stackId)
+            else -> FolderDestination
+        }
+        navController.createGraph(startDestination = start) {
             stackScreenDestination(navController)
             folderScreenDestination(navController, preferenceStorage)
             memorizationDestination(navController)
             newPairDestination(navController)
+            sharedWordDestination(navController)
         }
     }
 

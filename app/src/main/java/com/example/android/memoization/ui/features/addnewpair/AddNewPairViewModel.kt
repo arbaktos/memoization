@@ -14,6 +14,7 @@ import com.example.android.memoization.utils.LoadingState
 import com.example.android.memoization.utils.FROM_LANGUAGE
 import com.example.android.memoization.utils.STACK_ID
 import com.example.android.memoization.utils.TO_LANGUAGE
+import com.example.android.memoization.utils.WORD
 import com.example.android.memoization.utils.WORD_PAIR_ID
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
@@ -46,6 +47,12 @@ class AddNewPairViewModel @Inject constructor(
     private val currentWpId: Long? = savedStateHandle[WORD_PAIR_ID]
     private val fromLanguage: String? = savedStateHandle[FROM_LANGUAGE]
     private val toLanguage: String? = savedStateHandle[TO_LANGUAGE]
+
+    /**
+     * A word shared in from another app, already in the pair before the learner types: the
+     * word field starts with it and the explanation field is the one waiting for an answer.
+     */
+    val sharedWord: String? = savedStateHandle[WORD]
 
     /** Keyboard language hints for the two fields; null when the stack names no language. */
     val wordKeyboardLocale: String? = keyboardLocaleTag(fromLanguage)

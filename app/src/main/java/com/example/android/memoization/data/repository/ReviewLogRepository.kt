@@ -23,6 +23,10 @@ class ReviewLogRepository @Inject constructor(private val memoDao: MemoDao) {
         memoDao.finishSession(sessionId, now)
     }
 
+    /** When each stack was last practised, for ordering the stacks a word can be shared into. */
+    suspend fun lastSessionPerStack(): Map<Long, Long> =
+        memoDao.getLastSessionPerStack().associate { it.stackId to it.lastStartedAt }
+
     suspend fun logAnswer(sessionId: Long, answer: MemorizationSession.Answer, shownMs: Long, now: Long) {
         memoDao.insertReview(
             ReviewLogEntity(

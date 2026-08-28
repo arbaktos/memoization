@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Every stack is published as a dynamic shortcut by StackShortcuts; this is what tells the
+    system those shortcuts may stand on their own in the share sheet. The category has to be
+    the one the shortcuts carry - StackShortcuts.SHARE_CATEGORY.
+-->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <share-targets>
+        <share-target android:targetClass="com.example.android.memoization.MainActivity">
+            <data android:mimeType="text/plain" />
+            <category android:name="com.example.android.memoization.category.SHARE_INTO_STACK" />
+        </share-target>
+    </share-targets>
+</shortcuts>

@@ -25,9 +25,11 @@ which are scheduled.
 _Avoid_: mode, direction setting
 
 **Smart switch**:
-The default practice sides: a pair is practised word to meaning first, and its meaning side
-joins the schedule, as **New**, once the word side reaches Level3 - a memory holding a week.
-A meaning side that has been rated stays practised even if the word side lapses below that.
+The default practice sides: one side of a pair at a time. A pair is practised word to meaning
+first; once the word side reaches Level3 - a memory holding a week - the pair hands over to its
+meaning side, which enters as **New**, and the word side is no longer scheduled. A meaning side
+that has been rated keeps the pair even if the word side lapses below that. Both sides at once
+is what **Both sides** is for.
 _Avoid_: auto mode, adaptive, unlock
 
 **Stability**:
@@ -97,6 +99,14 @@ exists and the week had an obligation or a session. Its period is a setting: wee
 weeks, monthly, or never.
 _Avoid_: popup, notification, report
 
+**Shared word**:
+A word another app hands to Memoization - a selection in a browser, a reader or a chat, sent
+through the share sheet or straight from the selection menu. It arrives with no stack of its
+own, so the learner picks one and it opens as a new **Word pair** with the word already in the
+field - unless the share named a stack itself: the stacks in daily use stand in the share sheet
+as targets of their own, and sharing to one goes straight to the pair.
+_Avoid_: intent, quick add, import
+
 **Hidden**:
 A word pair or stack the learner has deleted. Nothing leaves the database - the row and its
 progress stay, so an undo, or a restore, can bring it back.
@@ -147,6 +157,7 @@ _Avoid_: include scheduling, preserve state
 - Every **Rating** adds a row to the **Review log**, and every **Session** one; **Statistics**
   and the **Weekly card** are read from the **Review log**; a **Streak** counts **Obligation
   days** with a finished **Session**
+- A **Shared word** becomes a **Word pair** in the **Stack** the learner picks for it
 - An **Export file** holds one or more **Stacks**, chosen by **Export scope**
 - A **Stack** has exactly one **Stack id**, unique within a **Library**
 - Importing a **Stack** whose **Stack id** is already present offers replace, **Fork** or skip;

@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -45,6 +46,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.data.model.WordPair
+import com.example.android.memoization.extensions.findActivity
 import com.example.android.memoization.ui.composables.components.CustomDoneFab
 import com.example.android.memoization.ui.composables.components.RowIcon
 import com.example.android.memoization.ui.composables.components.ShowToast
@@ -68,11 +70,14 @@ fun AddNewPairScreen(
     ShowToast(text = toastMessage)
 
     val keyboardController = LocalSoftwareKeyboardController.current
+    val context = LocalContext.current
 
     val onConfirm: () -> Unit = {
         viewModel.onConfirm()
         keyboardController?.hide()
-        navController.popBackStack()
+        // Nothing to go back to means the pair came from a share: close, and the learner is
+        // back in the app the word came from.
+        if (!navController.popBackStack()) context.findActivity()?.finish()
     }
 
 //    BackHandler(enabled = true) {
@@ -140,7 +145,10 @@ fun DisplayWordPair(
                 modifier = Modifier
                     .weight(1f),
                 viewModel = viewModel,
-                editWord = wordPair?.word1,
+                // A shared word is already the word of the pair; only an edit overrides it.
+                editWord = wordPair?.word1 ?: viewModel.sharedWord,
+                // The word is there, so the cursor belongs in the field that is still empty.
+                autoFocus = viewModel.sharedWord == null,
             )
 
             if (viewModel.needsTranslation()) {
@@ -159,7 +167,8 @@ fun DisplayWordPair(
                 onClick = onConfirm,
                 viewModel = viewModel,
                 word2 = wordPair?.word2,
-                translation = translation
+                translation = translation,
+                autoFocus = viewModel.sharedWord != null,
             )
         }
     }
@@ -169,7 +178,8 @@ fun DisplayWordPair(
 fun UpperField(
     modifier: Modifier = Modifier,
     viewModel: AddNewPairViewModel,
-    editWord: String?
+    editWord: String?,
+    autoFocus: Boolean = true,
 ) {
     // Keyed on editWord so the field picks up the pair once it is loaded from the db
     val text1 = rememberSaveable(editWord) { mutableStateOf(editWord ?: Empty_string) }
@@ -195,7 +205,7 @@ fun UpperField(
 
     }
     LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
+        if (autoFocus) focusRequester.requestFocus()
     }
 }
 
@@ -205,10 +215,12 @@ fun BottomField(
     onClick: () -> Unit,
     viewModel: AddNewPairViewModel,
     word2: String?,
-    translation: TranslationUiState = TranslationUiState.Idle
+    translation: TranslationUiState = TranslationUiState.Idle,
+    autoFocus: Boolean = false,
 ) {
     val textVal = word2 ?: Empty_string
     val text2 = rememberSaveable(textVal) { mutableStateOf(textVal) }
+    val focusRequester = remember { FocusRequester() }
 
     // A finished translation drops into the field, then is cleared so it lands only once.
     LaunchedEffect(translation) {
@@ -235,7 +247,11 @@ fun BottomField(
             // confirming - the done button is the fab.
             imeAction = ImeAction.Default,
             hintLocale = viewModel.meaningKeyboardLocale,
+            modifier = Modifier.focusRequester(focusRequester),
         )
+    }
+    LaunchedEffect(Unit) {
+        if (autoFocus) focusRequester.requestFocus()
     }
 }
 

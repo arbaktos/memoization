@@ -3,6 +3,7 @@ package com.example.android.memoization.data.database
 import androidx.room.*
 import com.example.android.memoization.data.database.logdb.ReviewLogEntity
 import com.example.android.memoization.data.database.logdb.SessionEntity
+import com.example.android.memoization.data.database.logdb.StackLastSession
 import com.example.android.memoization.data.database.sidedb.SideEntity
 import com.example.android.memoization.data.database.stackdb.StackEntity
 import com.example.android.memoization.data.database.stackdb.StackWithWords
@@ -86,4 +87,7 @@ interface MemoDao {
 
     @Query("SELECT * FROM review_log_table WHERE sessionId = :sessionId ORDER BY ratedAt")
     suspend fun getReviewsOfSession(sessionId: Long): List<ReviewLogEntity>
+
+    @Query("SELECT stackId, MAX(startedAt) AS lastStartedAt FROM session_table GROUP BY stackId")
+    suspend fun getLastSessionPerStack(): List<StackLastSession>
 }
