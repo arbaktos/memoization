@@ -38,6 +38,21 @@ class StackViewModel @Inject constructor(
 
     val showEditStackDialog = MutableStateFlow(false)
 
+    /** The search box's text, or null while the box is closed; kept here to survive rotation. */
+    val searchQuery = MutableStateFlow<String?>(null)
+
+    fun openSearch() {
+        searchQuery.value = ""
+    }
+
+    fun closeSearch() {
+        searchQuery.value = null
+    }
+
+    fun onSearchQueryChange(query: String) {
+        searchQuery.value = query
+    }
+
     val practiceSides = learningSettings.practiceSides.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(STOP_COLLECTING_AFTER_MS), PracticeSides.DEFAULT
     )

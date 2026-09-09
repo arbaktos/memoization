@@ -59,6 +59,11 @@
 
     <string name="choose_language">Choose…</string>
     <string name="search_language">Search language</string>
+    <string name="search_in_stack">Search in stack</string>
+    <string name="search_desc">Search this stack</string>
+    <string name="close_search_desc">Close search</string>
+    <string name="clear_search_desc">Clear search</string>
+    <string name="no_pairs_found">Nothing matches</string>
     <string name="no_languages_found">No languages match</string>
     <string name="languages_load_failed">Could not load the language list</string>
     <string name="retry">Retry</string>

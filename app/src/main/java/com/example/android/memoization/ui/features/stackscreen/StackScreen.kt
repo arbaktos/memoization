@@ -2,11 +2,13 @@ package com.example.android.memoization.ui.features.stackscreen
 
 import android.content.Context
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -17,8 +19,11 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Circle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -33,15 +38,22 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,6 +64,7 @@ import com.example.android.memoization.R
 import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.data.model.PracticeSides
 import com.example.android.memoization.data.model.WordPair
+import com.example.android.memoization.domain.search.PairSearch
 import com.example.android.memoization.extensions.checkLength
 import com.example.android.memoization.ui.composables.components.AddNewCardFab
 import com.example.android.memoization.ui.composables.components.CustomAddFab
@@ -79,6 +92,7 @@ fun StackScreen(
     val state by viewModel.getDataToDisplay().collectAsStateWithLifecycle(initialValue = LoadingState.Loading)
     val practice by viewModel.practiceSides.collectAsStateWithLifecycle()
     val showDialog by viewModel.showEditStackDialog.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -124,7 +138,12 @@ fun StackScreen(
         practice = practice,
         snackbarHostState = snackbarHostState,
         onEditStack = { viewModel.showEditStackDialog(true) },
-        onDismissDialog = { viewModel.showEditStackDialog(false) })
+        onDismissDialog = { viewModel.showEditStackDialog(false) },
+        searchQuery = searchQuery,
+        onOpenSearch = viewModel::openSearch,
+        onCloseSearch = viewModel::closeSearch,
+        onSearchQueryChange = viewModel::onSearchQueryChange,
+    )
 }
 
 
@@ -142,6 +161,10 @@ fun DisplayStackState(
     onEditStack: () -> Unit,
     onDismissDialog: () -> Unit,
     snackbarHostState: SnackbarHostState,
+    searchQuery: String? = null,
+    onOpenSearch: () -> Unit = {},
+    onCloseSearch: () -> Unit = {},
+    onSearchQueryChange: (String) -> Unit = {},
 ) {
 
     when (state) {
@@ -157,6 +180,10 @@ fun DisplayStackState(
             onEditStack = onEditStack,
             onDismissDialog = onDismissDialog,
             snackbarHostState = snackbarHostState,
+            searchQuery = searchQuery,
+            onOpenSearch = onOpenSearch,
+            onCloseSearch = onCloseSearch,
+            onSearchQueryChange = onSearchQueryChange,
         )
 
         is LoadingState.Loading -> DisplayLoadingStack()
@@ -170,6 +197,8 @@ fun DisplayStackError() {
 }
 
 /**
+ * The stack's name with its pencil right beside it, and the search at the far end.
+ *
  * MotionAppBar leaves its children unconstrained, so the title never gets laid out -
  * a plain bar until that motion scene is fixed.
  */
@@ -177,6 +206,7 @@ fun DisplayStackError() {
 fun StackAppBar(
     stackName: String,
     modifier: Modifier = Modifier,
+    onSearch: (() -> Unit)? = null,
     onEdit: (() -> Unit)? = null,
 ) {
     Row(
@@ -184,25 +214,88 @@ fun StackAppBar(
             .fillMaxWidth()
             .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            text = stackName,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f, fill = false)
-        )
-        if (onEdit != null) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = stackName,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false)
+            )
+            if (onEdit != null) {
+                ClickableVectorIcon(
+                    imageVector = Icons.Outlined.Edit,
+                    contentDescription = R.string.edit_stack_desc,
+                    onClick = onEdit,
+                    modifier = Modifier.padding(start = 12.dp)
+                )
+            }
+        }
+        if (onSearch != null) {
             ClickableVectorIcon(
-                imageVector = Icons.Outlined.Edit,
-                contentDescription = R.string.edit_stack_desc,
-                onClick = onEdit,
+                imageVector = Icons.Filled.Search,
+                contentDescription = R.string.search_desc,
+                onClick = onSearch,
                 modifier = Modifier.padding(start = 16.dp)
             )
         }
     }
+}
+
+/**
+ * The app bar while searching: the title gives way to a text box, the arrow or the system back
+ * closes it, the cross empties it. The keyboard comes up as soon as it opens.
+ */
+@Composable
+fun StackSearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val focusRequester = remember { FocusRequester() }
+    BackHandler(onBack = onClose)
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ClickableVectorIcon(
+            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = R.string.close_search_desc,
+            onClick = onClose,
+        )
+        TextField(
+            value = query,
+            onValueChange = onQueryChange,
+            singleLine = true,
+            placeholder = { Text(stringResource(R.string.search_in_stack)) },
+            trailingIcon = if (query.isEmpty()) null else {
+                {
+                    ClickableVectorIcon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = R.string.clear_search_desc,
+                        onClick = { onQueryChange("") },
+                    )
+                }
+            },
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent,
+            ),
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 8.dp)
+                .focusRequester(focusRequester)
+        )
+    }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
 }
 
 @Composable
@@ -239,8 +332,16 @@ fun DisplayStack(
     onEditStack: () -> Unit,
     onDismissDialog: () -> Unit,
     navigateToEditPair: (wordPair: WordPair, stack: MemoStack) -> Unit,
+    searchQuery: String? = null,
+    onOpenSearch: () -> Unit = {},
+    onCloseSearch: () -> Unit = {},
+    onSearchQueryChange: (String) -> Unit = {},
 ) {
     val lazyListState = rememberLazyListState()
+    // Newest first: ids grow with insertion, so this is "last added on top".
+    val words = remember(currentStack.words, searchQuery) {
+        PairSearch.filter(currentStack.words.sortedByDescending { it.wordPairId }, searchQuery ?: "")
+    }
 
     if (showDialog) {
         EditStackDialog(
@@ -253,10 +354,19 @@ fun DisplayStack(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            StackAppBar(
-                stackName = currentStack.name,
-                onEdit = onEditStack
-            )
+            if (searchQuery != null) {
+                StackSearchBar(
+                    query = searchQuery,
+                    onQueryChange = onSearchQueryChange,
+                    onClose = onCloseSearch,
+                )
+            } else {
+                StackAppBar(
+                    stackName = currentStack.name,
+                    onSearch = onOpenSearch,
+                    onEdit = onEditStack,
+                )
+            }
         },
         floatingActionButtonPosition = FabPosition.End,
         floatingActionButton = {
@@ -273,14 +383,23 @@ fun DisplayStack(
         },
         content = { innerPadding ->
             Box(modifier = Modifier.padding(innerPadding)) {
-                WordList(
-                    // Newest first: ids grow with insertion, so this is "last added on top".
-                    words = currentStack.words.sortedByDescending { it.wordPairId },
-                    navigateToEditPair = { navigateToEditPair(it, currentStack) },
-                    deletePair = deletePair,
-                    practice = practice,
-                    listState = lazyListState,
-                )
+                if (words.isEmpty() && !searchQuery.isNullOrBlank()) {
+                    Text(
+                        text = stringResource(R.string.no_pairs_found),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 48.dp)
+                    )
+                } else {
+                    WordList(
+                        words = words,
+                        navigateToEditPair = { navigateToEditPair(it, currentStack) },
+                        deletePair = deletePair,
+                        practice = practice,
+                        listState = lazyListState,
+                    )
+                }
             }
         }
     )
