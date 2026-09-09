@@ -1,5 +1,6 @@
 package com.example.android.memoization.data.database.stackdb
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.example.android.memoization.data.database.TableNames.STACK_TABLE
@@ -15,7 +16,11 @@ data class StackEntity(
     override var isVisible: Boolean = true,
     override val fromLanguage: String? = null,
     override val toLanguage: String? = null,
-    override var pinnedTime: Long? = null
+    override var pinnedTime: Long? = null,
+    @ColumnInfo(defaultValue = "0")
+    override val tiredSessions: Int = 0,
+    @ColumnInfo(defaultValue = "0")
+    override val tiredAnswersSum: Int = 0,
 ) : BaseStack {
 
     companion object {
@@ -28,7 +33,9 @@ data class StackEntity(
                 pinnedTime = stack.pinnedTime,
                 isVisible = stack.isVisible,
                 fromLanguage = stack.fromLanguage,
-                toLanguage = stack.toLanguage
+                toLanguage = stack.toLanguage,
+                tiredSessions = stack.tiredSessions,
+                tiredAnswersSum = stack.tiredAnswersSum,
             )
         }
     }

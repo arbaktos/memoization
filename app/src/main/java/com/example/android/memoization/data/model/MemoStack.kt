@@ -11,6 +11,8 @@ data class MemoStack(
     override val fromLanguage: String? = null,
     override val toLanguage: String? = null,
     override var pinnedTime: Long? = null,
+    override val tiredSessions: Int = 0,
+    override val tiredAnswersSum: Int = 0,
 ) : BaseStack, DismissableItem {
 
     var words: MutableList<WordPair> = mutableListOf()

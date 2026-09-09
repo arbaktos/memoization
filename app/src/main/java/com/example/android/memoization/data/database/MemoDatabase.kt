@@ -15,7 +15,7 @@ import com.example.android.memoization.data.database.wordpairdb.WordPairEntity
         StackEntity::class, WordPairEntity::class, SideEntity::class,
         SessionEntity::class, ReviewLogEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 abstract class MemoDatabase : RoomDatabase() {
@@ -27,7 +27,7 @@ abstract class MemoDatabase : RoomDatabase() {
          * empty and bumping the version makes Room throw on open, which is the point:
          * a crash is recoverable, a wiped vocabulary is not.
          */
-        val MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+        val MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
     }
 }
 
@@ -181,6 +181,31 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_review_log_table_ratedAt` ON `review_log_table` (`ratedAt`)")
     }
 }
+
+/**
+ * Sessions lose their size and gain an ending. Each stack keeps the running mean of where the
+ * learner says "Enough for today" (two counters, see Stamina); a session records how it ended
+ * (SessionEnding) and how many sides it closed. Additive: no stack has a stop recorded yet, and
+ * a session finished before this version could only have drained its queue, so it is marked
+ * so with every side it was given closed. A session left open before this version stays open:
+ * whether it was walked out of or killed is not known.
+ */
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `stack_entity_table` ADD COLUMN `tiredSessions` INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE `stack_entity_table` ADD COLUMN `tiredAnswersSum` INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE `session_table` ADD COLUMN `sidesDone` INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE `session_table` ADD COLUMN `ending` INTEGER")
+        db.execSQL(
+            "UPDATE `session_table` SET `ending` = $ENDING_DRAINED, `sidesDone` = `sidesOffered` " +
+                "WHERE `finishedAt` IS NOT NULL"
+        )
+    }
+}
+
+/** SessionEnding.DRAINED.code as it was at version 5; SessionEndingTest pins the two together. */
+private const val ENDING_DRAINED = 1
+const val MIGRATION_ENDING_DRAINED_FOR_TEST = ENDING_DRAINED
 
 private const val SHOWN_WORD = 0
 private const val SHOWN_MEANING = 1

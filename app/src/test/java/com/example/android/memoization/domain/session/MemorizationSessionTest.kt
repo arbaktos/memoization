@@ -50,16 +50,14 @@ class MemorizationSessionTest {
     }
 
     @Test
-    fun `shuffles once on entry and then keeps the order`() {
+    fun `asks the sides in the order it was given`() {
         val ids = LongArray(20) { it + 1L }
         val s = session(*ids, seed = 7)
 
         val first = s.state().current
         assertEquals(first, s.state().current)
 
-        val order = s.drain()
-        assertEquals(ids.toSet(), order.toSet())
-        assertNotEquals("a 20-item shuffle should not be the identity", ids.toList(), order)
+        assertEquals(ids.toList(), s.drain())
     }
 
     @Test
@@ -74,15 +72,81 @@ class MemorizationSessionTest {
     }
 
     @Test
-    fun `a session that left sides waiting is finished but not done for today`() {
-        val s = MemorizationSession(listOf(item(1)), Random(1), scheduler, waiting = 12)
+    fun `a session answered to the end is done for today`() {
+        val s = MemorizationSession(listOf(item(1)), Random(1), scheduler)
 
-        assertEquals(12, s.state().waiting)
+        assertEquals(0, s.state().waiting)
         assertFalse(s.state().isFinished)
         s.rate(Rating.Good, now)
         assertTrue(s.state().isFinished)
-        assertFalse(s.state().isDoneForToday)
-        assertEquals(12, s.state().waiting)
+        assertTrue(s.state().isDoneForToday)
+        assertEquals(1, s.state().done)
+        assertEquals(0, s.state().left)
+    }
+
+    @Test
+    fun `done and left add up to the total whether the session goes on or is stopped`() {
+        val s = MemorizationSession(listOf(item(1), item(2), item(3)), Random(1), scheduler, offerStopFrom = 1)
+        assertEquals(0, s.state().done)
+        assertEquals(3, s.state().left)
+
+        s.rate(Rating.Good, now)
+        s.rate(Rating.Again, now)
+        // One closed; the Again side is back in the queue, so it is not done and still left.
+        assertEquals(1, s.state().done)
+        assertEquals(2, s.state().left)
+
+        val stopped = s.stop()
+        assertEquals(1, stopped.done)
+        assertEquals(2, stopped.left)
+        assertEquals(2, stopped.waiting)
+    }
+
+    @Test
+    fun `stopping is offered after enough answers and withdrawn once the queue is empty`() {
+        val s = MemorizationSession(listOf(item(1), item(2), item(3)), Random(1), scheduler, offerStopFrom = 2)
+
+        assertFalse(s.state().stopOffered)
+        s.rate(Rating.Good, now)
+        assertFalse(s.state().stopOffered)
+        s.rate(Rating.Good, now)
+        assertTrue(s.state().stopOffered)
+        s.rate(Rating.Good, now)
+        assertTrue(s.state().isFinished)
+        assertFalse("nothing to stop once the queue has drained", s.state().stopOffered)
+    }
+
+    @Test
+    fun `an answer after Again counts towards the offer like any other tap`() {
+        val s = MemorizationSession(listOf(item(1)), Random(1), scheduler, offerStopFrom = 2)
+
+        s.rate(Rating.Again, now)
+        assertEquals(1, s.answered)
+        assertFalse(s.state().stopOffered)
+        assertFalse(s.state().isFinished)
+        // The same side came back; this tap is the second answer.
+        s.rate(Rating.Again, now)
+        assertEquals(2, s.answered)
+        assertTrue(s.state().stopOffered)
+    }
+
+    @Test
+    fun `stopping ends the session and leaves the rest of the queue waiting`() {
+        val s = MemorizationSession(
+            listOf(item(1), item(2), item(3), item(4)), Random(1), scheduler, offerStopFrom = 1
+        )
+        s.rate(Rating.Good, now)
+        s.rate(Rating.Again, now)
+
+        val state = s.stop()
+
+        assertTrue(state.isFinished)
+        assertFalse(state.isDoneForToday)
+        assertEquals(0, state.remaining)
+        // Two never answered plus the one re-queued after Again.
+        assertEquals(3, state.waiting)
+        assertEquals(2, s.answered)
+        assertFalse(state.stopOffered)
     }
 
     @Test

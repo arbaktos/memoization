@@ -34,6 +34,13 @@ interface MemoDao {
     @Update
     suspend fun updateStack(stackEntity: StackEntity)
 
+    /** One more "Enough for today" on this stack, in place: no snapshot of the row to go stale. */
+    @Query(
+        "UPDATE stack_entity_table SET tiredSessions = tiredSessions + 1, " +
+            "tiredAnswersSum = tiredAnswersSum + :answers WHERE stackId = :stackId"
+    )
+    suspend fun recordStoppedAt(stackId: Long, answers: Int)
+
     //words
     @Insert
     suspend fun insertWordPair(wordPairEntity: WordPairEntity): Long
@@ -76,8 +83,11 @@ interface MemoDao {
     @Insert
     suspend fun insertSession(session: SessionEntity): Long
 
-    @Query("UPDATE session_table SET finishedAt = :finishedAt WHERE sessionId = :sessionId")
-    suspend fun finishSession(sessionId: Long, finishedAt: Long)
+    @Query(
+        "UPDATE session_table SET finishedAt = :finishedAt, ending = :ending, " +
+            "sidesDone = :sidesDone, sidesWaiting = :sidesWaiting WHERE sessionId = :sessionId"
+    )
+    suspend fun finishSession(sessionId: Long, finishedAt: Long, ending: Int, sidesDone: Int, sidesWaiting: Int)
 
     @Insert
     suspend fun insertReview(review: ReviewLogEntity): Long

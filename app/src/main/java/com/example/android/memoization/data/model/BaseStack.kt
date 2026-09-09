@@ -10,4 +10,8 @@ interface BaseStack {
     var pinnedTime: Long?
     val fromLanguage: String?
     val toLanguage:String?
+    /** Sessions with this stack ended with "Enough for today"; see domain.session.Stamina. */
+    val tiredSessions: Int
+    /** Answers given in those sessions, summed. */
+    val tiredAnswersSum: Int
 }

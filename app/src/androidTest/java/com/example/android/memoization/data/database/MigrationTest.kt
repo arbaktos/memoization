@@ -123,7 +123,7 @@ class MigrationTest {
             )
         }
 
-        val db = helper.runMigrationsAndValidate(testDb, 4, true, *MemoDatabase.MIGRATIONS)
+        val db = helper.runMigrationsAndValidate(testDb, 5, true, *MemoDatabase.MIGRATIONS)
 
         db.query("SELECT stability FROM side_entity_table WHERE wordPairId = 1 AND shown = 0").use {
             it.moveToFirst()
@@ -163,6 +163,64 @@ class MigrationTest {
     }
 
     @Test
+    fun migration4To5_givesEveryStackAnEmptyStopRecordAndTouchesNothingElse() {
+        helper.createDatabase(testDb, 4).use { db ->
+            db.insert("stack_entity_table", 0, ContentValues().apply {
+                put("name", "Serbian"); put("numRep", 0); put("stackId", 1L)
+                put("hasWords", 1); put("isVisible", 1); put("pinnedTime", lastRep)
+            })
+            db.execSQL(
+                "INSERT INTO session_table (sessionId, stackId, startedAt, finishedAt, sidesOffered, sidesWaiting) " +
+                    "VALUES (1, 1, $lastRep, NULL, 37, 4), (2, 1, $lastRep, ${lastRep + 60_000}, 12, 0)"
+            )
+        }
+
+        val db = helper.runMigrationsAndValidate(testDb, 5, true, MIGRATION_4_5)
+
+        db.query("SELECT name, pinnedTime, tiredSessions, tiredAnswersSum FROM stack_entity_table WHERE stackId = 1").use {
+            it.moveToFirst()
+            assertEquals("Serbian", it.getString(0))
+            assertEquals(lastRep, it.getLong(1))
+            assertEquals(0, it.getInt(2))
+            assertEquals(0, it.getInt(3))
+        }
+        // An old session left open stays open: how it ended is not known.
+        db.query("SELECT finishedAt, ending, sidesDone, sidesWaiting FROM session_table WHERE sessionId = 1").use {
+            it.moveToFirst()
+            assertTrue(it.isNull(0))
+            assertTrue(it.isNull(1))
+            assertEquals(0, it.getInt(2))
+            assertEquals(4, it.getInt(3))
+        }
+        // An old finished session could only have drained its queue.
+        db.query("SELECT ending, sidesDone, sidesWaiting FROM session_table WHERE sessionId = 2").use {
+            it.moveToFirst()
+            assertEquals(MIGRATION_ENDING_DRAINED_FOR_TEST, it.getInt(0))
+            assertEquals(12, it.getInt(1))
+            assertEquals(0, it.getInt(2))
+        }
+    }
+
+    @Test
+    fun stoppingAStackAddsUpInPlace() = runBlocking {
+        val db = Room.inMemoryDatabaseBuilder(
+            InstrumentationRegistry.getInstrumentation().targetContext,
+            MemoDatabase::class.java
+        ).build()
+        val stackId = db.memoDao.insertStack(
+            com.example.android.memoization.data.database.stackdb.StackEntity(name = "Serbian")
+        )
+
+        db.memoDao.recordStoppedAt(stackId, 30)
+        db.memoDao.recordStoppedAt(stackId, 36)
+
+        val stack = db.memoDao.getStackById(stackId)
+        assertEquals(2, stack.tiredSessions)
+        assertEquals(66, stack.tiredAnswersSum)
+        db.close()
+    }
+
+    @Test
     fun aSessionAndItsAnswersRoundTripThroughTheLog() = runBlocking {
         val db = Room.inMemoryDatabaseBuilder(
             InstrumentationRegistry.getInstrumentation().targetContext,
@@ -171,7 +229,7 @@ class MigrationTest {
 
         val sessionId = db.memoDao.insertSession(
             com.example.android.memoization.data.database.logdb.SessionEntity(
-                stackId = 1, startedAt = lastRep, sidesOffered = 2, sidesWaiting = 5
+                stackId = 1, startedAt = lastRep, sidesOffered = 2
             )
         )
         db.memoDao.insertReview(
@@ -188,11 +246,13 @@ class MigrationTest {
                 dueAfter = null,
             )
         )
-        db.memoDao.finishSession(sessionId, lastRep + 10_000)
+        db.memoDao.finishSession(sessionId, lastRep + 10_000, ending = 2, sidesDone = 1, sidesWaiting = 1)
 
         val session = db.memoDao.getSession(sessionId)!!
         assertEquals(lastRep + 10_000, session.finishedAt)
-        assertEquals(5, session.sidesWaiting)
+        assertEquals(2, session.ending)
+        assertEquals(1, session.sidesDone)
+        assertEquals(1, session.sidesWaiting)
         val reviews = db.memoDao.getReviewsOfSession(sessionId)
         assertEquals(2, reviews.size)
         assertFalse(reviews[0].requeued)

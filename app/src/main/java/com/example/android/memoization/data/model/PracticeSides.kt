@@ -13,8 +13,7 @@ enum class PracticeSides {
      * Level3, a memory holding a week - the pair hands over to its meaning side: the word is
      * no longer asked for, the learner is shown the meaning and recalls the word. The hand-over
      * takes effect the day after the word side got there, so a word settled in this sitting is
-     * not asked for from the other side in the same sitting, and what a session leaves waiting
-     * is what the stack list shows afterwards. It holds from then on, so a lapse of the word
+     * not asked for from the other side in the same sitting. It holds from then on, so a lapse of the word
      * side never takes back a meaning side that has already been rated.
      */
     SMART_SWITCH,

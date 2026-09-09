@@ -10,8 +10,8 @@ import com.example.android.memoization.R
 import com.example.android.memoization.ui.theme.memoButtonColors
 
 /**
- * Shown when the session's queue is empty. "Done for today" only if nothing else in the stack
- * is due; otherwise it says how many sides are waiting for another sitting.
+ * Shown when the session is over. "Done for today" if the queue was answered to the end;
+ * after "Enough for today" it says how many sides are left waiting for another sitting.
  */
 @Composable
 fun StackCompleteDialog(

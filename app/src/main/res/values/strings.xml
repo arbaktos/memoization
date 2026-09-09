@@ -6,6 +6,7 @@
     <string name="cancel">Cancel</string>
     <string name="new_stack_name">New stack name</string>
     <string name="stack_complete">Done for today</string>
+    <string name="enough_for_today">Enough for today</string>
     <plurals name="session_complete_waiting">
         <item quantity="one">Session done \u2014 %d more waiting</item>
         <item quantity="other">Session done \u2014 %d more waiting</item>

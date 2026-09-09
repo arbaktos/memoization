@@ -6,9 +6,11 @@ import com.example.android.memoization.domain.scheduler.Rating
 import kotlin.random.Random
 
 /**
- * One sitting with a stack: the sides waiting to be answered, shuffled once on entry and worked
- * through one at a time. A side rated Again goes to the back of the queue and keeps coming round
- * until it is rated Hard or Good, so nothing leaves the session unrecalled.
+ * One sitting with a stack: everything due, in the order given (see dueSessionSides: the most
+ * forgotten first), worked through one at a time. A side rated Again goes to the back of the
+ * queue and keeps coming round until it is rated Hard or Good, so nothing leaves the session
+ * unrecalled. There is no size: the session ends when the queue is empty, when the learner
+ * says they have had enough ([stop]), or when they leave the screen.
  *
  * Pure Kotlin - the ViewModel feeds it ratings and persists whatever [Outcome.toPersist] says.
  */
@@ -16,8 +18,8 @@ class MemorizationSession(
     sides: List<SessionSide>,
     random: Random = Random.Default,
     private val scheduler: Fsrs = Fsrs(random = random),
-    /** Due sides of the stack that did not fit this session; they are still there after it. */
-    private val waiting: Int = 0,
+    /** Answers after which the learner is offered to stop; see [Stamina]. */
+    private val offerStopFrom: Int = Stamina.DEFAULT_OFFER,
 ) {
 
     data class State(
@@ -29,12 +31,20 @@ class MemorizationSession(
         val total: Int,
         /** Bumped on every rating so the UI can tell "same side, next attempt" apart. */
         val serial: Int,
-        /** Due sides of the stack left out of this session; another sitting would take them. */
+        /** Sides still in the queue when the learner stopped; another sitting would take them. */
         val waiting: Int,
+        /** True once enough has been answered that stopping here is offered; see [stop]. */
+        val stopOffered: Boolean,
     ) {
         val isFinished: Boolean get() = current == null
 
-        /** True once the queue is empty and nothing else in the stack is due. */
+        /** Sides answered to a close, whether the session went on or was stopped after. */
+        val done: Int get() = total - remaining - waiting
+
+        /** Sides not got to: still queued, or left behind by [stop]. */
+        val left: Int get() = remaining + waiting
+
+        /** True once the queue is empty because everything in it was answered. */
         val isDoneForToday: Boolean get() = isFinished && waiting == 0
 
         /** Share of the session done, 0f..1f; an empty session counts as done. */
@@ -61,12 +71,34 @@ class MemorizationSession(
         val after: Side,
     )
 
-    private val queue = ArrayDeque(sides.shuffled(random))
+    private val queue = ArrayDeque(sides)
     private val total = sides.size
     private val lapsedIds = mutableSetOf<Long>()
     private var serial = 0
+    private var waiting = 0
 
-    fun state(): State = State(queue.firstOrNull(), queue.size, total, serial, waiting)
+    fun state(): State = State(
+        current = queue.firstOrNull(),
+        remaining = queue.size,
+        total = total,
+        serial = serial,
+        waiting = waiting,
+        stopOffered = queue.isNotEmpty() && serial >= offerStopFrom,
+    )
+
+    /** Answers given so far, every tap counted - what "Enough for today" is measured in. */
+    val answered: Int get() = serial
+
+    /**
+     * Enough for today: the queue is dropped and its sides are left waiting for another
+     * sitting. Nothing needs writing for them - a side rated Again already had its lapse
+     * saved, and one never answered is untouched and still due.
+     */
+    fun stop(): State {
+        waiting = queue.size
+        queue.clear()
+        return state()
+    }
 
     /**
      * Again: the schedule is rewritten once, on the first lapse, and the side goes to the back

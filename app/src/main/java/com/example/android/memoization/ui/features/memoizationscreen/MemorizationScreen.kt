@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -42,6 +43,7 @@ fun MemorizationScreen(
     MemorizationBody(
         state = state,
         onRate = viewModel::onRate,
+        onStop = viewModel::onStop,
         onComplete = { navController.navigateToFolderScreen() }
     )
 }
@@ -50,6 +52,7 @@ fun MemorizationScreen(
 fun MemorizationBody(
     state: MemorizationSession.State?,
     onRate: (Rating) -> Unit,
+    onStop: () -> Unit,
     onComplete: () -> Unit,
 ) {
     // null = still loading the stack; nothing to draw yet.
@@ -94,6 +97,15 @@ fun MemorizationBody(
             GoodIcon { onRate(Rating.Good) }
             HardIcon { onRate(Rating.Hard) }
             WrongIcon { onRate(Rating.Again) }
+        }
+        // Offered once the learner is near where they usually stop with this stack; until
+        // then the space stays empty so the rating row does not move.
+        Row(modifier = Modifier.height(48.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (session.stopOffered) {
+                TextButton(onClick = onStop) {
+                    Text(stringResource(R.string.enough_for_today))
+                }
+            }
         }
     }
 }
