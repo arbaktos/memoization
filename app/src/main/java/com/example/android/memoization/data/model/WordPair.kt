@@ -15,13 +15,17 @@ data class WordPair(
     val sides: List<Side> = emptyList(),
 ) : BaseWordPair, DismissableItem {
 
-    fun activeSides(practice: PracticeSides): List<Side> = practice.practised(sides)
+    fun activeSides(
+        practice: PracticeSides,
+        now: Long = System.currentTimeMillis(),
+        zone: TimeZone = TimeZone.getDefault(),
+    ): List<Side> = practice.practised(sides, now, zone)
 
     fun dueSides(
         practice: PracticeSides,
         now: Long = System.currentTimeMillis(),
         zone: TimeZone = TimeZone.getDefault(),
-    ): List<Side> = activeSides(practice).filter { it.isDue(now, zone) }
+    ): List<Side> = activeSides(practice, now, zone).filter { it.isDue(now, zone) }
 
     fun isDue(
         practice: PracticeSides,
@@ -30,8 +34,12 @@ data class WordPair(
     ): Boolean = dueSides(practice, now, zone).isNotEmpty()
 
     /** A pair is only as known as its weakest practised side. */
-    fun level(practice: PracticeSides): WordStatus =
-        activeSides(practice).minByOrNull { it.level.frequency }?.level ?: WordStatus.Level1
+    fun level(
+        practice: PracticeSides,
+        now: Long = System.currentTimeMillis(),
+        zone: TimeZone = TimeZone.getDefault(),
+    ): WordStatus =
+        activeSides(practice, now, zone).minByOrNull { it.level.frequency }?.level ?: WordStatus.Level1
 
     fun front(shown: Shown): String = if (shown == Shown.WORD) word1 else word2.orEmpty()
 

@@ -1,16 +1,22 @@
 package com.example.android.memoization.data.model
 
+import com.example.android.memoization.domain.scheduler.DAY_MILLIS
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.util.TimeZone
 
 class PracticeSidesTest {
 
-    private fun side(shown: Shown, stability: Double? = null) = Side(
+    private val now = 1_800_000_000_000L
+    private val utc: TimeZone = TimeZone.getTimeZone("UTC")
+
+    private fun side(shown: Shown, stability: Double? = null, lastReview: Long? = null) = Side(
         sideId = if (shown == Shown.WORD) 1 else 2,
         wordPairId = 1,
         shown = shown,
         state = if (stability == null) SideState.New else SideState.Review,
         stability = stability,
+        lastReview = lastReview,
     )
 
     private fun shownOf(practice: PracticeSides, vararg sides: Side) =
@@ -52,6 +58,23 @@ class PracticeSidesTest {
         assertEquals(
             listOf(Shown.MEANING),
             shownOf(PracticeSides.SMART_SWITCH, side(Shown.WORD, 7.0), side(Shown.MEANING)),
+        )
+    }
+
+    @Test
+    fun `smart switch hands over the day after the word side got there, not the same day`() {
+        val sides = listOf(side(Shown.WORD, 9.0, lastReview = now), side(Shown.MEANING))
+
+        // Rated up to Level3 today: still the word side, so the meaning side is not due yet.
+        assertEquals(listOf(Shown.WORD), PracticeSides.SMART_SWITCH.practised(sides, now, utc).map { it.shown })
+        assertEquals(
+            listOf(Shown.WORD),
+            PracticeSides.SMART_SWITCH.practised(sides, now + 11 * 3_600_000L, utc).map { it.shown }
+        )
+        // From the next calendar day on, the meaning side.
+        assertEquals(
+            listOf(Shown.MEANING),
+            PracticeSides.SMART_SWITCH.practised(sides, now + DAY_MILLIS, utc).map { it.shown }
         )
     }
 

@@ -53,8 +53,14 @@ two by then - takes session slots from words that need them. Replaced by the han
 - Existing installs with no stored setting move to Smart switch on update. On a library where
   the word sides already have history, meaning sides of pairs at Level3 or above become New and
   due at once, within the session limit.
+- The hand-over takes effect the day after the word side reached Level3, not the moment it did
+  (since 2026-09-09). Before, a word settled in a sitting made its meaning side due at once, so
+  a session's "N more waiting" was short by the number of pairs that settled during it - the
+  stack list, counted afterwards, showed more - and a word could be asked for from the other
+  side in the same sitting. On the day it settles the pair is done for the day at Level3; the
+  next day it is the meaning side, New and due.
 - A pair's level is still that of its weakest practised side, so a pair drops to Level1 on the
-  day it hands over: the meaning side is New and it is now the only side practised.
+  day the meaning side takes over: it is New and it is now the only side practised.
 - The word side keeps its schedule in the database, untouched. It is only unscheduled: a
   learner who moves to Word to meaning or Both sides gets its history back as it was.
 - The hand-over level is a constant (`PracticeSides.HANDOVER_LEVEL`); a setting can come later.

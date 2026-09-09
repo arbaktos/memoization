@@ -1,5 +1,7 @@
 package com.example.android.memoization.data.model
 
+import java.util.TimeZone
+
 data class MemoStack(
     override val name: String,
     override var numRep: Int = 0, //to schedule check days
@@ -21,12 +23,14 @@ data class MemoStack(
     fun duePairs(
         practice: PracticeSides,
         now: Long = System.currentTimeMillis(),
-    ): List<WordPair> = words.filter { it.isDue(practice, now) }
+        zone: TimeZone = TimeZone.getDefault(),
+    ): List<WordPair> = words.filter { it.isDue(practice, now, zone) }
 
     fun hasDue(
         practice: PracticeSides,
         now: Long = System.currentTimeMillis(),
-    ): Boolean = words.any { it.isDue(practice, now) }
+        zone: TimeZone = TimeZone.getDefault(),
+    ): Boolean = words.any { it.isDue(practice, now, zone) }
 
     val needsTranslation = this.fromLanguage != null && this.toLanguage != null
 }

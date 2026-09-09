@@ -5,8 +5,11 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.TimeZone
 
 class WordPairTest {
+
+    private val utc: TimeZone = TimeZone.getTimeZone("UTC")
 
     private val now = 1_800_000_000_000L
 
@@ -44,6 +47,24 @@ class WordPairTest {
         assertEquals(listOf(Shown.MEANING), known.activeSides(PracticeSides.SMART_SWITCH).map { it.shown })
         assertTrue(known.isDue(PracticeSides.SMART_SWITCH, now))
         assertEquals(WordStatus.Level1, known.level(PracticeSides.SMART_SWITCH))
+    }
+
+    @Test
+    fun `on the day the word side settles the pair is done, and due again tomorrow from the meaning side`() {
+        val settledToday = pair(
+            side(Shown.WORD, 8.0, 8).copy(lastReview = now),
+            side(Shown.MEANING, null, null),
+        )
+
+        assertFalse(settledToday.isDue(PracticeSides.SMART_SWITCH, now, utc))
+        assertEquals(WordStatus.Level3, settledToday.level(PracticeSides.SMART_SWITCH, now, utc))
+        val tomorrow = now + DAY_MILLIS
+        assertTrue(settledToday.isDue(PracticeSides.SMART_SWITCH, tomorrow, utc))
+        assertEquals(
+            listOf(Shown.MEANING),
+            settledToday.activeSides(PracticeSides.SMART_SWITCH, tomorrow, utc).map { it.shown }
+        )
+        assertEquals(WordStatus.Level1, settledToday.level(PracticeSides.SMART_SWITCH, tomorrow, utc))
     }
 
     @Test
