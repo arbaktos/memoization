@@ -54,6 +54,16 @@ class Fsrs(
     fun retrievability(stability: Double, elapsedDays: Long): Double =
         (1 + factor * elapsedDays / stability).pow(decay)
 
+    /**
+     * The chance of recalling [side] at [now], from its stability and the calendar days since
+     * it was last rated; null for a side never rated, which has no memory to measure.
+     */
+    fun retrievability(side: Side, now: Long): Double? {
+        val stability = side.stability ?: return null
+        val elapsed = side.lastReview?.let { elapsedDays(it, now, zone) } ?: 0
+        return retrievability(stability, elapsed)
+    }
+
     /** Days until retrievability would fall to the desired retention; at least one, whole days. */
     fun nextInterval(stability: Double): Int {
         val days = stability / factor * (desiredRetention.pow(1 / decay) - 1)

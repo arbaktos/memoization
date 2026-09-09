@@ -3,6 +3,7 @@ package com.example.android.memoization.domain.session
 import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.data.model.PracticeSides
 import com.example.android.memoization.data.model.Side
+import com.example.android.memoization.domain.scheduler.Fsrs
 import java.util.TimeZone
 
 /** One thing to answer in a session: a side, with the texts to show and to recall. */
@@ -28,9 +29,12 @@ object SessionDefaults {
 }
 
 /**
- * What this stack asks for now: the most overdue practised sides first, then sides never
- * practised, up to [limit] for this session. Sides answered earlier today have been scheduled
- * forward and are simply not due, so a second sitting picks up the next batch.
+ * What this stack asks for now: the practised sides that are due, the most forgotten first,
+ * then sides never practised, up to [limit] for this session. "Most forgotten" is FSRS
+ * retrievability, the chance of recalling the side today: a side a day late on a one-day
+ * interval is far more forgotten than one three days late on a month, and it goes first. Sides
+ * answered earlier today have been scheduled forward and are simply not due, so a second
+ * sitting picks up the next batch.
  *
  * The order here is only the selection; MemorizationSession shuffles what it is given.
  */
@@ -39,14 +43,20 @@ fun MemoStack.dueSessionSides(
     now: Long = System.currentTimeMillis(),
     zone: TimeZone = TimeZone.getDefault(),
     limit: Int = SessionDefaults.SESSION_LIMIT,
+    scheduler: Fsrs = Fsrs(zone = zone),
 ): List<SessionSide> =
     words.flatMap { pair ->
         pair.dueSides(practice, now, zone).map { side ->
             SessionSide(side = side, front = pair.front(side.shown), back = pair.back(side.shown))
         }
     }
-        // Earliest due date first; sides never practised have no due date and fill what is left.
-        .sortedWith(compareBy(nullsLast()) { it.side.due })
+        .sortedWith(
+            // Lowest retrievability first. Sides due on the day FSRS asked for all sit at the
+            // desired retention, so among them the weaker memory goes first; sides never
+            // practised have no retrievability and fill what is left.
+            compareBy<SessionSide, Double?>(nullsLast()) { scheduler.retrievability(it.side, now) }
+                .thenBy(nullsLast()) { it.side.stability }
+        )
         .take(limit)
 
 /** Every practised side of this stack that is due now, whether or not it fits one session. */

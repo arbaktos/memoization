@@ -8,10 +8,28 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.TimeZone
 
 class MemoStackTest {
 
     private val now = 1_800_000_000_000L
+    private val utc: TimeZone = TimeZone.getTimeZone("UTC")
+
+    /** A word side rated [intervalDays] before its due date, which was [overdueDays] ago. */
+    private fun scheduledPair(id: Long, stability: Double, intervalDays: Long, overdueDays: Long) = WordPair(
+        parentStackId = 1,
+        word1 = "word$id",
+        word2 = "meaning$id",
+        wordPairId = id,
+        sides = listOf(
+            Side(
+                sideId = id, wordPairId = id, shown = Shown.WORD,
+                state = SideState.Review, stability = stability,
+                due = now - overdueDays * DAY_MILLIS,
+                lastReview = now - (overdueDays + intervalDays) * DAY_MILLIS,
+            )
+        )
+    )
 
     private fun overduePair(id: Long, overdueDays: Long) = WordPair(
         parentStackId = 1,
@@ -126,6 +144,32 @@ class MemoStackTest {
         assertEquals(10, session.size)
         // The ten longest overdue are ids 41..50; the order among them is the session's business.
         assertEquals((41L..50L).toSet(), session.map { it.side.sideId }.toSet())
+    }
+
+    @Test
+    fun `how late a side is counts against its interval, not in days`() {
+        val stack = stack(
+            // Three days late on a month: still about nine in ten recalled.
+            scheduledPair(1, stability = 30.0, intervalDays = 30, overdueDays = 3),
+            // One day late on a one-day interval: the interval doubled, half of it forgotten.
+            scheduledPair(2, stability = 1.0, intervalDays = 1, overdueDays = 1),
+        )
+
+        val session = stack.dueSessionSides(PracticeSides.WORD_TO_MEANING, now, utc, limit = 1)
+
+        assertEquals(listOf(2L), session.map { it.side.sideId })
+    }
+
+    @Test
+    fun `among sides due on the day asked for, the weaker memory goes first`() {
+        val stack = stack(
+            scheduledPair(1, stability = 20.0, intervalDays = 20, overdueDays = 0),
+            scheduledPair(2, stability = 2.0, intervalDays = 2, overdueDays = 0),
+        )
+
+        val session = stack.dueSessionSides(PracticeSides.WORD_TO_MEANING, now, utc, limit = 1)
+
+        assertEquals(listOf(2L), session.map { it.side.sideId })
     }
 
     @Test

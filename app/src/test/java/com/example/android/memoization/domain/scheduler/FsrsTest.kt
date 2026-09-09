@@ -89,6 +89,18 @@ class FsrsTest {
     }
 
     @Test
+    fun `a side's retrievability counts calendar days since its last rating`() {
+        val now = 1_800_000_000_000L
+        val side = newSide().copy(state = SideState.Review, stability = 10.0, difficulty = 5.0, lastReview = now)
+
+        assertEquals(null, fsrs.retrievability(newSide(), now))
+        assertEquals(1.0, fsrs.retrievability(side, now)!!, eps)
+        assertEquals(fsrs.retrievability(10.0, 10), fsrs.retrievability(side, now + 10 * DAY_MILLIS)!!, eps)
+        // Under 24 hours, but the next calendar day: one day elapsed, not none.
+        assertEquals(fsrs.retrievability(10.0, 1), fsrs.retrievability(side, now + 20 * 3_600_000L)!!, eps)
+    }
+
+    @Test
     fun `retrievability starts at one and decays`() {
         assertEquals(1.0, fsrs.retrievability(10.0, 0), eps)
         val afterTen = fsrs.retrievability(10.0, 10)
