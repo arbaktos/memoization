@@ -6,6 +6,7 @@ import com.example.android.memoization.data.model.Shown
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.TimeZone
 import kotlin.random.Random
 
 /**
@@ -16,7 +17,10 @@ import kotlin.random.Random
  */
 class FsrsTest {
 
-    private val fsrs = Fsrs(fuzz = false)
+    private val utc: TimeZone = TimeZone.getTimeZone("UTC")
+
+    // Instants below step by whole days; UTC keeps each step exactly one calendar day.
+    private val fsrs = Fsrs(fuzz = false, zone = utc)
     private val eps = 1e-6
 
     private fun newSide() = Side(sideId = 1, wordPairId = 1, shown = Shown.WORD)
@@ -243,7 +247,7 @@ class FsrsTest {
 
     @Test
     fun `fuzz leaves short intervals alone and keeps long ones in range`() {
-        val fuzzing = Fsrs(random = Random(42))
+        val fuzzing = Fsrs(random = Random(42), zone = utc)
 
         assertEquals(1, fuzzing.fuzzedInterval(1))
         assertEquals(2, fuzzing.fuzzedInterval(2))

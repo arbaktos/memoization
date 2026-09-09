@@ -13,12 +13,13 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.TimeZone
 import kotlin.random.Random
 
 class MemorizationSessionTest {
 
     private val now = 1_800_000_000_000L
-    private val scheduler = Fsrs(fuzz = false)
+    private val scheduler = Fsrs(fuzz = false, zone = TimeZone.getTimeZone("UTC"))
 
     private fun side(id: Long, shown: Shown = Shown.WORD, pairId: Long = id) = Side(
         sideId = id,

@@ -2,6 +2,7 @@ package com.example.android.memoization.domain.scheduler
 
 import com.example.android.memoization.data.model.Side
 import com.example.android.memoization.data.model.SideState
+import java.util.TimeZone
 import kotlin.math.exp
 import kotlin.math.floor
 import kotlin.math.max
@@ -22,6 +23,7 @@ import kotlin.random.Random
  * UI constraint of that library rather than part of the algorithm.
  *
  * Pure Kotlin: no Android, no clock of its own, so it can be tested with fixed instants.
+ * Days elapsed between reviews are calendar days in [zone], the same days due-ness is judged by.
  */
 class Fsrs(
     private val w: DoubleArray = DEFAULT_PARAMETERS,
@@ -29,6 +31,7 @@ class Fsrs(
     private val maximumInterval: Int = MAXIMUM_INTERVAL,
     private val fuzz: Boolean = true,
     private val random: Random = Random.Default,
+    private val zone: TimeZone = TimeZone.getDefault(),
 ) {
     init {
         require(w.size == DEFAULT_PARAMETERS.size) { "FSRS-6 takes ${DEFAULT_PARAMETERS.size} parameters" }
@@ -57,7 +60,7 @@ class Fsrs(
         return min(max(round(days).toInt(), 1), maximumInterval)
     }
 
-    /** A second look on the same day moves stability only a little. */
+    /** A second look on the same calendar day moves stability only a little. */
     fun shortTermStability(stability: Double, rating: Rating): Double {
         var increase = exp(w[17] * (rating.grade - 3 + w[18])) * stability.pow(-w[19])
         if (rating != Rating.Again) increase = max(increase, 1.0)
@@ -125,7 +128,7 @@ class Fsrs(
     fun review(side: Side, rating: Rating, now: Long): Side {
         val stability = side.stability
         val difficulty = side.difficulty
-        val elapsed = side.lastReview?.let { elapsedDays(it, now) }
+        val elapsed = side.lastReview?.let { elapsedDays(it, now, zone) }
 
         val newStability: Double
         val newDifficulty: Double

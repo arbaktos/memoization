@@ -55,6 +55,12 @@ stability keeps all three stable.
 - Intervals are fuzzed as in Anki, so a batch of pairs added on one day does not keep returning
   as one lump. Due-ness is judged by calendar day, so a side rated at 23:59 is available again
   the moment the next day starts.
+- Days elapsed between two reviews are calendar days too, as Anki counts them, not the whole
+  24-hour spans py-fsrs counts. Until 2026-09-09 they were the latter, and a learner who sits
+  down at about the same hour each day paid for it: whenever today's sitting began a few
+  minutes earlier than yesterday's, every side from yesterday was scored as a same-day review -
+  Hard grew stability by nothing, Good by a few percent - and came back the next day again. On
+  a real device that was 73 of 440 follow-up answers over a fortnight.
 - The 2 to 3 migration gives every pair two sides. The word side inherits the old schedule - its
   level becomes the stability in days it stood for, its due date lands where the five-level
   schedule would have put it - and the meaning side starts New. An instrumented `MigrationTest`
