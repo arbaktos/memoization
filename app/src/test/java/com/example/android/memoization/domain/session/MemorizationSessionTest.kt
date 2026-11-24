@@ -175,6 +175,23 @@ class MemorizationSessionTest {
     }
 
     @Test
+    fun `closed sides are tallied by result, a side forgotten on the way counting as forgot`() {
+        val s = session(1, 2, 3, 4)
+        assertEquals(MemorizationSession.Closed(), s.state().closed)
+
+        s.rate(Rating.Good, now)
+        s.rate(Rating.Hard, now)
+        val afterAgain = s.rate(Rating.Again, now).state.closed
+        assertEquals("a forgotten side still owed is not closed yet", MemorizationSession.Closed(good = 1, hard = 1), afterAgain)
+
+        s.rate(Rating.Good, now)
+        val recalled = s.rate(Rating.Good, now).state
+        assertTrue(recalled.isFinished)
+        assertEquals(MemorizationSession.Closed(good = 2, hard = 1, forgot = 1), recalled.closed)
+        assertEquals(recalled.total - recalled.remaining, recalled.closed.total)
+    }
+
+    @Test
     fun `every answer is reported for the log, with whether it changed the schedule`() {
         val s = session(1, 2)
         val first = s.state().current!!

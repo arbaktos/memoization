@@ -35,6 +35,8 @@ class MemorizationSession(
         val waiting: Int,
         /** True once enough has been answered that stopping here is offered; see [stop]. */
         val stopOffered: Boolean,
+        /** The closed sides by how they went, for the session's progress bar. */
+        val closed: Closed = Closed(),
     ) {
         val isFinished: Boolean get() = current == null
 
@@ -50,6 +52,15 @@ class MemorizationSession(
         /** Share of the session done, 0f..1f; an empty session counts as done. */
         val progress: Float
             get() = if (total == 0) 1f else (total - remaining).toFloat() / total
+    }
+
+    /**
+     * Sides closed so far, by how they went. A side counts once, when it is closed - rated
+     * Hard or Good - and a side forgotten on the way counts as [forgot] however it ended, so
+     * the tally adds up to the sides done and a full bar means the queue is through.
+     */
+    data class Closed(val good: Int = 0, val hard: Int = 0, val forgot: Int = 0) {
+        val total: Int get() = good + hard + forgot
     }
 
     data class Outcome(
@@ -78,6 +89,7 @@ class MemorizationSession(
     private val lapsedIds = mutableSetOf<Long>()
     private var serial = 0
     private var waiting = 0
+    private var closed = Closed()
 
     fun state(): State = State(
         current = queue.firstOrNull(),
@@ -86,6 +98,7 @@ class MemorizationSession(
         serial = serial,
         waiting = waiting,
         stopOffered = queue.isNotEmpty() && serial >= offerStopFrom,
+        closed = closed,
     )
 
     /** Answers given so far, every tap counted - what "Enough for today" is measured in. */
@@ -128,6 +141,11 @@ class MemorizationSession(
                 reviewed
             }
             else -> if (lapsed) scheduler.dueFrom(item.side, now) else scheduler.review(item.side, rating, now)
+        }
+        if (rating != Rating.Again) closed = when {
+            lapsed -> closed.copy(forgot = closed.forgot + 1)
+            rating == Rating.Hard -> closed.copy(hard = closed.hard + 1)
+            else -> closed.copy(good = closed.good + 1)
         }
         val answer = Answer(
             sideId = item.id,

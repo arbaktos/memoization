@@ -47,9 +47,19 @@ class MemoizationViewModel @Inject constructor(
     /** When the side now on screen appeared, so an answer can record how long it took. */
     private var shownAt: Long = 0
 
+    /**
+     * The session as the screen draws it. [checking] is true while the side on screen is turned
+     * over after Hard, waiting for the learner to say whether they had it right; nothing is
+     * rated until then, see [onCheck]. One value, so the next side and the card turning back
+     * arrive in the same frame and the next side's answer is never shown.
+     */
+    data class Screen(val session: MemorizationSession.State, val checking: Boolean = false)
+
     /** null while the stack is loading. */
-    private val _state = MutableStateFlow<MemorizationSession.State?>(null)
-    val state: StateFlow<MemorizationSession.State?> = _state.asStateFlow()
+    private val _state = MutableStateFlow<Screen?>(null)
+    val state: StateFlow<Screen?> = _state.asStateFlow()
+
+    private val checking: Boolean get() = _state.value?.checking == true
 
     init {
         viewModelScope.launch {
@@ -67,12 +77,34 @@ class MemoizationViewModel @Inject constructor(
             sessionId = reviewLog.startSession(stackId, batch.size, now)
             shownAt = now
             val started = MemorizationSession(batch, offerStopFrom = stack.stamina.offerFrom)
-                .also { session = it; _state.value = it.state() }
+                .also { session = it; _state.value = Screen(it.state()) }
             if (batch.isEmpty()) reviewLog.finishSession(sessionId, SessionEnding.DRAINED, started.state(), now)
         }
     }
 
+    /** Good or Forgot from the front of the card; Hard goes through [onHard] instead. */
     fun onRate(rating: Rating) {
+        if (checking) return
+        rate(rating)
+    }
+
+    /** Hard is not taken at its word: the card turns over and the learner checks the answer. */
+    fun onHard() {
+        val screen = _state.value ?: return
+        if (screen.session.isFinished || screen.checking) return
+        _state.value = screen.copy(checking = true)
+    }
+
+    /**
+     * The answer to the check after Hard. Right keeps the Hard; wrong is a Forgot, exactly as
+     * if it had been pressed in the first place. The side's time on screen runs to here.
+     */
+    fun onCheck(right: Boolean) {
+        if (!checking) return
+        rate(if (right) Rating.Hard else Rating.Again)
+    }
+
+    private fun rate(rating: Rating) {
         val now = System.currentTimeMillis()
         val outcome = session?.rate(rating, now) ?: return
         val shownMs = now - shownAt
@@ -83,7 +115,7 @@ class MemoizationViewModel @Inject constructor(
             reviewLog.logAnswer(id, outcome.answer, shownMs, now)
             if (outcome.state.isFinished) reviewLog.finishSession(id, SessionEnding.DRAINED, outcome.state, now)
         }
-        _state.value = outcome.state
+        _state.value = Screen(outcome.state)
     }
 
     /**
@@ -96,12 +128,13 @@ class MemoizationViewModel @Inject constructor(
         val now = System.currentTimeMillis()
         val answered = s.answered
         val id = sessionId
+        // A Hard still being checked is not an answer yet: it is left waiting with the rest.
         val stopped = s.stop()
         viewModelScope.launch {
             reviewLog.finishSession(id, SessionEnding.ENOUGH, stopped, now)
             stackRepository.recordStoppedAt(stackId, answered)
         }
-        _state.value = stopped
+        _state.value = Screen(stopped)
     }
 
     /**
