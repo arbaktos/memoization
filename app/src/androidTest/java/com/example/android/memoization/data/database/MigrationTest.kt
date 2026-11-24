@@ -6,6 +6,7 @@ import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -123,7 +124,7 @@ class MigrationTest {
             )
         }
 
-        val db = helper.runMigrationsAndValidate(testDb, 5, true, *MemoDatabase.MIGRATIONS)
+        val db = helper.runMigrationsAndValidate(testDb, 6, true, *MemoDatabase.MIGRATIONS)
 
         db.query("SELECT stability FROM side_entity_table WHERE wordPairId = 1 AND shown = 0").use {
             it.moveToFirst()
@@ -280,6 +281,81 @@ class MigrationTest {
         assertEquals(listOf(0, 1), sides.map { it.shown })
         assertTrue(sides.all { it.state == 0 })
         assertNull(sides.first().stability)
+        db.close()
+    }
+
+    @Test
+    fun migration5To6_addsAnEmptyDismissedMatchTableAndTouchesNothingElse() {
+        helper.createDatabase(testDb, 5).use { db ->
+            db.execSQL(
+                "INSERT INTO wordpair_entity_table (parentStackId, word1, word2, wordPairId, isVisible) " +
+                    "VALUES (1, 'sada', 'сейчас', 1, 1)"
+            )
+        }
+
+        val db = helper.runMigrationsAndValidate(testDb, 6, true, MIGRATION_5_6)
+
+        db.query("SELECT word1 FROM wordpair_entity_table WHERE wordPairId = 1").use {
+            it.moveToFirst(); assertEquals("sada", it.getString(0))
+        }
+        db.query("SELECT COUNT(*) FROM dismissed_match_table").use { it.moveToFirst(); assertEquals(0, it.getInt(0)) }
+    }
+
+    @Test
+    fun mergingKeepsTheOldestPairMovesItsAnswersAndHidesTheRest() = runBlocking {
+        val db = Room.inMemoryDatabaseBuilder(
+            InstrumentationRegistry.getInstrumentation().targetContext,
+            MemoDatabase::class.java
+        ).build()
+        val dao = db.memoDao
+        val old = dao.insertWordPairWithSides(
+            com.example.android.memoization.data.database.wordpairdb.WordPairEntity(parentStackId = 1, word1 = "sada", word2 = "сейчас")
+        )
+        val copy = dao.insertWordPairWithSides(
+            com.example.android.memoization.data.database.wordpairdb.WordPairEntity(parentStackId = 1, word1 = "sada", word2 = "теперь")
+        )
+        val oldSides = dao.getSidesForPair(old)
+        dao.updateSide(oldSides[0].copy(state = 1, stability = 20.0, difficulty = 5.0, reps = 4))
+        val copySides = dao.getSidesForPair(copy)
+        dao.insertReview(
+            com.example.android.memoization.data.database.logdb.ReviewLogEntity(
+                sessionId = 1, sideId = copySides[1].sideId, ratedAt = lastRep, shownMs = 1_000,
+                rating = 3, requeued = false, stabilityAfter = 2.0, difficultyAfter = 5.0, dueAfter = null,
+            )
+        )
+
+        val pairs = listOf(old, copy).map { id ->
+            dao.findWordPairById(id).toWordPair(dao.getSidesForPair(id).map { it.toSide() })
+        }
+        dao.applyMerges(
+            listOf(com.example.android.memoization.domain.duplicates.Duplicates.plan(pairs, "sada", "сейчас, теперь"))
+        )
+
+        val kept = dao.findWordPairById(old)
+        assertEquals("сейчас, теперь", kept.word2)
+        assertTrue(kept.isVisible)
+        assertFalse(dao.findWordPairById(copy).isVisible)
+        // The copy was never practised, so the learned word side starts again as New.
+        val keptSides = dao.getSidesForPair(old)
+        assertEquals(oldSides.map { it.sideId }, keptSides.map { it.sideId })
+        assertTrue(keptSides.all { it.state == 0 && it.stability == null })
+        // The copy's answer now belongs to the kept meaning side.
+        assertEquals(oldSides[1].sideId, dao.getReviewsOfSession(1).single().sideId)
+        db.close()
+    }
+
+    @Test
+    fun aDismissedMatchIsStoredOnce() = runBlocking {
+        val db = Room.inMemoryDatabaseBuilder(
+            InstrumentationRegistry.getInstrumentation().targetContext,
+            MemoDatabase::class.java
+        ).build()
+        val match = com.example.android.memoization.data.database.dismisseddb.DismissedMatchEntity(1, 2)
+
+        db.memoDao.insertDismissedMatches(listOf(match))
+        db.memoDao.insertDismissedMatches(listOf(match))
+
+        assertEquals(listOf(match), db.memoDao.getDismissedMatches().first())
         db.close()
     }
 

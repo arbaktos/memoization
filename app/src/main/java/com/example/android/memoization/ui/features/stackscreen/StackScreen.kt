@@ -93,6 +93,9 @@ fun StackScreen(
     val practice by viewModel.practiceSides.collectAsStateWithLifecycle()
     val showDialog by viewModel.showEditStackDialog.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val duplicates by viewModel.duplicates.collectAsStateWithLifecycle()
+    val reviewStep by viewModel.reviewStep.collectAsStateWithLifecycle()
+    val duplicatesBusy by viewModel.duplicatesBusy.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -127,6 +130,25 @@ fun StackScreen(
     val navigateToMemorization =
         remember(navController) { { stackId: Long -> navController.navigateToMemorization(stackId) } }
 
+    when (val step = reviewStep) {
+        is ReviewStep.Copies -> RemoveCopiesDialog(
+            groups = step.groups,
+            busy = duplicatesBusy,
+            onRemove = { viewModel.removeCopies(step.groups) },
+            onCancel = viewModel::skipCopies,
+            onDismiss = viewModel::stopDuplicatesReview,
+        )
+        is ReviewStep.Merge -> MergePairsDialog(
+            proposal = step.proposal,
+            practice = practice,
+            busy = duplicatesBusy,
+            onMerge = { word1, word2 -> viewModel.merge(step.proposal, word1, word2) },
+            onCancel = { viewModel.cancelMerge(step.proposal) },
+            onDismiss = viewModel::stopDuplicatesReview,
+        )
+        null -> Unit
+    }
+
     DisplayStackState(
         state = state,
         showDialog = showDialog,
@@ -143,6 +165,8 @@ fun StackScreen(
         onOpenSearch = viewModel::openSearch,
         onCloseSearch = viewModel::closeSearch,
         onSearchQueryChange = viewModel::onSearchQueryChange,
+        duplicatesToReview = duplicates.toReview,
+        onReviewDuplicates = viewModel::startDuplicatesReview,
     )
 }
 
@@ -165,6 +189,8 @@ fun DisplayStackState(
     onOpenSearch: () -> Unit = {},
     onCloseSearch: () -> Unit = {},
     onSearchQueryChange: (String) -> Unit = {},
+    duplicatesToReview: Int = 0,
+    onReviewDuplicates: () -> Unit = {},
 ) {
 
     when (state) {
@@ -184,6 +210,8 @@ fun DisplayStackState(
             onOpenSearch = onOpenSearch,
             onCloseSearch = onCloseSearch,
             onSearchQueryChange = onSearchQueryChange,
+            duplicatesToReview = duplicatesToReview,
+            onReviewDuplicates = onReviewDuplicates,
         )
 
         is LoadingState.Loading -> DisplayLoadingStack()
@@ -336,6 +364,8 @@ fun DisplayStack(
     onOpenSearch: () -> Unit = {},
     onCloseSearch: () -> Unit = {},
     onSearchQueryChange: (String) -> Unit = {},
+    duplicatesToReview: Int = 0,
+    onReviewDuplicates: () -> Unit = {},
 ) {
     val lazyListState = rememberLazyListState()
     // Newest first: ids grow with insertion, so this is "last added on top".
@@ -392,13 +422,24 @@ fun DisplayStack(
                             .padding(top = 48.dp)
                     )
                 } else {
-                    WordList(
-                        words = words,
-                        navigateToEditPair = { navigateToEditPair(it, currentStack) },
-                        deletePair = deletePair,
-                        practice = practice,
-                        listState = lazyListState,
-                    )
+                    // Above the list, not in it: an item added on top of a list already showing
+                    // would be scrolled out of sight.
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        if (searchQuery == null && duplicatesToReview > 0) {
+                            DuplicatesStrip(
+                                toReview = duplicatesToReview,
+                                onReview = onReviewDuplicates,
+                                modifier = Modifier.fillMaxWidth(0.9f),
+                            )
+                        }
+                        WordList(
+                            words = words,
+                            navigateToEditPair = { navigateToEditPair(it, currentStack) },
+                            deletePair = deletePair,
+                            practice = practice,
+                            listState = lazyListState,
+                        )
+                    }
                 }
             }
         }

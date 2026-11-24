@@ -85,4 +85,20 @@
         <item quantity="one">%d word</item>
         <item quantity="other">%d words</item>
     </plurals>
+    <string name="duplicates_to_review">Duplicates: %d to review</string>
+    <string name="duplicates_review">Review</string>
+    <string name="duplicates_copies_title">Remove identical copies?</string>
+    <string name="duplicates_copies_note">One of each stays; progress resets to the weaker copy for each side.</string>
+    <string name="duplicates_copies_count">×%d</string>
+    <string name="duplicates_remove">Remove</string>
+    <string name="duplicates_merge_title">Merge into one pair?</string>
+    <string name="duplicates_merge_note">Progress resets to the weaker of the two for each side.</string>
+    <string name="duplicates_merge">Merge</string>
+    <string name="duplicates_word">Word</string>
+    <string name="duplicates_meaning">Meaning</string>
+    <string name="duplicates_new">new</string>
+    <plurals name="duplicates_days">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
 </resources>
