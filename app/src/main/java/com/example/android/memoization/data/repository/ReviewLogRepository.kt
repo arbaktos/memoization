@@ -39,8 +39,8 @@ class ReviewLogRepository @Inject constructor(private val memoDao: MemoDao) {
                 requeued = answer.requeued,
                 stabilityAfter = answer.after.stability,
                 difficultyAfter = answer.after.difficulty,
-                // A requeued answer changes no schedule, so it has no "next due" of its own.
-                dueAfter = if (answer.requeued) null else answer.after.due,
+                // An answer that changed no schedule has no "next due" of its own.
+                dueAfter = if (answer.rescheduled) answer.after.due else null,
             )
         )
     }

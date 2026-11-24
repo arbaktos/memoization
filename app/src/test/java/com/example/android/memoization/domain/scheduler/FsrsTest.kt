@@ -258,6 +258,19 @@ class FsrsTest {
     }
 
     @Test
+    fun `dueFrom moves only the due date, by what the stability earns`() {
+        val now = 1_800_000_000_000L
+        val lapsed = fsrs.review(fsrs.review(newSide(), Rating.Good, now), Rating.Again, now + 2 * DAY_MILLIS)
+            .copy(due = now + 2 * DAY_MILLIS)
+
+        val recalled = fsrs.dueFrom(lapsed, now + 2 * DAY_MILLIS)
+
+        assertEquals(lapsed.copy(due = recalled.due), recalled)
+        assertEquals(now + 2 * DAY_MILLIS + fsrs.nextInterval(lapsed.stability!!) * DAY_MILLIS, recalled.due)
+        assertEquals("a side never rated has nothing to earn", newSide(), fsrs.dueFrom(newSide(), now))
+    }
+
+    @Test
     fun `fuzz leaves short intervals alone and keeps long ones in range`() {
         val fuzzing = Fsrs(random = Random(42), zone = utc)
 

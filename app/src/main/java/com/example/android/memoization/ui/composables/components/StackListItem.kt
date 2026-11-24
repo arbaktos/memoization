@@ -52,7 +52,9 @@ fun StackListItem(
 ) {
 
     // Not remembered: MemoStack.words sits outside the data-class constructor, so no key would
-    // ever change, and a remembered value froze at first composition.
+    // ever change, and a remembered value froze at first composition. The count is not shown -
+    // the session's own closing count is the one that is right - it only decides whether the
+    // Play button is there and how urgent it looks.
     val wordsToLearn = stack.duePairs(practice)
     val unRepeatedPercent = wordsToLearn.size.toFloat() / stack.words.size.toFloat() * 100
     Card(
@@ -74,12 +76,6 @@ fun StackListItem(
                         .padding(start = 12.dp, top = 8.dp)
                 ) {
                     StackNameText(text = stack.name)
-                    if (stack.words.isNotEmpty()) Text(
-                        text = stringResource(R.string.wrods_to_learn) + "${wordsToLearn.size}/${stack.words.size}",
-                        color = Color.LightGray,
-                        style = MaterialTheme.typography.caption,
-                        modifier = Modifier
-                    )
                 }
                 PinPushIcon(isPinned = stack.pinnedTime != null) { onPin() }
             }

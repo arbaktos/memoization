@@ -171,6 +171,16 @@ class Fsrs(
         )
     }
 
+    /**
+     * The side with the due date its stability earns counted from [now], nothing else touched.
+     * For a side whose lapse was recorded with today's date so that it stayed due until
+     * recalled: the recall does not re-rate it, it only lets the lapse's schedule start.
+     */
+    fun dueFrom(side: Side, now: Long): Side {
+        val stability = side.stability ?: return side
+        return side.copy(due = now + fuzzedInterval(nextInterval(stability)) * DAY_MILLIS)
+    }
+
     private fun clampStability(stability: Double) = max(stability, STABILITY_MIN)
 
     private fun clampDifficulty(difficulty: Double) =

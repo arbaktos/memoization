@@ -62,12 +62,14 @@ class MemorizationSession(
 
     /**
      * One answer as the log wants it: [after] is the side's schedule once the answer is
-     * applied - unchanged for a [requeued] answer, which the scheduler ignores.
+     * applied, [rescheduled] whether the answer changed it - a second Again on a side does
+     * not, nor does anything the scheduler ignores.
      */
     data class Answer(
         val sideId: Long,
         val rating: Rating,
         val requeued: Boolean,
+        val rescheduled: Boolean,
         val after: Side,
     )
 
@@ -101,27 +103,39 @@ class MemorizationSession(
     }
 
     /**
-     * Again: the schedule is rewritten once, on the first lapse, and the side goes to the back
-     * of the queue. Hard/Good on a side answered right first time: written as scheduled.
-     * Hard/Good after an Again in this session: the side is done for today but earns no new
-     * schedule, so nothing is written.
+     * Again: the lapse is written once, on the first Again - stability drops, a lapse is
+     * counted - but the side is kept due today, and it goes to the back of the queue. It is
+     * not done until it is recalled, and the session may end before that: a side still owed
+     * is still due, in the stack's count and in the next sitting, whenever that is. A second
+     * Again changes nothing more.
+     *
+     * Hard/Good on a side answered right first time: written as scheduled. Hard/Good after an
+     * Again in this session: the recall is not rated again - the lapse set the stability -
+     * it only lets the lapse's schedule start, so the due date moves out and nothing else.
      */
     fun rate(rating: Rating, now: Long): Outcome {
         val item = queue.removeFirst()
         serial++
         val lapsed = item.id in lapsedIds
         val toPersist = when (rating) {
-            Rating.Again -> {
-                val reviewed = scheduler.review(item.side, Rating.Again, now)
+            Rating.Again -> if (lapsed) {
+                queue.addLast(item)
+                null
+            } else {
+                val reviewed = scheduler.review(item.side, Rating.Again, now).copy(due = now)
+                lapsedIds += item.id
                 queue.addLast(item.copy(side = reviewed))
-                if (lapsed) null else {
-                    lapsedIds += item.id
-                    reviewed
-                }
+                reviewed
             }
-            else -> if (lapsed) null else scheduler.review(item.side, rating, now)
+            else -> if (lapsed) scheduler.dueFrom(item.side, now) else scheduler.review(item.side, rating, now)
         }
-        val answer = Answer(item.id, rating, requeued = lapsed, after = toPersist ?: item.side)
+        val answer = Answer(
+            sideId = item.id,
+            rating = rating,
+            requeued = lapsed,
+            rescheduled = toPersist != null,
+            after = toPersist ?: item.side,
+        )
         return Outcome(toPersist, state(), answer)
     }
 }

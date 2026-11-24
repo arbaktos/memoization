@@ -49,7 +49,9 @@ _Avoid_: score, status, stored level
 
 **Rating**:
 The learner's answer to a side - Again, Hard or Good, which is also what the three buttons say.
-Again drops stability sharply but not to nothing, Hard grows it a little, Good grows it fully.
+Again drops stability sharply but not to nothing and keeps the side **Due** until it is
+recalled; Hard grows it a little, Good grows it fully. Recalling a side after Again in the same
+**Session** is not a rating: it only lets the lapse's schedule start.
 _Avoid_: a fourth rating (FSRS has one, this app does not), icon, click
 
 **New**:
@@ -62,12 +64,25 @@ any of its practised sides is.
 _Avoid_: to learn, toShow, unrepeated
 
 **Session**:
-One sitting with a stack: up to 37 of its due practised sides, the most forgotten first (lowest
-FSRS retrievability; among ties the weaker memory), shuffled
-once on entry and shown one at a time; a side rated Again returns to the back of the queue until
-it is rated Hard or Good. The cap is per session, not per day: another sitting takes the next
-batch.
-_Avoid_: memorization list, wordsToLearn, round, daily limit
+One sitting with a stack: all of its due practised sides, the most forgotten first (lowest
+FSRS retrievability; among ties the weaker memory; never-practised last; equals in random
+order), shown one at a time; a side rated Again returns to the back of the queue until it is
+rated Hard or Good. A session has no size. It ends one of three ways - the queue drains, the
+learner taps **Enough for today**, or they leave the screen - and the **Review log** records
+which, with how many sides were closed and how many were not got to.
+_Avoid_: memorization list, wordsToLearn, round, daily limit, cap
+
+**Enough for today**:
+The learner's way to end a **Session** early. Offered once they have answered as many sides as
+the stack's **Stamina** says; the sides not got to simply stay **Due**.
+_Avoid_: I'm tired, quit, give up
+
+**Stamina**:
+Where the learner tends to stop with a stack: the running mean of answers per **Session** ended
+with **Enough for today**, kept per **Stack**. The offer comes at three quarters of that mean -
+30 answers until the stack has been stopped once, never earlier than 10 - so a stop can fall
+below the mean and pull it either way.
+_Avoid_: limit, fatigue score, threshold
 
 **Review log**:
 A row per answer the learner gives - every tap, including the answer to a side brought back
@@ -181,7 +196,8 @@ _Avoid_: include scheduling, preserve state
 - **Practice sides** decides which **Sides** of every pair are scheduled; under **Smart
   switch** that depends on the word side's **Level**
 - A **Session** holds the **Due** practised **Sides** of exactly one **Stack**; each **Rating**
-  given in it updates one **Side**
+  given in it updates one **Side**; a **Stack** has one **Stamina**, which decides when the
+  **Session** offers **Enough for today**
 - Every **Rating** adds a row to the **Review log**, and every **Session** one; **Statistics**
   and the **Weekly card** are read from the **Review log**; a **Streak** counts **Obligation
   days** with a finished **Session**
@@ -230,5 +246,5 @@ _Avoid_: include scheduling, preserve state
 - **Hidden** pairs and stacks have no way back in the UI yet; a restore screen is the missing
   half of "nothing is ever deleted".
 - A **Session** lives in memory. If the process dies mid-session the queue is rebuilt from the
-  due sides; a side already rated Again that day has been rescheduled and returns tomorrow,
-  not later in the same sitting. Accepted for now.
+  due sides, and a side rated Again and not yet recalled is among them, since a lapse keeps
+  the side **Due**; only its place in the queue is lost.
