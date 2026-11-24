@@ -4,6 +4,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.android.memoization.data.database.dismisseddb.DismissedMatchEntity
 import com.example.android.memoization.data.database.logdb.ReviewLogEntity
 import com.example.android.memoization.data.database.logdb.SessionEntity
 import com.example.android.memoization.data.database.sidedb.SideEntity
@@ -13,9 +14,9 @@ import com.example.android.memoization.data.database.wordpairdb.WordPairEntity
 @Database(
     entities = [
         StackEntity::class, WordPairEntity::class, SideEntity::class,
-        SessionEntity::class, ReviewLogEntity::class,
+        SessionEntity::class, ReviewLogEntity::class, DismissedMatchEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 abstract class MemoDatabase : RoomDatabase() {
@@ -27,7 +28,9 @@ abstract class MemoDatabase : RoomDatabase() {
          * empty and bumping the version makes Room throw on open, which is the point:
          * a crash is recoverable, a wiped vocabulary is not.
          */
-        val MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+        val MIGRATIONS: Array<Migration> = arrayOf(
+            MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
+        )
     }
 }
 
@@ -199,6 +202,24 @@ val MIGRATION_4_5 = object : Migration(4, 5) {
         db.execSQL(
             "UPDATE `session_table` SET `ending` = $ENDING_DRAINED, `sidesDone` = `sidesOffered` " +
                 "WHERE `finishedAt` IS NOT NULL"
+        )
+    }
+}
+
+/**
+ * Merges the learner cancelled, so the same two pairs are never proposed again (ADR 0009).
+ * Purely additive: nothing has been cancelled yet.
+ */
+val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `dismissed_match_table` (
+                `lowPairId` INTEGER NOT NULL,
+                `highPairId` INTEGER NOT NULL,
+                PRIMARY KEY(`lowPairId`, `highPairId`)
+            )
+            """.trimIndent()
         )
     }
 }

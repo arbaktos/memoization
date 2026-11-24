@@ -114,6 +114,32 @@ A word pair or stack the learner has deleted. Nothing leaves the database - the 
 progress stay, so an undo, or a restore, can bring it back.
 _Avoid_: deleted, removed, trashed
 
+**Copy**:
+A word pair added again to the same stack exactly as before - word and meaning the same up to
+case and spacing. Copies are removed all at once: the oldest pair stays, the others are
+**Hidden**.
+_Avoid_: duplicate (that is the umbrella word), clone
+
+**Spelling variant**:
+Two words that differ only in the marks on letters (tražiti / traziti) or in a Cyrillic letter
+that looks Latin (ako / akо, typed on the wrong keyboard). They count as the same word; merging
+them asks which spelling to keep. A different letter is a different word - trazit is not tražiti.
+_Avoid_: typo, near match
+
+**Merge**:
+Turning pairs that share a word or a meaning into one pair: the matching side keeps one
+spelling, the other side becomes the comma-joined values the learner can edit. The oldest pair
+stays; each of its **Sides** takes the weakest schedule among the merged sides of that
+direction (a **New** side is the weakest of all), because adding a word again says it was not
+remembered. The others are **Hidden** and their answers in the **Review log** move to the kept
+sides.
+_Avoid_: squish, combine, dedupe
+
+**Dismissed match**:
+Two pairs whose **Merge** the learner cancelled: they are never proposed together again. A
+pair added later that looks the same is still proposed, against each of them on its own.
+_Avoid_: ignored duplicate, false positive
+
 **Library**:
 Every stack the learner currently has on this device.
 _Avoid_: database, collection
@@ -162,6 +188,8 @@ _Avoid_: include scheduling, preserve state
 - A **Shared word** becomes a **Word pair** in the **Stack** the learner picks for it
 - An **Export file** holds one or more **Stacks**, chosen by **Export scope**
 - A **Stack** has exactly one **Stack id**, unique within a **Library**
+- Within a **Stack**, **Copies** are removed and pairs sharing a word or a meaning are offered
+  for a **Merge**, unless they are a **Dismissed match**
 - Importing a **Stack** whose **Stack id** is already present offers replace, **Fork** or skip;
   a **Stack id** not yet present is added and keeps the id from the **Export file**
 

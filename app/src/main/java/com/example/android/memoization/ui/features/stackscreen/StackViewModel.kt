@@ -6,7 +6,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.data.model.PracticeSides
+import com.example.android.memoization.data.repository.DuplicatesRepository
 import com.example.android.memoization.data.repository.LearningSettingsRepository
+import com.example.android.memoization.domain.duplicates.CopyGroup
+import com.example.android.memoization.domain.duplicates.DuplicateReport
+import com.example.android.memoization.domain.duplicates.Duplicates
+import com.example.android.memoization.domain.duplicates.MergeProposal
 import com.example.android.memoization.domain.usecases.HideWordPairUseCase
 import com.example.android.memoization.domain.usecases.GetStackUseCase
 import com.example.android.memoization.domain.usecases.UpdateStackUseCase
@@ -16,6 +21,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -26,6 +34,7 @@ class StackViewModel @Inject constructor(
     private val getStackUseCase: GetStackUseCase,
     private val updateStackUseCase: UpdateStackUseCase,
     private val hideWordPairUseCase: HideWordPairUseCase,
+    private val duplicatesRepository: DuplicatesRepository,
     learningSettings: LearningSettingsRepository,
 ) : BaseViewModel<LoadingState<MemoStack>>() {
 
@@ -86,6 +95,73 @@ class StackViewModel @Inject constructor(
         }
     }
 
+    /** Copies and merge proposals among the stack's visible pairs, recomputed on every change. */
+    val duplicates: StateFlow<DuplicateReport> =
+        combine(stackWithWords, duplicatesRepository.dismissedMatches) { state, dismissed ->
+            if (state is LoadingState.Collected) Duplicates.find(state.content.words, dismissed) else DuplicateReport.NONE
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_COLLECTING_AFTER_MS), DuplicateReport.NONE)
+
+    private val reviewing = MutableStateFlow(false)
+
+    /** Cancel on the copies dialog moves on to the merges; it is not remembered beyond this review. */
+    private val copiesSkipped = MutableStateFlow(false)
+
+    /** A write is running; the dialog's buttons wait for it. */
+    val duplicatesBusy = MutableStateFlow(false)
+
+    /**
+     * The dialog to show, or null: all copies at once first, then one merge proposal at a
+     * time. Each answer changes the database, the report is recomputed, and the next step
+     * follows from it; when nothing is left the review ends.
+     */
+    val reviewStep: StateFlow<ReviewStep?> =
+        combine(reviewing, copiesSkipped, duplicates) { on, skipped, report ->
+            when {
+                !on -> null
+                report.copies.isNotEmpty() && !skipped -> ReviewStep.Copies(report.copies)
+                report.proposals.isNotEmpty() -> ReviewStep.Merge(report.proposals.first())
+                else -> null
+            }
+        }.onEach { if (it == null) reviewing.value = false }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_COLLECTING_AFTER_MS), null)
+
+    fun startDuplicatesReview() {
+        copiesSkipped.value = false
+        reviewing.value = true
+    }
+
+    /** Tapping outside or Back: the review stops and nothing is remembered. */
+    fun stopDuplicatesReview() {
+        reviewing.value = false
+    }
+
+    fun removeCopies(groups: List<CopyGroup>) = write { duplicatesRepository.apply(groups.map { it.plan() }) }
+
+    fun skipCopies() {
+        copiesSkipped.value = true
+    }
+
+    fun merge(proposal: MergeProposal, word1: String, word2: String) =
+        write { duplicatesRepository.apply(listOf(Duplicates.plan(proposal.pairs, word1, word2))) }
+
+    /** Cancel on a merge: these pairs are not proposed together again. */
+    fun cancelMerge(proposal: MergeProposal) = write { duplicatesRepository.dismiss(proposal.matches()) }
+
+    private fun write(block: suspend () -> Unit) {
+        if (duplicatesBusy.value) return
+        duplicatesBusy.value = true
+        viewModelScope.launch {
+            try {
+                block()
+            } catch (e: Exception) {
+                Log.e(TAG, "duplicates: write failed", e)
+                reviewing.value = false
+            } finally {
+                duplicatesBusy.value = false
+            }
+        }
+    }
+
     fun showEditStackDialog(toShow: Boolean) {
         showEditStackDialog.value = toShow
         Log.d(TAG, "showEditStackDialog: to Show $toShow")
@@ -95,4 +171,9 @@ class StackViewModel @Inject constructor(
         return stackWithWords
     }
 
+}
+
+sealed interface ReviewStep {
+    data class Copies(val groups: List<CopyGroup>) : ReviewStep
+    data class Merge(val proposal: MergeProposal) : ReviewStep
 }

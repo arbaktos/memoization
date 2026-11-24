@@ -1,6 +1,7 @@
 package com.example.android.memoization.data.database
 
 import androidx.room.*
+import com.example.android.memoization.data.database.dismisseddb.DismissedMatchEntity
 import com.example.android.memoization.data.database.logdb.ReviewLogEntity
 import com.example.android.memoization.data.database.logdb.SessionEntity
 import com.example.android.memoization.data.database.logdb.StackLastSession
@@ -8,6 +9,7 @@ import com.example.android.memoization.data.database.sidedb.SideEntity
 import com.example.android.memoization.data.database.stackdb.StackEntity
 import com.example.android.memoization.data.database.stackdb.StackWithWords
 import com.example.android.memoization.data.database.wordpairdb.WordPairEntity
+import com.example.android.memoization.domain.duplicates.MergePlan
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -100,4 +102,32 @@ interface MemoDao {
 
     @Query("SELECT stackId, MAX(startedAt) AS lastStartedAt FROM session_table GROUP BY stackId")
     suspend fun getLastSessionPerStack(): List<StackLastSession>
+
+    //duplicates
+    @Query("UPDATE wordpair_entity_table SET word1 = :word1, word2 = :word2 WHERE wordPairId = :wordPairId")
+    suspend fun setWordPairWords(wordPairId: Long, word1: String, word2: String?)
+
+    /** Re-points answers given on a merged-away side at the side that now stands for it. */
+    @Query("UPDATE review_log_table SET sideId = :toSideId WHERE sideId = :fromSideId")
+    suspend fun moveReviews(fromSideId: Long, toSideId: Long)
+
+    /**
+     * Merging pairs, or removing copies, all in one go: a half-applied merge would leave a
+     * hidden pair's answers on a side nobody sees, or two visible pairs with one schedule.
+     */
+    @Transaction
+    suspend fun applyMerges(plans: List<MergePlan>) {
+        for (plan in plans) {
+            setWordPairWords(plan.keepPairId, plan.word1, plan.word2)
+            plan.sides.forEach { updateSide(SideEntity.from(it)) }
+            plan.moveReviews.forEach { (from, to) -> moveReviews(from, to) }
+            plan.hidePairIds.forEach { setWordPairVisible(it, visible = false) }
+        }
+    }
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertDismissedMatches(matches: List<DismissedMatchEntity>)
+
+    @Query("SELECT * FROM dismissed_match_table")
+    fun getDismissedMatches(): Flow<List<DismissedMatchEntity>>
 }

@@ -6,4 +6,5 @@ object TableNames {
     const val SIDE_TABLE = "side_entity_table"
     const val SESSION_TABLE = "session_table"
     const val REVIEW_LOG_TABLE = "review_log_table"
+    const val DISMISSED_MATCH_TABLE = "dismissed_match_table"
 }
