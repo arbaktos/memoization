@@ -68,6 +68,12 @@ class MemorizationSession(
      */
     data class Results(val easy: Int = 0, val hard: Int = 0, val forgot: Int = 0) {
         val total: Int get() = easy + hard + forgot
+
+        fun plus(rating: Rating): Results = when (rating) {
+            Rating.Again -> copy(forgot = forgot + 1)
+            Rating.Hard, Rating.Good -> copy(hard = hard + 1)
+            Rating.Easy -> copy(easy = easy + 1)
+        }
     }
 
     data class Outcome(
@@ -98,9 +104,9 @@ class MemorizationSession(
     private var waiting = 0
     private var results = Results()
 
-    /** Every side answered so far, as it stands after its latest answer; in answer order. */
-    private val practised = LinkedHashMap<Long, Side>()
-    private var newPractised = 0
+    /** Every side answered so far. */
+    private val practised = mutableSetOf<Long>()
+    private var firstAnswers = Results()
     private var reviewed = 0
     private var mistakes = 0
     private var expectedMistakes = 0.0
@@ -118,10 +124,7 @@ class MemorizationSession(
     /** What the session comes to so far; shown when it ends, however it ends. */
     fun summary(): SessionSummary = SessionSummary(
         practised = practised.size,
-        new = newPractised,
-        levels = practised.values.groupingBy { it.level }.eachCount()
-            .toList()
-            .sortedBy { (level, _) -> level.frequency },
+        firstAnswers = firstAnswers,
         mistakes = if (reviewed == 0) null else Mistakes(mistakes, reviewed, expectedMistakes),
     )
 
@@ -154,12 +157,11 @@ class MemorizationSession(
         val item = queue.removeFirst()
         serial++
         val lapsed = item.id in lapsedIds
-        if (item.id !in practised) {
-            // First answer to this side in the session: what the summary's mistakes are made of.
+        if (practised.add(item.id)) {
+            // First answer to this side in the session: what the summary is made of.
+            firstAnswers = firstAnswers.plus(rating)
             val recall = scheduler.retrievability(item.side, now)
-            if (recall == null) {
-                newPractised++
-            } else {
+            if (recall != null) {
                 reviewed++
                 expectedMistakes += 1 - recall
                 if (rating == Rating.Again) mistakes++
@@ -177,12 +179,7 @@ class MemorizationSession(
             }
             else -> if (lapsed) scheduler.dueFrom(item.side, now) else scheduler.review(item.side, rating, now)
         }
-        results = when (rating) {
-            Rating.Again -> results.copy(forgot = results.forgot + 1)
-            Rating.Hard, Rating.Good -> results.copy(hard = results.hard + 1)
-            Rating.Easy -> results.copy(easy = results.easy + 1)
-        }
-        practised[item.id] = toPersist ?: item.side
+        results = results.plus(rating)
         val answer = Answer(
             sideId = item.id,
             rating = rating,

@@ -213,7 +213,11 @@ class MemorizationSessionTest {
         s.rate(Rating.Good, now)    // side 1 recalled
 
         assertEquals(3, summary.practised)
-        assertEquals(1, summary.new)
+        assertEquals(
+            "each side once, by its first answer",
+            MemorizationSession.Results(easy = 0, hard = 1, forgot = 2),
+            summary.firstAnswers,
+        )
         val mistakes = summary.mistakes!!
         assertEquals(1, mistakes.count)
         assertEquals(2, mistakes.reviewed)
@@ -222,16 +226,18 @@ class MemorizationSessionTest {
     }
 
     @Test
-    fun `the summary places every practised side by its level after the session`() {
+    fun `the summary's first answers add up to the sides practised, repeats left out`() {
         val s = MemorizationSession(listOf(item(1), item(2), newItem(3)), Random(1), scheduler)
         s.rate(Rating.Easy, now)
         s.rate(Rating.Again, now)
+        s.rate(Rating.Good, now)    // side 3
+        s.rate(Rating.Good, now)    // side 2 recalled: a repeat
         s.stop()
 
         val summary = s.summary()
-        assertEquals(2, summary.practised)
-        assertEquals(2, summary.levels.sumOf { it.second })
-        assertEquals("weakest first", summary.levels.sortedBy { it.first.frequency }, summary.levels)
+        assertEquals(3, summary.practised)
+        assertEquals(summary.practised, summary.firstAnswers.total)
+        assertEquals(MemorizationSession.Results(easy = 1, hard = 1, forgot = 1), summary.firstAnswers)
     }
 
     @Test

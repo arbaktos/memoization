@@ -6,15 +6,18 @@ status: accepted
 
 Every session that had an answer ends in a summary - drained, "Enough for today", or Back,
 which now ends the session and shows it instead of leaving at once. It says how many sides were
-practised and how many were new, puts them by level after the session (with names for the
-learner instead of Level1..Learned), and judges the mistakes.
+practised, how each was first answered (Easy, Hard or Forgot, a bar and a legend that add up to
+the sides practised - a repeat after Forgot is not counted again), and judges the mistakes.
+The judgement is a message, never a count: a count reads as a score.
 
 A mistake is a side practised before whose first answer in the session was Forgot. Hard, checked
 wrong or not, is a recall to FSRS and not a mistake; a repeated Forgot on the same side is not a
 second one; new sides count neither way. The expected number is the sum, over those sides, of
 FSRS's chance of forgetting each when it was shown (1 - retrievability). Within 15 % of it,
-never narrower than one mistake either way, the summary says this is how it should be; fewer,
-that the words have stuck; more, that this is fine and they will come up again soon.
+never narrower than one mistake either way, the summary says the learner is right on track;
+more, that it was a productive session and mistakes are where the learning happens; fewer,
+that recall was great. A session of only new sides has nothing to judge and shows no message.
+None of it is in red.
 
 ## Why
 
@@ -28,6 +31,12 @@ The window has a floor of one mistake because 15 % of a small expectation can ho
 number: with 1.4 expected, 1.19..1.61 would leave the learner never "as expected".
 
 ## Considered
+
+**The design's rule: Hard and Forgot are mistakes, 20-30 % is the norm.** Kept FSRS instead,
+for the reasons above; the design's layout and texts were taken as they are.
+
+**Sides by level after the session.** In the first version; dropped with the design, which
+puts how the session went before where the words stand.
 
 **A fixed band, 10-15 %.** Simple, but blind to how overdue the session was.
 

@@ -109,16 +109,10 @@
         <item quantity="one">%d word practised</item>
         <item quantity="other">%d words practised</item>
     </plurals>
-    <plurals name="summary_new">
-        <item quantity="one">, %d of them new</item>
-        <item quantity="other">, %d of them new</item>
-    </plurals>
-    <string name="level_just_started">Just started</string>
-    <string name="level_sinking_in">Sinking in</string>
-    <string name="level_familiar">Familiar</string>
-    <string name="level_nearly_learned">Nearly learned</string>
-    <string name="level_learned">Learned</string>
-    <string name="summary_mistakes_as_expected">Mistakes: %1$d out of %2$d — just as it should be. This is how words stick.</string>
-    <string name="summary_mistakes_few">Very few mistakes (%1$d out of %2$d) — these words have really stuck.</string>
-    <string name="summary_mistakes_many">More mistakes than usual (%1$d out of %2$d) — and that\'s fine. The forgotten words will come up again soon.</string>
+    <string name="summary_on_track_title">Right on track</string>
+    <string name="summary_on_track_text">These words will come back sooner. Recalling with effort is exactly what makes words stick.</string>
+    <string name="summary_productive_title">A productive session</string>
+    <string name="summary_productive_text">You found the words that need work. Each one comes back sooner, and every hard recall makes it stronger. Mistakes are where the learning happens.</string>
+    <string name="summary_great_recall_title">Great recall</string>
+    <string name="summary_great_recall_text">Words you know well will show up less often.</string>
 </resources>

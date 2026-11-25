@@ -82,11 +82,11 @@ _Avoid_: memorization list, wordsToLearn, round, daily limit, cap
 
 **Session summary**:
 What the learner is shown when a **Session** ends, however it ended - Back included, once
-anything was answered: how many sides were practised and how many of them were **New**, where
-they stand now by **Level** (named for the learner: just started, sinking in, familiar, nearly
-learned, learned), and the mistakes - sides practised before whose first answer was Forgot -
-against what FSRS expected for them. Within 15 % of that, never narrower than one either way,
-is "as it should be"; the wording treats mistakes as part of learning in every case.
+anything was answered: how many sides were practised, each counted once by its first answer
+(Easy, Hard, Forgot), and a message chosen by the mistakes - sides practised before whose first
+answer was Forgot - against what FSRS expected for them: within 15 % of that, never narrower
+than one either way, "right on track"; more, "a productive session"; fewer, "great recall".
+The number of mistakes is never shown; the wording treats them as part of learning.
 _Avoid_: report, score, result screen
 
 **Enough for today**:

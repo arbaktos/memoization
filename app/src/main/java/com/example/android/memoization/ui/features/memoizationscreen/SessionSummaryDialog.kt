@@ -1,12 +1,15 @@
 package com.example.android.memoization.ui.features.memoizationscreen
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -15,9 +18,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -25,16 +34,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.example.android.memoization.R
-import com.example.android.memoization.data.model.WordStatus
 import com.example.android.memoization.domain.session.Mistakes
 import com.example.android.memoization.domain.session.SessionSummary
-import com.example.android.memoization.ui.theme.indicatorColors
 
 /**
- * The end of a session, however it ended: how many sides were practised, where they stand now,
- * and the mistakes against what the scheduler expected - worded so that mistakes read as part
- * of learning, never as a failure.
+ * The end of a session, however it ended (design handoff "Итог сессии"): how many sides were
+ * practised, how each was first answered, and a message chosen by how the mistakes compare with
+ * what the scheduler expected - never a count of them, and never in red: mistakes read as part
+ * of learning, not as a failure.
  */
 @Composable
 fun SessionSummaryDialog(
@@ -43,94 +52,124 @@ fun SessionSummaryDialog(
     colors: SessionColors,
     onDone: () -> Unit,
 ) {
-    Dialog(onDismissRequest = onDone) {
+    Dialog(onDismissRequest = onDone, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        val shape = RoundedCornerShape(28.dp)
         Column(
             modifier = Modifier
+                .padding(horizontal = 20.dp)
                 .fillMaxWidth()
-                .background(colors.card, RoundedCornerShape(24.dp))
+                .shadow(colors.shadowElevation, shape, ambientColor = colors.shadow, spotColor = colors.shadow)
+                .background(colors.dialog, shape)
                 .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            Text(
-                text = if (waiting == 0) {
-                    stringResource(R.string.stack_complete)
-                } else {
-                    pluralStringResource(R.plurals.session_complete_waiting, waiting, waiting)
-                },
-                color = colors.text,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
-            val practised = pluralStringResource(R.plurals.summary_practised, summary.practised, summary.practised)
-            val ofThemNew = if (summary.new == 0) "" else pluralStringResource(R.plurals.summary_new, summary.new, summary.new)
-            Text(text = practised + ofThemNew, color = colors.text, fontSize = 16.sp)
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                summary.levels.forEach { (level, count) -> LevelRow(level, count, colors) }
-            }
-            summary.mistakes?.let { mistakes ->
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = stringResource(mistakes.verdict.text, mistakes.count, mistakes.reviewed),
+                    text = if (waiting == 0) {
+                        stringResource(R.string.stack_complete)
+                    } else {
+                        pluralStringResource(R.plurals.session_complete_waiting, waiting, waiting)
+                    },
+                    color = colors.text,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = pluralStringResource(R.plurals.summary_practised, summary.practised, summary.practised),
                     color = colors.secondaryText,
-                    fontSize = 14.sp,
+                    fontSize = 15.sp,
                 )
             }
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                Box(
-                    modifier = Modifier
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(colors.goodFill)
-                        .clickable(role = Role.Button, onClick = onDone)
-                        .padding(horizontal = 28.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = stringResource(R.string.ok),
-                        color = colors.onResult,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
+            val answers = listOf(
+                Triple(R.string.easy, summary.firstAnswers.easy, colors.goodBar),
+                Triple(R.string.hard, summary.firstAnswers.hard, colors.hardBar),
+                Triple(R.string.wrong, summary.firstAnswers.forgot, colors.forgotBar),
+            ).filter { (_, count, _) -> count > 0 }
+            ResultsBar(answers.map { (_, count, color) -> count to color })
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                answers.forEach { (label, count, color) -> LegendRow(label, count, color, colors) }
+            }
+            summary.mistakes?.let { MessageBox(it.verdict, colors) }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(colors.goodFill)
+                    .clickable(role = Role.Button, onClick = onDone),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(R.string.ok),
+                    color = colors.onResult,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                )
             }
         }
     }
 }
 
+/** One segment per kind of answer, as wide as its count, 2dp apart; fills left to right on show. */
 @Composable
-private fun LevelRow(level: WordStatus, count: Int, colors: SessionColors) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            Modifier
-                .size(8.dp)
-                .background(indicatorColors(level), CircleShape)
-        )
-        Text(
-            text = stringResource(level.label),
-            color = colors.text,
-            fontSize = 14.sp,
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 10.dp),
-        )
-        Text(text = count.toString(), color = colors.text, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+private fun ResultsBar(segments: List<Pair<Int, Color>>) {
+    val reveal = remember { Animatable(0f) }
+    LaunchedEffect(Unit) { reveal.animateTo(1f, tween(durationMillis = 450, delayMillis = 200)) }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(8.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .drawWithContent { clipRect(right = size.width * reveal.value) { this@drawWithContent.drawContent() } },
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        segments.forEach { (count, color) ->
+            Box(
+                Modifier
+                    .weight(count.toFloat())
+                    .fillMaxHeight()
+                    .background(color)
+            )
+        }
     }
 }
 
-/** A level as the learner reads it: a step on the way from just started to learned. */
-@get:StringRes
-private val WordStatus.label: Int
-    get() = when (this) {
-        WordStatus.Level1 -> R.string.level_just_started
-        WordStatus.Level2 -> R.string.level_sinking_in
-        WordStatus.Level3 -> R.string.level_familiar
-        WordStatus.Level4 -> R.string.level_nearly_learned
-        WordStatus.Learned -> R.string.level_learned
+@Composable
+private fun LegendRow(@StringRes label: Int, count: Int, dot: Color, colors: SessionColors) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Box(
+            Modifier
+                .size(8.dp)
+                .background(dot, CircleShape)
+        )
+        Text(
+            text = stringResource(label),
+            color = colors.legendText,
+            fontSize = 15.sp,
+            modifier = Modifier.weight(1f),
+        )
+        Text(text = count.toString(), color = colors.text, fontSize = 15.sp, fontWeight = FontWeight.Bold)
     }
+}
 
-@get:StringRes
-private val Mistakes.Verdict.text: Int
-    get() = when (this) {
-        Mistakes.Verdict.FEW -> R.string.summary_mistakes_few
-        Mistakes.Verdict.AS_EXPECTED -> R.string.summary_mistakes_as_expected
-        Mistakes.Verdict.MANY -> R.string.summary_mistakes_many
+@Composable
+private fun MessageBox(verdict: Mistakes.Verdict, colors: SessionColors) {
+    val (title, text, box) = when (verdict) {
+        Mistakes.Verdict.AS_EXPECTED ->
+            Triple(R.string.summary_on_track_title, R.string.summary_on_track_text, colors.onTrackBox)
+        Mistakes.Verdict.MANY ->
+            Triple(R.string.summary_productive_title, R.string.summary_productive_text, colors.productiveBox)
+        Mistakes.Verdict.FEW ->
+            Triple(R.string.summary_great_recall_title, R.string.summary_great_recall_text, colors.greatRecallBox)
     }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(box, RoundedCornerShape(18.dp))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(text = stringResource(title), color = colors.text, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+        Text(text = stringResource(text), color = colors.legendText, fontSize = 14.sp, lineHeight = 21.sp)
+    }
+}

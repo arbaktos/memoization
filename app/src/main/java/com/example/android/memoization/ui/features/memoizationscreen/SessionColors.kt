@@ -36,6 +36,13 @@ data class SessionColors(
     val forgotBorder: Color,
     val shadow: Color,
     val shadowElevation: Dp,
+    /** The session summary (design handoff "Итог сессии"): its surface and legend labels. */
+    val dialog: Color,
+    val legendText: Color,
+    /** The summary's message box: violet when mistakes did their job, teal for great recall. */
+    val onTrackBox: Color,
+    val productiveBox: Color,
+    val greatRecallBox: Color,
 )
 
 private val Dark = SessionColors(
@@ -59,6 +66,11 @@ private val Dark = SessionColors(
     forgotBorder = Color(0xFFE5627A).copy(alpha = 0.35f),
     shadow = Color.Black.copy(alpha = 0.35f),
     shadowElevation = 12.dp,
+    dialog = Color(0xFF2A2A2E),
+    legendText = Color(0xFFD8D8DC),
+    onTrackBox = Color(0xFF3A3648),
+    productiveBox = Color(0xFF3C374E),
+    greatRecallBox = Color(0xFF263D3B),
 )
 
 private val Light = SessionColors(
@@ -83,6 +95,11 @@ private val Light = SessionColors(
     // The handoff's light shadow is two soft layers; one light one at a low alpha is close.
     shadow = Color(0xFF14141E).copy(alpha = 0.14f),
     shadowElevation = 6.dp,
+    dialog = Color(0xFFFFFFFF),
+    legendText = Color(0xFF3A3A40),
+    onTrackBox = Color(0xFFEEEBF7),
+    productiveBox = Color(0xFFEEEBF7),
+    greatRecallBox = Color(0xFFE3F3F1),
 )
 
 @Composable
