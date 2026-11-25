@@ -41,7 +41,8 @@ data class StackListColors(
 
 private val Dark = StackListColors(
     background = Color(0xFF2A2A2E),
-    card = Color(0xFF333338),
+    // The handoff's #333338, with 20% more difference from the background (linear light).
+    card = Color(0xFF35353A),
     cardShadow = Color.Transparent,
     cardElevation = 0.dp,
     text = Color(0xFFECECEE),
