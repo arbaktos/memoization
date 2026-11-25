@@ -123,4 +123,11 @@
     <string name="summary_productive_text">Нашлись слова, над которыми стоит поработать. Каждое вернётся раньше, и каждое трудное воспоминание делает его прочнее. Учатся как раз на ошибках.</string>
     <string name="summary_great_recall_title">Отличная память</string>
     <string name="summary_great_recall_text">Слова, которые ты хорошо знаешь, будут попадаться реже.</string>
+    <string name="study">Учить</string>
+    <string name="study_anyway">Всё равно учить</string>
+    <string name="new_stack">Новый стек</string>
+    <string name="stack_level_new">Новые %d</string>
+    <string name="stack_level_learning">Учатся %d</string>
+    <string name="stack_level_known">Знакомые %d</string>
+    <string name="stack_level_learned">Выучены %d</string>
 </resources>

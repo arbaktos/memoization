@@ -84,8 +84,9 @@ class FolderViewModel @Inject constructor(
         return stacksWithWords
     }
 
-    fun onPlayWords(navController: NavController, stackId: Long) {
-        navController.navigateToMemorization(stackId)
+    /** Study: what is due, or - with nothing due - every practised side ahead of time. */
+    fun onPlayWords(navController: NavController, stackId: Long, ahead: Boolean) {
+        navController.navigateToMemorization(stackId, ahead)
     }
 
     private companion object {

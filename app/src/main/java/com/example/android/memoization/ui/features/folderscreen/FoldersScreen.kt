@@ -4,6 +4,18 @@ import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.Text
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -47,17 +59,13 @@ import androidx.navigation.NavController
 import com.example.android.memoization.R
 import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.data.model.PracticeSides
-import com.example.android.memoization.ui.composables.components.CustomAddFab
 import com.example.android.memoization.ui.composables.components.StackListItem
 import com.example.android.memoization.ui.composables.components.SwipeToDismiss
 import com.example.android.memoization.ui.composables.dialog.AddStackDialog
-import com.example.android.memoization.ui.composables.labels.PrimaryBoldLabel
 import com.example.android.memoization.ui.composables.labels.SimpleLabel
 import com.example.android.memoization.ui.features.settings.MenuDrawer
 import com.example.android.memoization.ui.features.stackscreen.DisplayStackError
-import com.example.android.memoization.ui.icons.ClickableVectorIcon
 import com.example.android.memoization.ui.theme.MemoizationTheme
-import com.example.android.memoization.ui.theme.PlayColors
 import com.example.android.memoization.utils.LoadingState
 import kotlinx.coroutines.launch
 
@@ -75,22 +83,20 @@ fun FoldersScreen(
     val scope = rememberCoroutineScope()
     val state by viewModel.getDataToDisplay().collectAsState(initial = LoadingState.Loading)
     val toShowDialog = viewModel.showAddStackDialog.observeAsState(false)
+    val colors = stackListColors()
 
     Scaffold(
         scaffoldState = scaffoldState,
+            backgroundColor = colors.background,
             floatingActionButton = {
                 val collectedState = state
-                if (collectedState is LoadingState.Collected) {
-                    CustomAddFab(
-                        isVisible = (collectedState.content.isNotEmpty()),
-                        onClick = {
-                            viewModel.showAddStackDialog(true)
-                        })
+                if (collectedState is LoadingState.Collected && collectedState.content.isNotEmpty()) {
+                    NewStackFab(colors) { viewModel.showAddStackDialog(true) }
                 }
             },
             drawerContent = { MenuDrawer(preferenceStorage = preferenceStorage) },
             topBar = {
-                AppBar(name = stringResource(id = R.string.app_name)) {
+                AppBar(name = stringResource(id = R.string.app_name), colors = colors) {
                     scope.launch { scaffoldState.drawerState.open() }
                 }
             }
@@ -162,12 +168,14 @@ fun StackList(
 ) {
     val scope = rememberCoroutineScope()
     val practice by viewModel.practiceSides.collectAsState()
+    val colors = stackListColors()
     LazyColumn(
         state = listState,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .padding(8.dp)
-            .fillMaxWidth()
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        // Room under the last card for the New stack button.
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 100.dp),
+        modifier = Modifier.fillMaxWidth()
     ) {
         items(
             state.content, key = { stack -> stack.stackId },
@@ -178,6 +186,7 @@ fun StackList(
                     ShowStack(
                         stack = stack,
                         practice = practice,
+                        colors = colors,
                         onAddNewWord = { viewModel.onAddNewWord(navController, stack) },
                         onNavigateToStack = {
                             viewModel.onNavigateToStack(
@@ -185,7 +194,7 @@ fun StackList(
                                 stack.stackId
                             )
                         },
-                        onPlayWords = { viewModel.onPlayWords(navController, stack.stackId) },
+                        onPlayWords = { ahead -> viewModel.onPlayWords(navController, stack.stackId, ahead) },
                         onPin = { viewModel.onPin(stack) },
                         modifier = Modifier//.animateItemPlacement()
                     )
@@ -204,7 +213,6 @@ fun StackList(
             )
 
         }
-        item { Spacer(modifier = Modifier.padding(40.dp)) }
     }
 }
 
@@ -245,7 +253,8 @@ fun InvitationToCreateStack(onClick: () -> Unit = {}) {
 fun ShowStack(
     stack: MemoStack,
     practice: PracticeSides,
-    onPlayWords: () -> Unit,
+    colors: StackListColors,
+    onPlayWords: (ahead: Boolean) -> Unit,
     onNavigateToStack: () -> Unit,
     onAddNewWord: () -> Unit,
     onPin: () -> Unit,
@@ -254,6 +263,7 @@ fun ShowStack(
     StackListItem(
         stack = stack,
         practice = practice,
+        colors = colors,
         modifier = modifier,
         onPlay = onPlayWords,
         onAdd = onAddNewWord,
@@ -262,43 +272,54 @@ fun ShowStack(
     )
 }
 
-fun animateToTop() {
-    TODO("Not yet implemented")
-}
-
-
-fun getPlayIconColor(unRepeatedPercent: Float): Color {
-    return when (unRepeatedPercent.toInt()) {
-        in 1..20 -> PlayColors.itsok.getColor()
-        in 21..40 -> PlayColors.itsstillok.getColor()
-        in 41..60 -> PlayColors.shoulddosomework.getColor()
-        in 61..80 -> PlayColors.actionneeded.getColor()
-        else -> PlayColors.timetolearn.getColor()
-    }
-}
-
-
 @Composable
 fun AppBar(
     modifier: Modifier = Modifier,
     name: String,
+    colors: StackListColors,
     onClick: () -> Unit
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(8.dp),
-        verticalAlignment = Alignment.Bottom,
+            .padding(start = 20.dp, end = 8.dp, top = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        PrimaryBoldLabel(text = name, size = 28.sp)
-        ClickableVectorIcon(
-            modifier = Modifier.padding(
-                end = 16.dp,
-                bottom = 14.dp
-            ),
-            imageVector = Icons . Filled . Menu,
-            onClick = onClick
+        Text(text = name, color = colors.text, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+        IconButton(onClick = onClick) {
+            Icon(
+                Icons.Filled.Menu,
+                contentDescription = stringResource(R.string.app_menu),
+                tint = colors.icon,
+                modifier = Modifier.size(24.dp),
+            )
+        }
+    }
+}
+
+/** Extended, so it says what it makes; shown once there is a stack, the empty list has its own. */
+@Composable
+private fun NewStackFab(colors: StackListColors, onClick: () -> Unit) {
+    val shape = RoundedCornerShape(18.dp)
+    Row(
+        modifier = Modifier
+            .padding(bottom = 12.dp)
+            .height(56.dp)
+            .shadow(12.dp, shape, ambientColor = Color.Black.copy(alpha = 0.35f), spotColor = Color.Black.copy(alpha = 0.35f))
+            .clip(shape)
+            .background(colors.accent)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(start = 16.dp, end = 20.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Icon(Icons.Filled.Add, contentDescription = null, tint = colors.onAccent, modifier = Modifier.size(18.dp))
+        Text(
+            text = stringResource(R.string.new_stack),
+            color = colors.onAccent,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
         )
     }
 }

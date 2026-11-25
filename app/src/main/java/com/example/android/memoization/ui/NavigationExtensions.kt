@@ -41,6 +41,6 @@ fun NavController.navigateToEditPair(
     navigate(route = EditPairDestination(wordPairId, fromLanguage, toLanguage))
 }
 
-fun NavController.navigateToMemorization(stackId: Long) {
-    navigate(route = MemorizationDestination(stackId))
+fun NavController.navigateToMemorization(stackId: Long, ahead: Boolean = false) {
+    navigate(route = MemorizationDestination(stackId, ahead))
 }

@@ -46,6 +46,8 @@ _Avoid_: level, hardness
 **Level**:
 A reading of a side's stability, for colour: Level1 under 2 days, Level2 under 7, Level3 under
 14, Level4 under 30, Learned beyond. A pair shows the level of its weakest practised side.
+The stack list folds them into four bars: new (a practised side never answered), learning
+(Level1-2), known (Level3-4) and learned.
 _Avoid_: score, status, stored level
 
 **Rating**:
@@ -93,6 +95,11 @@ _Avoid_: report, score, result screen
 The learner's way to end a **Session** early. Offered once they have answered as many sides as
 the stack's **Stamina** says; the sides not got to simply stay **Due**.
 _Avoid_: I'm tired, quit, give up
+
+**Study anyway**:
+A **Session** started from the stack list when nothing is **Due**: every practised side, due
+or not, the most forgotten first. FSRS rates the early answers for what they are.
+_Avoid_: cram, extra practice, review ahead
 
 **Stamina**:
 Where the learner tends to stop with a stack: the running mean of answers per **Session** ended

@@ -1,158 +1,204 @@
 package com.example.android.memoization.ui.composables.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
 import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.PlayCircleFilled
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.android.memoization.R
 import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.data.model.PracticeSides
-import com.example.android.memoization.ui.features.folderscreen.getPlayIconColor
-import com.example.android.memoization.ui.theme.memoButtonColors
+import com.example.android.memoization.data.model.StackLevels
+import com.example.android.memoization.data.model.levels
+import com.example.android.memoization.ui.features.folderscreen.StackListColors
 
-
+/**
+ * One stack in the list (design handoff "Список колод", 6c/6e): name and size, the pairs by
+ * level as four bars, Study and Add. With nothing due, Study turns grey and studies ahead.
+ */
 @Composable
 fun StackListItem(
     stack: MemoStack,
     practice: PracticeSides,
+    colors: StackListColors,
     modifier: Modifier = Modifier,
     onPin: () -> Unit = {},
     onAdd: () -> Unit = {},
-    onPlay: () -> Unit = {},
+    onPlay: (ahead: Boolean) -> Unit = {},
     onClick: () -> Unit = {}
 ) {
-
     // Not remembered: MemoStack.words sits outside the data-class constructor, so no key would
-    // ever change, and a remembered value froze at first composition. The count is not shown -
-    // the session's own closing count is the one that is right - it only decides whether the
-    // Play button is there and how urgent it looks.
-    val wordsToLearn = stack.duePairs(practice)
-    val unRepeatedPercent = wordsToLearn.size.toFloat() / stack.words.size.toFloat() * 100
-    Card(
-        elevation = 8.dp,
-        shape = RoundedCornerShape(20.dp),
+    // ever change, and a remembered value would freeze at first composition.
+    val hasDue = stack.hasDue(practice)
+    val levels = stack.levels(practice)
+    val shape = RoundedCornerShape(24.dp)
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color.White)
-            .padding(5.dp)
-            .height(120.dp)
-            .clickable { onClick() }
-
+            .shadow(colors.cardElevation, shape, ambientColor = colors.cardShadow, spotColor = colors.cardShadow)
+            .clip(shape)
+            .background(colors.card)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 20.dp, vertical = 18.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Column(modifier = Modifier.padding(5.dp)) {
-            Row(modifier = Modifier.weight(1f)) {
-                Column(
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = stack.name,
+                    color = colors.text,
+                    fontSize = 21.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = pluralStringResource(R.plurals.stack_word_count, stack.words.size, stack.words.size),
+                    color = colors.secondaryText,
+                    fontSize = 14.sp,
+                )
+            }
+            PinToggle(pinned = stack.pinnedTime != null, colors = colors, onPin = onPin)
+        }
+        LevelBars(levels, colors)
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            val buttonShape = RoundedCornerShape(16.dp)
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(48.dp)
+                    .clip(buttonShape)
+                    .background(if (hasDue) colors.accent else colors.studyAheadFill)
+                    .clickable(role = Role.Button) { onPlay(!hasDue) },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(if (hasDue) R.string.study else R.string.study_anyway),
+                    color = if (hasDue) colors.onAccent else colors.studyAheadText,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .height(48.dp)
+                    .clip(buttonShape)
+                    .border(BorderStroke(1.5.dp, colors.addOutline), buttonShape)
+                    .clickable(role = Role.Button, onClick = onAdd)
+                    .padding(start = 12.dp, end = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Icon(Icons.Outlined.Add, contentDescription = null, tint = colors.icon, modifier = Modifier.size(18.dp))
+                Text(
+                    text = stringResource(R.string.add),
+                    color = colors.icon,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Filled in blue when the stack is pinned, an outline otherwise - the only way to pin, so it is
+ * always there. The touch target is wider than the 18dp icon and reaches into the card padding.
+ */
+@Composable
+private fun PinToggle(pinned: Boolean, colors: StackListColors, onPin: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .offset(x = 13.dp)
+            .size(44.dp)
+            .clip(CircleShape)
+            .toggleable(value = pinned, role = Role.Switch, onValueChange = { onPin() }),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = if (pinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
+            contentDescription = stringResource(R.string.pin_stack),
+            tint = if (pinned) colors.pin else colors.secondaryText,
+            modifier = Modifier.size(18.dp),
+        )
+    }
+}
+
+/** Four bars on a shared scale - the tallest level fills the 36dp - with no track behind them. */
+@Composable
+private fun LevelBars(levels: StackLevels, colors: StackListColors) {
+    val counts = levels.counts
+    val max = counts.max()
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        counts.forEachIndexed { index, count ->
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 12.dp, top = 8.dp)
+                        .fillMaxWidth()
+                        .height(BAR_HEIGHT),
+                    contentAlignment = Alignment.BottomCenter,
                 ) {
-                    StackNameText(text = stack.name)
+                    if (count > 0) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(BAR_HEIGHT * (count.toFloat() / max))
+                                .background(colors.levels[index], RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
+                        )
+                    }
                 }
-                PinPushIcon(isPinned = stack.pinnedTime != null) { onPin() }
+                Text(
+                    text = stringResource(LEVEL_LABELS[index], count),
+                    color = colors.secondaryText,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                )
             }
-            Row(modifier = Modifier.padding(start = 8.dp)) {
-                AddIconBtn { onAdd() }
-            }
-        }
-        Column(
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.Bottom,
-            modifier = Modifier.height(IntrinsicSize.Max)
-        ) {
-            if (wordsToLearn.isNotEmpty()) PlayIcon(tint = getPlayIconColor(unRepeatedPercent)) { onPlay() }
         }
     }
 }
 
-@Composable
-fun StackNameText(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text = text,
-        maxLines = 2,
-        overflow = TextOverflow.Ellipsis,
-        fontFamily = FontFamily.Serif,
-        style = MaterialTheme.typography.h6,
-        modifier = modifier
-    )
-}
+private val BAR_HEIGHT = 36.dp
 
-@Composable
-fun PinPushIcon(
-    modifier: Modifier = Modifier,
-    isPinned: Boolean = false,
-    onPin: () -> Unit
-) {
-    val _isPinned = remember { mutableStateOf(isPinned) }
-    Icon(
-        Icons.Outlined.PushPin, stringResource(R.string.pin_stack),
-        tint = if (_isPinned.value) MaterialTheme.colors.primary else Color.LightGray,
-        modifier = modifier
-            .size(30.dp)
-            .padding(8.dp)
-            .toggleable(value = _isPinned.value, onValueChange = {
-                _isPinned.value = !_isPinned.value
-                onPin()
-            })
-    )
-}
-
-@Composable
-fun AddIconBtn(modifier: Modifier = Modifier, onAdd: () -> Unit) {
-
-    OutlinedButton(
-        onClick = onAdd,
-        shape = RoundedCornerShape(16.dp),
-        colors = memoButtonColors(),
-        modifier = modifier
-    ) {
-        Icon(Icons.Outlined.Add, stringResource(R.string.add_wordpair), tint = Color.Gray)
-        Spacer(modifier = Modifier.width(5.dp))
-        Text(stringResource(R.string.add), color = Color.Gray)
-
-    }
-}
-
-@Composable
-fun PlayIcon(
-    tint: Color = MaterialTheme.colors.primary,
-    modifier: Modifier = Modifier,
-    onPlay: () -> Unit
-) {
-    Icon(Icons.Outlined.PlayCircleFilled, stringResource(R.string.add_wordpair),
-        tint = tint, modifier = modifier
-            .size(60.dp)
-//            .padding(8.dp)
-            .clickable {
-                onPlay()
-            }
-    )
-}
+private val LEVEL_LABELS = listOf(
+    R.string.stack_level_new,
+    R.string.stack_level_learning,
+    R.string.stack_level_known,
+    R.string.stack_level_learned,
+)

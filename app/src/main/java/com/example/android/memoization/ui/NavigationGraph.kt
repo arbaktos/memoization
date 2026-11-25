@@ -42,7 +42,11 @@ internal data class EditPairDestination(
 ) : MemoDestination
 
 @Serializable
-internal data class MemorizationDestination(val id: Long) : MemoDestination
+internal data class MemorizationDestination(
+    val id: Long,
+    /** "Study anyway": nothing is due, so the session takes every practised side. */
+    val ahead: Boolean = false,
+) : MemoDestination
 
 /**
  * Where a share from another app lands: the word, waiting for a stack to go into. [stackId] is

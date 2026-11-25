@@ -14,6 +14,7 @@ import com.example.android.memoization.domain.session.MemorizationSession
 import com.example.android.memoization.domain.session.SessionEnding
 import com.example.android.memoization.domain.session.SessionSide
 import com.example.android.memoization.domain.session.SessionSummary
+import com.example.android.memoization.domain.session.aheadSessionSides
 import com.example.android.memoization.domain.session.dueSessionSides
 import com.example.android.memoization.domain.session.stamina
 import com.example.android.memoization.domain.usecases.GetStackUseCase
@@ -40,6 +41,7 @@ class MemoizationViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val stackId: Long = savedStateHandle.get<Long>(STACK_ID_ARG) ?: NO_STACK_ID_PASSED
+    private val ahead: Boolean = savedStateHandle.get<Boolean>(AHEAD_ARG) ?: false
 
     private var session: MemorizationSession? = null
 
@@ -93,7 +95,7 @@ class MemoizationViewModel @Inject constructor(
                 .first()
                 .content
             val practice = learningSettings.practiceSides.first()
-            val batch = stack.dueSessionSides(practice)
+            val batch = if (ahead) stack.aheadSessionSides(practice) else stack.dueSessionSides(practice)
             val now = System.currentTimeMillis()
             // The session row is written before the first side is shown, so every answer has
             // a session to belong to; an empty sitting is recorded too, and finished at once.
@@ -214,6 +216,8 @@ class MemoizationViewModel @Inject constructor(
     companion object {
         // Matches MemorizationDestination.id
         private const val STACK_ID_ARG = "id"
+        // Matches MemorizationDestination.ahead
+        private const val AHEAD_ARG = "ahead"
         private const val NO_STACK_ID_PASSED = -1L
     }
 }

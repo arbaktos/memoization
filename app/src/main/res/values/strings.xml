@@ -115,4 +115,11 @@
     <string name="summary_productive_text">You found the words that need work. Each one comes back sooner, and every hard recall makes it stronger. Mistakes are where the learning happens.</string>
     <string name="summary_great_recall_title">Great recall</string>
     <string name="summary_great_recall_text">Words you know well will show up less often.</string>
+    <string name="study">Study</string>
+    <string name="study_anyway">Study anyway</string>
+    <string name="new_stack">New stack</string>
+    <string name="stack_level_new">New %d</string>
+    <string name="stack_level_learning">Learning %d</string>
+    <string name="stack_level_known">Known %d</string>
+    <string name="stack_level_learned">Learned %d</string>
 </resources>

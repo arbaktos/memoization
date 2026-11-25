@@ -1,6 +1,7 @@
 package com.example.android.memoization.data.model
 
 import com.example.android.memoization.domain.scheduler.DAY_MILLIS
+import com.example.android.memoization.domain.session.aheadSessionSides
 import com.example.android.memoization.domain.session.dueSessionSides
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -208,5 +209,36 @@ class MemoStackTest {
         val stack = stack(answeredTodayPair(1), answeredTodayPair(2))
 
         assertTrue(stack.dueSessionSides(PracticeSides.WORD_TO_MEANING, now).isEmpty())
+    }
+
+    @Test
+    fun `studying anyway takes every practised side, due or not, the most forgotten first`() {
+        val stack = stack(
+            answeredTodayPair(1),
+            scheduledPair(2, stability = 10.0, intervalDays = 8, overdueDays = -2),
+            newPair(3),
+        )
+
+        val ahead = stack.aheadSessionSides(PracticeSides.WORD_TO_MEANING, now, utc, Random(1))
+
+        assertTrue(stack.dueSessionSides(PracticeSides.WORD_TO_MEANING, now, utc).map { it.side.sideId } == listOf(3L))
+        assertEquals(listOf(2L, 1L, 3L), ahead.map { it.side.sideId })
+    }
+
+    @Test
+    fun `levels place each pair once, by its weakest practised side`() {
+        val learned = Side(sideId = 1, wordPairId = 1, shown = Shown.WORD, state = SideState.Review, stability = 40.0)
+        val known = Side(sideId = 2, wordPairId = 1, shown = Shown.MEANING, state = SideState.Review, stability = 8.0)
+        val fresh = Side(sideId = 3, wordPairId = 2, shown = Shown.MEANING)
+        val stack = stack(
+            WordPair(1, "a", "b", 1, sides = listOf(learned, known)),
+            WordPair(1, "c", "d", 2, sides = listOf(learned.copy(sideId = 4, wordPairId = 2), fresh)),
+            overduePair(3, overdueDays = 1),
+            WordPair(1, "e", "f", 4, sides = listOf(learned.copy(sideId = 5, wordPairId = 4))),
+        )
+
+        val levels = stack.levels(PracticeSides.BOTH, now, utc)
+
+        assertEquals(StackLevels(new = 1, learning = 1, known = 1, learned = 1), levels)
     }
 }
