@@ -8,6 +8,7 @@ import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.data.model.PracticeSides
 import com.example.android.memoization.data.repository.DuplicatesRepository
 import com.example.android.memoization.data.repository.LearningSettingsRepository
+import com.example.android.memoization.data.repository.StackRepository
 import com.example.android.memoization.domain.duplicates.CopyGroup
 import com.example.android.memoization.domain.duplicates.DuplicateReport
 import com.example.android.memoization.domain.duplicates.Duplicates
@@ -35,6 +36,7 @@ class StackViewModel @Inject constructor(
     private val updateStackUseCase: UpdateStackUseCase,
     private val hideWordPairUseCase: HideWordPairUseCase,
     private val duplicatesRepository: DuplicatesRepository,
+    private val stackRepository: StackRepository,
     learningSettings: LearningSettingsRepository,
 ) : BaseViewModel<LoadingState<MemoStack>>() {
 
@@ -73,6 +75,17 @@ class StackViewModel @Inject constructor(
     fun updateStackInDb(stack: MemoStack) {
         viewModelScope.launch {
             updateStackUseCase(stack)
+        }
+    }
+
+    fun togglePin(stack: MemoStack) =
+        updateStackInDb(stack.copy(pinnedTime = if (stack.pinnedTime == null) System.currentTimeMillis() else null))
+
+    /** Delete from the menu: hidden, never deleted - the stack list offers the undo. */
+    fun hideStack(onHidden: () -> Unit) {
+        viewModelScope.launch {
+            stackRepository.setStackVisible(stackId, false)
+            onHidden()
         }
     }
 

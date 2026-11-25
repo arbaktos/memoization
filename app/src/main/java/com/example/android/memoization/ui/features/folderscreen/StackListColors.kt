@@ -30,6 +30,13 @@ data class StackListColors(
     val pin: Color,
     /** New, learning, known, learned. */
     val levels: List<Color>,
+    /** The stack screen (handoff "Экран колоды", 9a/9b): a word row, a little flatter than a card. */
+    val rowElevation: Dp,
+    val plusFill: Color,
+    val plusIcon: Color,
+    val fabShadow: Color,
+    val menu: Color,
+    val danger: Color,
 )
 
 private val Dark = StackListColors(
@@ -47,6 +54,12 @@ private val Dark = StackListColors(
     studyAheadText = Color(0xFFA8A8B0),
     pin = Color(0xFF7FA8EE),
     levels = listOf(Color(0xFF5E6676), Color(0xFF5E7494), Color(0xFF5684C2), Color(0xFF4A95F2)),
+    rowElevation = 0.dp,
+    plusFill = Color(0xFF424248),
+    plusIcon = Color(0xFFECECEE),
+    fabShadow = Color.Black.copy(alpha = 0.35f),
+    menu = Color(0xFF3A3A40),
+    danger = Color(0xFFF58A98),
 )
 
 private val Light = StackListColors(
@@ -65,6 +78,12 @@ private val Light = StackListColors(
     studyAheadText = Color(0xFF5E5E66),
     pin = Color(0xFF3F7BD0),
     levels = listOf(Color(0xFFC7CEDA), Color(0xFF97ABC9), Color(0xFF5A88C6), Color(0xFF2F6CD0)),
+    rowElevation = 2.dp,
+    plusFill = Color(0xFFFFFFFF),
+    plusIcon = Color(0xFF1C1C1F),
+    fabShadow = Color(0xFF14141E).copy(alpha = 0.14f),
+    menu = Color(0xFFFFFFFF),
+    danger = Color(0xFFB5304F),
 )
 
 @Composable

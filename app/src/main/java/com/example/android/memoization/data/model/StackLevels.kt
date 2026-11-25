@@ -12,25 +12,36 @@ data class StackLevels(val new: Int, val learning: Int, val known: Int, val lear
     val counts: List<Int> get() = listOf(new, learning, known, learned)
 }
 
+/**
+ * Where a side stands on the four-step scale: 0 new (never answered), 1 learning (Level1-2),
+ * 2 known (Level3-4), 3 learned.
+ */
+val Side.step: Int
+    get() = when {
+        stability == null -> 0
+        else -> when (level) {
+            WordStatus.Level1, WordStatus.Level2 -> 1
+            WordStatus.Level3, WordStatus.Level4 -> 2
+            WordStatus.Learned -> 3
+        }
+    }
+
+/** True when this setting ever asks for sides shown that way, today or after a hand-over. */
+fun PracticeSides.covers(shown: Shown): Boolean = when (this) {
+    PracticeSides.WORD_TO_MEANING -> shown == Shown.WORD
+    PracticeSides.MEANING_TO_WORD -> shown == Shown.MEANING
+    PracticeSides.SMART_SWITCH, PracticeSides.BOTH -> true
+}
+
 fun MemoStack.levels(
     practice: PracticeSides,
     now: Long = System.currentTimeMillis(),
     zone: TimeZone = TimeZone.getDefault(),
 ): StackLevels {
-    var new = 0
-    var learning = 0
-    var known = 0
-    var learned = 0
+    val counts = IntArray(4)
     words.forEach { pair ->
-        val sides = pair.activeSides(practice, now, zone)
-        when {
-            sides.isEmpty() || sides.any { it.stability == null } -> new++
-            else -> when (sides.minBy { it.level.frequency }.level) {
-                WordStatus.Level1, WordStatus.Level2 -> learning++
-                WordStatus.Level3, WordStatus.Level4 -> known++
-                WordStatus.Learned -> learned++
-            }
-        }
+        // The weakest practised side places the pair; one never answered makes it new.
+        counts[pair.activeSides(practice, now, zone).minOfOrNull { it.step } ?: 0]++
     }
-    return StackLevels(new, learning, known, learned)
+    return StackLevels(counts[0], counts[1], counts[2], counts[3])
 }

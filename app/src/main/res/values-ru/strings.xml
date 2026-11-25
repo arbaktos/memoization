@@ -130,4 +130,7 @@
     <string name="stack_level_learning">Учатся %d</string>
     <string name="stack_level_known">Знакомые %d</string>
     <string name="stack_level_learned">Выучены %d</string>
+    <string name="stack_menu">Меню стека</string>
+    <string name="unpin_stack">Открепить стек</string>
+    <string name="delete_stack">Удалить стек</string>
 </resources>

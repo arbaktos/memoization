@@ -20,6 +20,10 @@ class StackRepository @Inject constructor(private val memoDao: MemoDao){
         memoDao.updateStack(stackEntity)
     }
 
+    suspend fun setStackVisible(stackId: Long, visible: Boolean) {
+        memoDao.setStackVisible(stackId, visible)
+    }
+
     /** The learner stopped a session with this stack after [answers] answers; see Stamina. */
     suspend fun recordStoppedAt(stackId: Long, answers: Int) {
         memoDao.recordStoppedAt(stackId, answers)

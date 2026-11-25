@@ -2,6 +2,7 @@ package com.example.android.memoization.ui.features.folderscreen
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.android.memoization.data.database.stackdb.StackEntity
@@ -20,6 +21,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -27,6 +29,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class FolderViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private var stackRepository: StackRepository,
     val getStacksWithWordsUseCase: GetStacksWithWordsUseCase,
     val updateStackUseCase: UpdateStackUseCase,
@@ -61,6 +64,20 @@ class FolderViewModel @Inject constructor(
 
     fun unhideStack(stack: MemoStack) = updateStack(stack.copy(isVisible = true))
 
+    /** A stack deleted from its own screen, handed back here so the list can offer the undo. */
+    val hiddenFromStackScreen: StateFlow<Long?> = savedStateHandle.getStateFlow(HIDDEN_STACK_ID, null)
+    private val handle = savedStateHandle
+
+    fun hiddenStackName(): String = handle.get<String>(HIDDEN_STACK_NAME).orEmpty()
+
+    fun onHiddenStackShown() {
+        handle[HIDDEN_STACK_ID] = null
+    }
+
+    fun unhideStack(stackId: Long) {
+        viewModelScope.launch { stackRepository.setStackVisible(stackId, true) }
+    }
+
     fun addStackAndOpenIt(stack: MemoStack, navController: NavController) {
         viewModelScope.launch {
             val stackId = stackRepository.insertStack(StackEntity.create(stack))
@@ -89,8 +106,11 @@ class FolderViewModel @Inject constructor(
         navController.navigateToMemorization(stackId, ahead)
     }
 
-    private companion object {
-        const val STOP_COLLECTING_AFTER_MS = 5_000L
+    companion object {
+        private const val STOP_COLLECTING_AFTER_MS = 5_000L
+        /** Keys in the stack list's saved state, set by the stack screen as it closes. */
+        const val HIDDEN_STACK_ID = "hiddenStackId"
+        const val HIDDEN_STACK_NAME = "hiddenStackName"
     }
 
     fun onPin(stack: MemoStack) {

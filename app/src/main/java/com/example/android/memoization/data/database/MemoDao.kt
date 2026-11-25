@@ -36,6 +36,10 @@ interface MemoDao {
     @Update
     suspend fun updateStack(stackEntity: StackEntity)
 
+    /** Hiding is how a stack is deleted; its words stay, so it can always come back. */
+    @Query("UPDATE stack_entity_table SET isVisible = :visible WHERE stackId = :stackId")
+    suspend fun setStackVisible(stackId: Long, visible: Boolean)
+
     /** One more "Enough for today" on this stack, in place: no snapshot of the row to go stale. */
     @Query(
         "UPDATE stack_entity_table SET tiredSessions = tiredSessions + 1, " +

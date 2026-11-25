@@ -122,4 +122,7 @@
     <string name="stack_level_learning">Learning %d</string>
     <string name="stack_level_known">Known %d</string>
     <string name="stack_level_learned">Learned %d</string>
+    <string name="stack_menu">Stack menu</string>
+    <string name="unpin_stack">Unpin this stack</string>
+    <string name="delete_stack">Delete stack</string>
 </resources>

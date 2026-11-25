@@ -39,6 +39,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -84,6 +85,15 @@ fun FoldersScreen(
     val state by viewModel.getDataToDisplay().collectAsState(initial = LoadingState.Loading)
     val toShowDialog = viewModel.showAddStackDialog.observeAsState(false)
     val colors = stackListColors()
+    val hiddenFromStackScreen by viewModel.hiddenFromStackScreen.collectAsState()
+    LaunchedEffect(hiddenFromStackScreen) {
+        val stackId = hiddenFromStackScreen ?: return@LaunchedEffect
+        val name = viewModel.hiddenStackName()
+        viewModel.onHiddenStackShown()
+        if (scaffoldState.snackbarHostState.showOnStackDeleteSnackBar(name) == SnackbarResult.ActionPerformed) {
+            viewModel.unhideStack(stackId)
+        }
+    }
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -325,9 +335,12 @@ private fun NewStackFab(colors: StackListColors, onClick: () -> Unit) {
 }
 
 
-suspend fun SnackbarHostState.showOnStackDeleteSnackBar(stack: MemoStack): SnackbarResult {
+suspend fun SnackbarHostState.showOnStackDeleteSnackBar(stack: MemoStack): SnackbarResult =
+    showOnStackDeleteSnackBar(stack.name)
+
+suspend fun SnackbarHostState.showOnStackDeleteSnackBar(name: String): SnackbarResult {
     return showSnackbar(
-        message = "Deletion of ${stack.name} with all the words",
+        message = "Deletion of $name with all the words",
         actionLabel = "Undo",
         duration = SnackbarDuration.Short
     )

@@ -47,7 +47,9 @@ _Avoid_: level, hardness
 A reading of a side's stability, for colour: Level1 under 2 days, Level2 under 7, Level3 under
 14, Level4 under 30, Learned beyond. A pair shows the level of its weakest practised side.
 The stack list folds them into four bars: new (a practised side never answered), learning
-(Level1-2), known (Level3-4) and learned.
+(Level1-2), known (Level3-4) and learned. The stack screen shows the same four steps as a dot
+beside each side of a pair - the word's dot for the word side, the meaning's for the meaning
+side - and no dot for a side the **Practice sides** setting never asks for.
 _Avoid_: score, status, stored level
 
 **Rating**:
