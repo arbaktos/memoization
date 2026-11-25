@@ -81,7 +81,7 @@
     <string name="practice_smart_switch_caption">Умное переключение: сначала слово → значение; когда слово выучено, пара переходит на значение → слово</string>
     <string name="session_progress">Готово %1$d из %2$d</string>
     <string name="session_legend">Помню %1$d, трудно %2$d, не помню %3$d</string>
-    <string name="end_session">Закончить сессию</string>
+    <string name="next">Дальше</string>
     <string name="check_question">Получилось вспомнить?</string>
     <string name="check_no">Нет ;(</string>
     <string name="check_yes">Да</string>

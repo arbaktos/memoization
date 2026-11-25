@@ -21,7 +21,6 @@ data class SessionColors(
     val secondaryText: Color,
     val question: Color,
     val mutedText: Color,
-    val closeIcon: Color,
     val onResult: Color,
     val forgotFill: Color,
     val hardFill: Color,
@@ -31,8 +30,10 @@ data class SessionColors(
     val goodBar: Color,
     val noOutline: Color,
     val noText: Color,
-    /** The 1dp frame of the card's back, which is only ever shown after Hard. */
+    /** The 1dp frame of the card's back after Hard. */
     val backBorder: Color,
+    /** The same frame after Forgot, so the turned card says why it is turned. */
+    val forgotBorder: Color,
     val shadow: Color,
     val shadowElevation: Dp,
 )
@@ -45,7 +46,6 @@ private val Dark = SessionColors(
     secondaryText = Color(0xFFA8A8B0),
     question = Color(0xFFB5B5BC),
     mutedText = Color(0xFF9A9AA2),
-    closeIcon = Color(0xFF8D8D95),
     onResult = Color(0xFF1A1A1C),
     forgotFill = Color(0xFFE5627A),
     hardFill = Color(0xFFE8C15C),
@@ -56,6 +56,7 @@ private val Dark = SessionColors(
     noOutline = Color(0xFFE5627A),
     noText = Color(0xFFF58A98),
     backBorder = Color(0xFFE8C15C).copy(alpha = 0.35f),
+    forgotBorder = Color(0xFFE5627A).copy(alpha = 0.35f),
     shadow = Color.Black.copy(alpha = 0.35f),
     shadowElevation = 12.dp,
 )
@@ -68,7 +69,6 @@ private val Light = SessionColors(
     secondaryText = Color(0xFF5E5E66),
     question = Color(0xFF5E5E66),
     mutedText = Color(0xFF7A7A82),
-    closeIcon = Color(0xFF7A7A82),
     onResult = Color(0xFF1A1A1C),
     forgotFill = Color(0xFFEC6A80),
     hardFill = Color(0xFFF0C95E),
@@ -79,6 +79,7 @@ private val Light = SessionColors(
     noOutline = Color(0xFFD9506B),
     noText = Color(0xFFB5304F),
     backBorder = Color(0xFFE6B846).copy(alpha = 0.6f),
+    forgotBorder = Color(0xFFD9506B).copy(alpha = 0.6f),
     // The handoff's light shadow is two soft layers; one light one at a low alpha is close.
     shadow = Color(0xFF14141E).copy(alpha = 0.14f),
     shadowElevation = 6.dp,

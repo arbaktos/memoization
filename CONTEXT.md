@@ -54,7 +54,8 @@ recalled; Hard grows it a little, Good grows it fully. Recalling a side after Ag
 **Session** is not a rating: it only lets the lapse's schedule start. Hard is not taken at its
 word: it turns the card over to the answer, and the learner says whether they had it right - yes
 keeps the Hard, no is an Again, as if it had been pressed first. Nothing is rated until then.
-Good and Again never show the answer.
+Again is rated at once and turns the card over too, so the learner sees what they could not
+recall; Good never shows the answer.
 _Avoid_: a fourth rating (FSRS has one, this app does not), icon, click
 
 **New**:

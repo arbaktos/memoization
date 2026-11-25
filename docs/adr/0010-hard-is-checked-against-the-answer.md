@@ -2,10 +2,12 @@
 status: accepted
 ---
 
-# Hard is checked against the answer; the card turns over for nothing else
+# Hard is checked against the answer; Forgot shows it
 
-The card no longer turns over on a tap. **Good** and **Forgot** rate the side and move to the
-next one at once, without showing the answer. **Hard** turns the card over to the answer and
+The card no longer turns over on a tap. **Good** rates the side and moves to the next one at
+once, without showing the answer. **Forgot** rates the side at once - leaving then loses
+nothing - and turns the card over to the answer, with a single **Next** in place of the three
+buttons; the side's time on screen stops at the Forgot. **Hard** turns the card over to the answer and
 puts a check in place of the three buttons - "Did you get it right?" with **Yes** and
 **Forgot** (ru: «Получилось вспомнить?», «Да» / «Нет ;(»). Yes rates the side Hard; Forgot rates
 it Again, exactly as if Again had been pressed first: the lapse is written and the side goes to
@@ -21,7 +23,8 @@ The log does not mark an Again that came through the check. Nothing reads that y
 can be added when a statistic wants it, and earlier rows stay correct as plain Again and Hard.
 
 The screen follows the design handoff "Переворот карточки на Hard" (variant 1a dark, 2a light):
-a close button and, once offered, "Enough for today" in the header; a bar filled by the sides
+no close button - Back does that - and "Enough for today" in a row above the bar that is there
+only while it is offered; a bar filled by the sides
 closed so far in the colour of how each went, with the three counts under it and no "N left";
 buttons in the order Forgot - Hard - Good with their names inside. The handoff's example line on
 the back is left out: a pair has no example.
@@ -31,7 +34,8 @@ the back is left out: a pair has no example.
 Hard is the answer a learner gives when unsure, and unsure is when a self-rating is least to be
 trusted: a word half-remembered and wrong would otherwise be scheduled as recalled. Good is
 meant as "sure", and checking it too would put a step in front of every answer. Forgot needs no
-check - and showing the answer after it was weighed and left out, following the handoff.
+check, but a learner who forgot a word has to see it: the handoff left the answer out after
+Forgot, and trying the screen showed that was wrong.
 
 ## Considered
 

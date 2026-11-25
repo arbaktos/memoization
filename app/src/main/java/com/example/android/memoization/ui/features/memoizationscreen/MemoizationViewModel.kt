@@ -12,6 +12,7 @@ import com.example.android.memoization.di.ApplicationScope
 import com.example.android.memoization.domain.scheduler.Rating
 import com.example.android.memoization.domain.session.MemorizationSession
 import com.example.android.memoization.domain.session.SessionEnding
+import com.example.android.memoization.domain.session.SessionSide
 import com.example.android.memoization.domain.session.dueSessionSides
 import com.example.android.memoization.domain.session.stamina
 import com.example.android.memoization.domain.usecases.GetStackUseCase
@@ -47,19 +48,33 @@ class MemoizationViewModel @Inject constructor(
     /** When the side now on screen appeared, so an answer can record how long it took. */
     private var shownAt: Long = 0
 
+    /** Why the card is turned over to its answer. */
+    enum class Turned {
+        /** After Hard: waiting for the learner to say whether they had it right; see [onCheck]. */
+        CHECK,
+        /** After Forgot: already rated, the answer up until the learner moves on; see [onNext]. */
+        FORGOT,
+    }
+
     /**
-     * The session as the screen draws it. [checking] is true while the side on screen is turned
-     * over after Hard, waiting for the learner to say whether they had it right; nothing is
-     * rated until then, see [onCheck]. One value, so the next side and the card turning back
+     * The session as the screen draws it. [card] is the side on the card - the session's current
+     * one, or, while [turned] is [Turned.FORGOT], the side just forgotten, which the session has
+     * already sent to the back. [cardSerial] changes whenever another side comes onto the card,
+     * so the card starts face-up for it. One value, so the next side and the card turning back
      * arrive in the same frame and the next side's answer is never shown.
      */
-    data class Screen(val session: MemorizationSession.State, val checking: Boolean = false)
+    data class Screen(
+        val session: MemorizationSession.State,
+        val card: SessionSide?,
+        val cardSerial: Int,
+        val turned: Turned? = null,
+    )
+
+    private fun faceUp(state: MemorizationSession.State) = Screen(state, state.current, state.serial)
 
     /** null while the stack is loading. */
     private val _state = MutableStateFlow<Screen?>(null)
     val state: StateFlow<Screen?> = _state.asStateFlow()
-
-    private val checking: Boolean get() = _state.value?.checking == true
 
     init {
         viewModelScope.launch {
@@ -77,22 +92,40 @@ class MemoizationViewModel @Inject constructor(
             sessionId = reviewLog.startSession(stackId, batch.size, now)
             shownAt = now
             val started = MemorizationSession(batch, offerStopFrom = stack.stamina.offerFrom)
-                .also { session = it; _state.value = Screen(it.state()) }
+                .also { session = it; _state.value = faceUp(it.state()) }
             if (batch.isEmpty()) reviewLog.finishSession(sessionId, SessionEnding.DRAINED, started.state(), now)
         }
     }
 
-    /** Good or Forgot from the front of the card; Hard goes through [onHard] instead. */
-    fun onRate(rating: Rating) {
-        if (checking) return
-        rate(rating)
+    /** Good: rated, and the next side straight away. */
+    fun onGood() {
+        if (_state.value?.turned != null) return
+        rate(Rating.Good)?.let { _state.value = faceUp(it) }
+    }
+
+    /**
+     * Forgot is rated at once - leaving now loses nothing - and the card turns over to the
+     * answer, so the learner sees what they could not recall. The side's time on screen stops
+     * at the tap; [onNext] moves on.
+     */
+    fun onForgot() {
+        val screen = _state.value?.takeIf { it.turned == null } ?: return
+        val card = screen.card ?: return
+        val after = rate(Rating.Again) ?: return
+        _state.value = Screen(after, card, screen.cardSerial, Turned.FORGOT)
+    }
+
+    /** From the answer of a forgotten side to the next side. */
+    fun onNext() {
+        val screen = _state.value?.takeIf { it.turned == Turned.FORGOT } ?: return
+        shownAt = System.currentTimeMillis()
+        _state.value = faceUp(screen.session)
     }
 
     /** Hard is not taken at its word: the card turns over and the learner checks the answer. */
     fun onHard() {
-        val screen = _state.value ?: return
-        if (screen.session.isFinished || screen.checking) return
-        _state.value = screen.copy(checking = true)
+        val screen = _state.value?.takeIf { it.turned == null && it.card != null } ?: return
+        _state.value = screen.copy(turned = Turned.CHECK)
     }
 
     /**
@@ -100,13 +133,14 @@ class MemoizationViewModel @Inject constructor(
      * if it had been pressed in the first place. The side's time on screen runs to here.
      */
     fun onCheck(right: Boolean) {
-        if (!checking) return
-        rate(if (right) Rating.Hard else Rating.Again)
+        if (_state.value?.turned != Turned.CHECK) return
+        rate(if (right) Rating.Hard else Rating.Again)?.let { _state.value = faceUp(it) }
     }
 
-    private fun rate(rating: Rating) {
+    /** Rates the side the session is on and writes the answer; returns the session after it. */
+    private fun rate(rating: Rating): MemorizationSession.State? {
         val now = System.currentTimeMillis()
-        val outcome = session?.rate(rating, now) ?: return
+        val outcome = session?.rate(rating, now) ?: return null
         val shownMs = now - shownAt
         shownAt = now
         val id = sessionId
@@ -115,7 +149,7 @@ class MemoizationViewModel @Inject constructor(
             reviewLog.logAnswer(id, outcome.answer, shownMs, now)
             if (outcome.state.isFinished) reviewLog.finishSession(id, SessionEnding.DRAINED, outcome.state, now)
         }
-        _state.value = Screen(outcome.state)
+        return outcome.state
     }
 
     /**
@@ -128,13 +162,14 @@ class MemoizationViewModel @Inject constructor(
         val now = System.currentTimeMillis()
         val answered = s.answered
         val id = sessionId
-        // A Hard still being checked is not an answer yet: it is left waiting with the rest.
+        // A Hard still being checked is not an answer yet: it is left waiting with the rest. A
+        // Forgot whose answer is up was rated already.
         val stopped = s.stop()
         viewModelScope.launch {
             reviewLog.finishSession(id, SessionEnding.ENOUGH, stopped, now)
             stackRepository.recordStoppedAt(stackId, answered)
         }
-        _state.value = Screen(stopped)
+        _state.value = faceUp(stopped)
     }
 
     /**

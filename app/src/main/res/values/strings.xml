@@ -79,7 +79,7 @@
     <string name="practice_smart_switch_caption">Smart switch: word \u2192 meaning first; once a word is known the pair switches to meaning \u2192 word instead</string>
     <string name="session_progress">%1$d of %2$d done</string>
     <string name="session_legend">Good %1$d, Hard %2$d, Forgot %3$d</string>
-    <string name="end_session">End session</string>
+    <string name="next">Next</string>
     <string name="check_question">Did you get it right?</string>
     <string name="check_no">Forgot</string>
     <string name="check_yes">Yes</string>

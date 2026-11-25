@@ -1,7 +1,6 @@
 package com.example.android.memoization.ui.features.memoizationscreen
 
 import android.view.HapticFeedbackConstants
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -31,12 +30,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -61,10 +56,10 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.android.memoization.R
-import com.example.android.memoization.domain.scheduler.Rating
 import com.example.android.memoization.domain.session.MemorizationSession
 import com.example.android.memoization.domain.session.SessionSide
 import com.example.android.memoization.ui.composables.components.StackCompleteDialog
+import com.example.android.memoization.ui.features.memoizationscreen.MemoizationViewModel.Turned
 import com.example.android.memoization.ui.navigateToFolderScreen
 
 private const val FLIP_MS = 550
@@ -77,16 +72,15 @@ fun MemorizationScreen(
 ) {
     val viewModel: MemoizationViewModel = hiltViewModel()
     val state by viewModel.state.collectAsState()
-    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
     MemorizationBody(
         screen = state,
-        onRate = viewModel::onRate,
+        onGood = viewModel::onGood,
         onHard = viewModel::onHard,
+        onForgot = viewModel::onForgot,
         onCheck = viewModel::onCheck,
+        onNext = viewModel::onNext,
         onStop = viewModel::onStop,
-        // The same as the system Back: the session is closed as left, nothing to confirm.
-        onClose = { backDispatcher?.onBackPressed() },
         onComplete = { navController.navigateToFolderScreen() }
     )
 }
@@ -94,11 +88,12 @@ fun MemorizationScreen(
 @Composable
 fun MemorizationBody(
     screen: MemoizationViewModel.Screen?,
-    onRate: (Rating) -> Unit,
+    onGood: () -> Unit,
     onHard: () -> Unit,
+    onForgot: () -> Unit,
     onCheck: (right: Boolean) -> Unit,
+    onNext: () -> Unit,
     onStop: () -> Unit,
-    onClose: () -> Unit,
     onComplete: () -> Unit,
 ) {
     val colors = sessionColors()
@@ -110,19 +105,19 @@ fun MemorizationBody(
         // null = still loading the stack; nothing to draw yet.
         val current = screen ?: return@Box
         val session = current.session
-        if (session.isFinished) {
+        val item = current.card
+        if (session.isFinished || item == null) {
             StackCompleteDialog(waiting = session.waiting, onClick = onComplete)
             return@Box
         }
-        val item = session.current ?: return@Box
 
-        // A fresh angle for every side on screen, the serial included: after a Forgot the same
-        // side can come straight back. The next side so starts face-up at once and never turns
-        // back through its own answer.
-        val angle = remember(item.id, session.serial) { Animatable(0f) }
-        LaunchedEffect(angle, current.checking) {
+        // A fresh angle for every side that comes onto the card, the serial included: after a
+        // Forgot the same side can come straight back. The next side so starts face-up at once
+        // and never turns back through its own answer.
+        val angle = remember(item.id, current.cardSerial) { Animatable(0f) }
+        LaunchedEffect(angle, current.turned) {
             angle.animateTo(
-                targetValue = if (current.checking) 180f else 0f,
+                targetValue = if (current.turned != null) 180f else 0f,
                 animationSpec = tween(FLIP_MS, easing = FastOutSlowInEasing),
             )
         }
@@ -135,51 +130,40 @@ fun MemorizationBody(
                 .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
-            Header(stopOffered = session.stopOffered, colors = colors, onClose = onClose, onStop = onStop)
+            if (session.stopOffered) Header(colors = colors, onStop = onStop)
             SessionProgress(session = session, colors = colors)
             SessionCard(
                 item = item,
                 angle = angle.value,
+                backBorder = if (current.turned == Turned.FORGOT) colors.forgotBorder else colors.backBorder,
                 colors = colors,
                 modifier = Modifier.weight(1f),
             )
             AnswerButtons(
-                checking = current.checking,
+                turned = current.turned,
                 enabled = enabled,
                 colors = colors,
-                onRate = onRate,
+                onGood = onGood,
                 onHard = onHard,
+                onForgot = onForgot,
                 onCheck = onCheck,
+                onNext = onNext,
             )
         }
     }
 }
 
-/** Close on the left; "Enough for today" on the right once it is offered. */
+/** "Enough for today", in a row of its own that is there only while it is offered. */
 @Composable
-private fun Header(stopOffered: Boolean, colors: SessionColors, onClose: () -> Unit, onStop: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 12.dp)
-    ) {
-        IconButton(onClick = onClose, modifier = Modifier.align(Alignment.CenterStart)) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = stringResource(R.string.end_session),
-                tint = colors.closeIcon,
-                modifier = Modifier.size(22.dp),
+private fun Header(colors: SessionColors, onStop: () -> Unit) {
+    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+        TextButton(onClick = onStop) {
+            Text(
+                text = stringResource(R.string.enough_for_today),
+                color = colors.secondaryText,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
             )
-        }
-        if (stopOffered) {
-            TextButton(onClick = onStop, modifier = Modifier.align(Alignment.CenterEnd)) {
-                Text(
-                    text = stringResource(R.string.enough_for_today),
-                    color = colors.secondaryText,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
         }
     }
 }
@@ -241,10 +225,17 @@ private fun LegendItem(dot: Color, count: Int, colors: SessionColors) {
 
 /**
  * The side on screen. It turns over only after Hard, so the learner can check what they
- * recalled; past the half-turn the back is drawn, itself turned so it does not read mirrored.
+ * recalled, and after Forgot, so they see what they could not; past the half-turn the back is
+ * drawn, itself turned so it does not read mirrored, in a frame of [backBorder].
  */
 @Composable
-private fun SessionCard(item: SessionSide, angle: Float, colors: SessionColors, modifier: Modifier) {
+private fun SessionCard(
+    item: SessionSide,
+    angle: Float,
+    backBorder: Color,
+    colors: SessionColors,
+    modifier: Modifier,
+) {
     val shape = RoundedCornerShape(24.dp)
     val showBack = angle > 90f
     Box(
@@ -256,7 +247,7 @@ private fun SessionCard(item: SessionSide, angle: Float, colors: SessionColors, 
             }
             .shadow(colors.shadowElevation, shape, ambientColor = colors.shadow, spotColor = colors.shadow)
             .background(colors.card, shape)
-            .then(if (showBack) Modifier.border(1.dp, colors.backBorder, shape) else Modifier),
+            .then(if (showBack) Modifier.border(1.dp, backBorder, shape) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
         if (showBack) {
@@ -293,17 +284,20 @@ private fun SessionCard(item: SessionSide, angle: Float, colors: SessionColors, 
 }
 
 /**
- * Forgot / Hard / Good on the front; after Hard, the check in their place. The block has a
- * fixed height so the card does not move when one set gives way to the other.
+ * Forgot / Hard / Good on the front; after Hard, the check in their place; after Forgot, the
+ * way on. The block has a fixed height so the card does not move when one set gives way to
+ * another.
  */
 @Composable
 private fun AnswerButtons(
-    checking: Boolean,
+    turned: Turned?,
     enabled: Boolean,
     colors: SessionColors,
-    onRate: (Rating) -> Unit,
+    onGood: () -> Unit,
     onHard: () -> Unit,
+    onForgot: () -> Unit,
     onCheck: (right: Boolean) -> Unit,
+    onNext: () -> Unit,
 ) {
     val view = LocalView.current
     val tap: (() -> Unit) -> () -> Unit = { action ->
@@ -319,69 +313,80 @@ private fun AnswerButtons(
         contentAlignment = Alignment.BottomCenter,
     ) {
         AnimatedContent(
-            targetState = checking,
+            targetState = turned,
             transitionSpec = {
                 (fadeIn(tween(BUTTONS_MS)) + slideInVertically(tween(BUTTONS_MS)) { it / 6 }) togetherWith
                     (fadeOut(tween(BUTTONS_MS)) + slideOutVertically(tween(BUTTONS_MS)) { it / 6 })
             },
             contentAlignment = Alignment.BottomCenter,
             label = "answer buttons",
-        ) { turned ->
-            if (turned) {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        text = stringResource(R.string.check_question),
-                        color = colors.question,
-                        fontSize = 14.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+        ) { shown ->
+            when (shown) {
+                Turned.FORGOT -> AnswerButton(
+                    label = stringResource(R.string.next),
+                    textColor = colors.noText,
+                    outline = colors.noOutline,
+                    enabled = enabled,
+                    onClick = tap(onNext),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Turned.CHECK -> {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(
+                            text = stringResource(R.string.check_question),
+                            color = colors.question,
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            AnswerButton(
+                                label = stringResource(R.string.check_no),
+                                textColor = colors.noText,
+                                outline = colors.noOutline,
+                                enabled = enabled,
+                                onClick = tap { onCheck(false) },
+                                modifier = Modifier.weight(1f),
+                            )
+                            AnswerButton(
+                                label = stringResource(R.string.check_yes),
+                                textColor = colors.onResult,
+                                fill = colors.goodFill,
+                                enabled = enabled,
+                                onClick = tap { onCheck(true) },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                    }
+                }
+                null -> {
+                    // Rising from Forgot to Good, so Good sits under the right thumb.
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         AnswerButton(
-                            label = stringResource(R.string.check_no),
-                            textColor = colors.noText,
-                            outline = colors.noOutline,
+                            label = stringResource(R.string.wrong),
+                            textColor = colors.onResult,
+                            fill = colors.forgotFill,
                             enabled = enabled,
-                            onClick = tap { onCheck(false) },
+                            onClick = tap(onForgot),
                             modifier = Modifier.weight(1f),
                         )
                         AnswerButton(
-                            label = stringResource(R.string.check_yes),
+                            label = stringResource(R.string.hard),
+                            textColor = colors.onResult,
+                            fill = colors.hardFill,
+                            enabled = enabled,
+                            onClick = tap(onHard),
+                            modifier = Modifier.weight(1f),
+                        )
+                        AnswerButton(
+                            label = stringResource(R.string.good),
                             textColor = colors.onResult,
                             fill = colors.goodFill,
                             enabled = enabled,
-                            onClick = tap { onCheck(true) },
+                            onClick = tap(onGood),
                             modifier = Modifier.weight(1f),
                         )
                     }
-                }
-            } else {
-                // Rising from Forgot to Good, so Good sits under the right thumb.
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    AnswerButton(
-                        label = stringResource(R.string.wrong),
-                        textColor = colors.onResult,
-                        fill = colors.forgotFill,
-                        enabled = enabled,
-                        onClick = tap { onRate(Rating.Again) },
-                        modifier = Modifier.weight(1f),
-                    )
-                    AnswerButton(
-                        label = stringResource(R.string.hard),
-                        textColor = colors.onResult,
-                        fill = colors.hardFill,
-                        enabled = enabled,
-                        onClick = tap(onHard),
-                        modifier = Modifier.weight(1f),
-                    )
-                    AnswerButton(
-                        label = stringResource(R.string.good),
-                        textColor = colors.onResult,
-                        fill = colors.goodFill,
-                        enabled = enabled,
-                        onClick = tap { onRate(Rating.Good) },
-                        modifier = Modifier.weight(1f),
-                    )
                 }
             }
         }
