@@ -105,4 +105,20 @@
         <item quantity="one">%d day</item>
         <item quantity="other">%d days</item>
     </plurals>
+    <plurals name="summary_practised">
+        <item quantity="one">%d word practised</item>
+        <item quantity="other">%d words practised</item>
+    </plurals>
+    <plurals name="summary_new">
+        <item quantity="one">, %d of them new</item>
+        <item quantity="other">, %d of them new</item>
+    </plurals>
+    <string name="level_just_started">Just started</string>
+    <string name="level_sinking_in">Sinking in</string>
+    <string name="level_familiar">Familiar</string>
+    <string name="level_nearly_learned">Nearly learned</string>
+    <string name="level_learned">Learned</string>
+    <string name="summary_mistakes_as_expected">Mistakes: %1$d out of %2$d — just as it should be. This is how words stick.</string>
+    <string name="summary_mistakes_few">Very few mistakes (%1$d out of %2$d) — these words have really stuck.</string>
+    <string name="summary_mistakes_many">More mistakes than usual (%1$d out of %2$d) — and that\'s fine. The forgotten words will come up again soon.</string>
 </resources>

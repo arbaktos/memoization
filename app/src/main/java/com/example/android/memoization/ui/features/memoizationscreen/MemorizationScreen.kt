@@ -1,6 +1,7 @@
 package com.example.android.memoization.ui.features.memoizationscreen
 
 import android.view.HapticFeedbackConstants
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -81,6 +82,7 @@ fun MemorizationScreen(
         onCheck = viewModel::onCheck,
         onNext = viewModel::onNext,
         onStop = viewModel::onStop,
+        onLeave = { viewModel.onLeave() },
         onComplete = { navController.navigateToFolderScreen() }
     )
 }
@@ -94,6 +96,7 @@ fun MemorizationBody(
     onCheck: (right: Boolean) -> Unit,
     onNext: () -> Unit,
     onStop: () -> Unit,
+    onLeave: () -> Unit,
     onComplete: () -> Unit,
 ) {
     val colors = sessionColors()
@@ -107,9 +110,16 @@ fun MemorizationBody(
         val session = current.session
         val item = current.card
         if (session.isFinished || item == null) {
-            StackCompleteDialog(waiting = session.waiting, onClick = onComplete)
+            val summary = current.summary
+            if (summary != null && summary.practised > 0) {
+                SessionSummaryDialog(summary = summary, waiting = session.waiting, colors = colors, onDone = onComplete)
+            } else {
+                StackCompleteDialog(waiting = session.waiting, onClick = onComplete)
+            }
             return@Box
         }
+        // Back ends the session with its summary, once there is something to sum up.
+        BackHandler(enabled = session.serial > 0, onBack = onLeave)
 
         // A fresh angle for every side that comes onto the card, the serial included: after a
         // Forgot the same side can come straight back. The next side so starts face-up at once

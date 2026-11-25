@@ -196,6 +196,52 @@ class MemorizationSessionTest {
         assertEquals("a full bar is a finished session", recalled.slots, recalled.results.total)
     }
 
+    private fun newItem(id: Long) = SessionSide(
+        Side(sideId = id, wordPairId = id, shown = Shown.WORD), front = "front$id", back = "back$id"
+    )
+
+    @Test
+    fun `the summary counts first answers only, mistakes among sides practised before`() {
+        val s = MemorizationSession(listOf(item(1), item(2), newItem(3)), Random(1), scheduler)
+
+        s.rate(Rating.Again, now)   // side 1: a mistake
+        s.rate(Rating.Hard, now)    // side 2: Hard is a recall, not a mistake
+        s.rate(Rating.Again, now)   // side 3: new, so not a mistake
+        s.rate(Rating.Again, now)   // side 1 again: a repeat, not a second mistake
+        s.rate(Rating.Easy, now)    // side 3 recalled
+        val summary = s.summary()
+        s.rate(Rating.Good, now)    // side 1 recalled
+
+        assertEquals(3, summary.practised)
+        assertEquals(1, summary.new)
+        val mistakes = summary.mistakes!!
+        assertEquals(1, mistakes.count)
+        assertEquals(2, mistakes.reviewed)
+        val forgetting = 1 - scheduler.retrievability(side(1), now)!!
+        assertEquals("what FSRS expected for the two sides practised before", 2 * forgetting, mistakes.expected, 1e-9)
+    }
+
+    @Test
+    fun `the summary places every practised side by its level after the session`() {
+        val s = MemorizationSession(listOf(item(1), item(2), newItem(3)), Random(1), scheduler)
+        s.rate(Rating.Easy, now)
+        s.rate(Rating.Again, now)
+        s.stop()
+
+        val summary = s.summary()
+        assertEquals(2, summary.practised)
+        assertEquals(2, summary.levels.sumOf { it.second })
+        assertEquals("weakest first", summary.levels.sortedBy { it.first.frequency }, summary.levels)
+    }
+
+    @Test
+    fun `a session of only new sides has no mistakes to judge`() {
+        val s = MemorizationSession(listOf(newItem(1)), Random(1), scheduler)
+        s.rate(Rating.Again, now)
+
+        assertNull(s.summary().mistakes)
+    }
+
     @Test
     fun `easy schedules a side further out than good, and hard closes it without a lapse`() {
         val easy = session(1).rate(Rating.Easy, now)

@@ -98,6 +98,13 @@ class MemorizationSession(
     private var waiting = 0
     private var results = Results()
 
+    /** Every side answered so far, as it stands after its latest answer; in answer order. */
+    private val practised = LinkedHashMap<Long, Side>()
+    private var newPractised = 0
+    private var reviewed = 0
+    private var mistakes = 0
+    private var expectedMistakes = 0.0
+
     fun state(): State = State(
         current = queue.firstOrNull(),
         remaining = queue.size,
@@ -106,6 +113,16 @@ class MemorizationSession(
         waiting = waiting,
         stopOffered = queue.isNotEmpty() && serial >= offerStopFrom,
         results = results,
+    )
+
+    /** What the session comes to so far; shown when it ends, however it ends. */
+    fun summary(): SessionSummary = SessionSummary(
+        practised = practised.size,
+        new = newPractised,
+        levels = practised.values.groupingBy { it.level }.eachCount()
+            .toList()
+            .sortedBy { (level, _) -> level.frequency },
+        mistakes = if (reviewed == 0) null else Mistakes(mistakes, reviewed, expectedMistakes),
     )
 
     /** Answers given so far, every tap counted - what "Enough for today" is measured in. */
@@ -137,6 +154,17 @@ class MemorizationSession(
         val item = queue.removeFirst()
         serial++
         val lapsed = item.id in lapsedIds
+        if (item.id !in practised) {
+            // First answer to this side in the session: what the summary's mistakes are made of.
+            val recall = scheduler.retrievability(item.side, now)
+            if (recall == null) {
+                newPractised++
+            } else {
+                reviewed++
+                expectedMistakes += 1 - recall
+                if (rating == Rating.Again) mistakes++
+            }
+        }
         val toPersist = when (rating) {
             Rating.Again -> if (lapsed) {
                 queue.addLast(item)
@@ -154,6 +182,7 @@ class MemorizationSession(
             Rating.Hard, Rating.Good -> results.copy(hard = results.hard + 1)
             Rating.Easy -> results.copy(easy = results.easy + 1)
         }
+        practised[item.id] = toPersist ?: item.side
         val answer = Answer(
             sideId = item.id,
             rating = rating,

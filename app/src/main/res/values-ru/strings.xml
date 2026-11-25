@@ -111,4 +111,24 @@
         <item quantity="many">%d дней</item>
         <item quantity="other">%d дня</item>
     </plurals>
+    <plurals name="summary_practised">
+        <item quantity="one">Повторено %d слово</item>
+        <item quantity="few">Повторено %d слова</item>
+        <item quantity="many">Повторено %d слов</item>
+        <item quantity="other">Повторено %d слова</item>
+    </plurals>
+    <plurals name="summary_new">
+        <item quantity="one">, из них %d новое</item>
+        <item quantity="few">, из них %d новых</item>
+        <item quantity="many">, из них %d новых</item>
+        <item quantity="other">, из них %d новых</item>
+    </plurals>
+    <string name="level_just_started">Только начали</string>
+    <string name="level_sinking_in">Запоминаются</string>
+    <string name="level_familiar">Знакомые</string>
+    <string name="level_nearly_learned">Почти выучены</string>
+    <string name="level_learned">Выучены</string>
+    <string name="summary_mistakes_as_expected">Ошибок %1$d из %2$d — так и должно быть. Именно так слова и запоминаются.</string>
+    <string name="summary_mistakes_few">Ошибок совсем немного (%1$d из %2$d) — эти слова уже уверенно запомнились.</string>
+    <string name="summary_mistakes_many">Ошибок больше обычного (%1$d из %2$d) — и это нормально. Забытые слова скоро попадутся снова.</string>
 </resources>

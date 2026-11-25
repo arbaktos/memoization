@@ -80,6 +80,15 @@ side and one more per Forgot, for the repeat; every answer fills one in the colo
 button, so the bar is full when the queue is through. It never says how many are left.
 _Avoid_: memorization list, wordsToLearn, round, daily limit, cap
 
+**Session summary**:
+What the learner is shown when a **Session** ends, however it ended - Back included, once
+anything was answered: how many sides were practised and how many of them were **New**, where
+they stand now by **Level** (named for the learner: just started, sinking in, familiar, nearly
+learned, learned), and the mistakes - sides practised before whose first answer was Forgot -
+against what FSRS expected for them. Within 15 % of that, never narrower than one either way,
+is "as it should be"; the wording treats mistakes as part of learning in every case.
+_Avoid_: report, score, result screen
+
 **Enough for today**:
 The learner's way to end a **Session** early. Offered once they have answered as many sides as
 the stack's **Stamina** says; the sides not got to simply stay **Due**.

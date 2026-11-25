@@ -13,6 +13,7 @@ import com.example.android.memoization.domain.scheduler.Rating
 import com.example.android.memoization.domain.session.MemorizationSession
 import com.example.android.memoization.domain.session.SessionEnding
 import com.example.android.memoization.domain.session.SessionSide
+import com.example.android.memoization.domain.session.SessionSummary
 import com.example.android.memoization.domain.session.dueSessionSides
 import com.example.android.memoization.domain.session.stamina
 import com.example.android.memoization.domain.usecases.GetStackUseCase
@@ -61,16 +62,23 @@ class MemoizationViewModel @Inject constructor(
      * one, or, while [turned] is [Turned.FORGOT], the side just forgotten, which the session has
      * already sent to the back. [cardSerial] changes whenever another side comes onto the card,
      * so the card starts face-up for it. One value, so the next side and the card turning back
-     * arrive in the same frame and the next side's answer is never shown.
+     * arrive in the same frame and the next side's answer is never shown. [summary] is set once
+     * the session has ended, however it ended.
      */
     data class Screen(
         val session: MemorizationSession.State,
         val card: SessionSide?,
         val cardSerial: Int,
         val turned: Turned? = null,
+        val summary: SessionSummary? = null,
     )
 
-    private fun faceUp(state: MemorizationSession.State) = Screen(state, state.current, state.serial)
+    private fun faceUp(state: MemorizationSession.State) = Screen(
+        session = state,
+        card = state.current,
+        cardSerial = state.serial,
+        summary = if (state.isFinished) session?.summary() else null,
+    )
 
     /** null while the stack is loading. */
     private val _state = MutableStateFlow<Screen?>(null)
@@ -171,6 +179,22 @@ class MemoizationViewModel @Inject constructor(
             stackRepository.recordStoppedAt(stackId, answered)
         }
         _state.value = faceUp(stopped)
+    }
+
+    /**
+     * Back ends the session where it is and shows its summary; true if it did. Before the first
+     * answer there is nothing to sum up, so Back just leaves, and so it does once the summary
+     * is up. A Hard still being checked is left waiting, as with "Enough for today".
+     */
+    fun onLeave(): Boolean {
+        val s = session ?: return false
+        if (s.state().isFinished || s.answered == 0) return false
+        val now = System.currentTimeMillis()
+        val id = sessionId
+        val left = s.stop()
+        viewModelScope.launch { reviewLog.finishSession(id, SessionEnding.LEFT, left, now) }
+        _state.value = faceUp(left)
+        return true
     }
 
     /**
