@@ -175,23 +175,25 @@ class MemorizationSessionTest {
     }
 
     @Test
-    fun `results count a forgot at once and a side only once, by its worst answer`() {
+    fun `every answer fills a slot by its button, and every forgot adds a slot for the repeat`() {
         val s = session(1, 2, 3, 4)
         assertEquals(MemorizationSession.Results(), s.state().results)
+        assertEquals(4, s.state().slots)
 
         s.rate(Rating.Easy, now)
         s.rate(Rating.Hard, now)
-        val afterAgain = s.rate(Rating.Again, now).state.results
-        assertEquals("a forgot shows at once", MemorizationSession.Results(easy = 1, hard = 1, forgot = 1), afterAgain)
+        val afterAgain = s.rate(Rating.Again, now).state
+        assertEquals("a forgot shows at once", MemorizationSession.Results(easy = 1, hard = 1, forgot = 1), afterAgain.results)
+        assertEquals("and the repeat gets a slot of its own", 5, afterAgain.slots)
 
         // Good comes from Hard checked right: it counts with Hard, by the button pressed.
         s.rate(Rating.Good, now)
-        // The forgotten side comes round: a second Forgot, then recalled - neither adds to it.
-        assertEquals(MemorizationSession.Results(easy = 1, hard = 2, forgot = 1), s.rate(Rating.Again, now).state.results)
+        // The forgotten side comes round and is forgotten again: one more slot.
+        assertEquals(6, s.rate(Rating.Again, now).state.slots)
         val recalled = s.rate(Rating.Easy, now).state
         assertTrue(recalled.isFinished)
-        assertEquals(MemorizationSession.Results(easy = 1, hard = 2, forgot = 1), recalled.results)
-        assertEquals(recalled.total, recalled.results.total)
+        assertEquals(MemorizationSession.Results(easy = 2, hard = 2, forgot = 2), recalled.results)
+        assertEquals("a full bar is a finished session", recalled.slots, recalled.results.total)
     }
 
     @Test

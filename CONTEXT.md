@@ -75,9 +75,9 @@ FSRS retrievability; among ties the weaker memory; never-practised last; equals 
 order), shown one at a time; a side rated Again returns to the back of the queue until it is
 rated anything else. A session has no size. It ends one of three ways - the queue drains, the
 learner taps **Enough for today**, or they leave the screen - and the **Review log** records
-which, with how many sides were closed and how many were not got to. Its progress is the sides
-answered so far, each once, in the colour of the button behind its worst answer - a Forgot
-shows at once, while the side is still owed - and never says how many are left.
+which, with how many sides were closed and how many were not got to. Its progress has a place per
+side and one more per Forgot, for the repeat; every answer fills one in the colour of its
+button, so the bar is full when the queue is through. It never says how many are left.
 _Avoid_: memorization list, wordsToLearn, round, daily limit, cap
 
 **Enough for today**:

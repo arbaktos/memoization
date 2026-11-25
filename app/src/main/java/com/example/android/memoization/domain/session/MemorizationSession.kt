@@ -35,9 +35,16 @@ class MemorizationSession(
         val waiting: Int,
         /** True once enough has been answered that stopping here is offered; see [stop]. */
         val stopOffered: Boolean,
-        /** How the sides answered so far went, for the session's progress bar. */
+        /** Every answer so far by the button behind it, for the session's progress bar. */
         val results: Results = Results(),
     ) {
+        /**
+         * Places on the progress bar: one per side the session started with, and one more for
+         * every Forgot, since the side comes round again. Every answer fills one, so the bar is
+         * full exactly when the queue is through.
+         */
+        val slots: Int get() = total + results.forgot
+
         val isFinished: Boolean get() = current == null
 
         /** Sides answered to a close, whether the session went on or was stopped after. */
@@ -55,11 +62,9 @@ class MemorizationSession(
     }
 
     /**
-     * The sides answered so far, each counted once by its worst answer in this session, by the
-     * button that gave it: [easy] for Easy, [hard] for Hard either way the check went (Good or
-     * Hard), [forgot] for Again. A Forgot counts at once, though the side is still owed - the
-     * learner sees the tap land - and recalling it later adds nothing. The total can so run
-     * ahead of the sides done while forgotten ones wait to be recalled.
+     * Every answer so far, every tap counted, by the button that gave it: [easy] for Easy,
+     * [hard] for Hard either way the check went (Good or Hard), [forgot] for Again. A side
+     * forgotten and then recalled counts twice, once for each answer; see [State.slots].
      */
     data class Results(val easy: Int = 0, val hard: Int = 0, val forgot: Int = 0) {
         val total: Int get() = easy + hard + forgot
@@ -144,7 +149,7 @@ class MemorizationSession(
             }
             else -> if (lapsed) scheduler.dueFrom(item.side, now) else scheduler.review(item.side, rating, now)
         }
-        if (!lapsed) results = when (rating) {
+        results = when (rating) {
             Rating.Again -> results.copy(forgot = results.forgot + 1)
             Rating.Hard, Rating.Good -> results.copy(hard = results.hard + 1)
             Rating.Easy -> results.copy(easy = results.easy + 1)

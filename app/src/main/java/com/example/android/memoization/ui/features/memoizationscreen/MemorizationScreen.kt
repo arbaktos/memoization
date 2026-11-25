@@ -169,14 +169,15 @@ private fun Header(colors: SessionColors, onStop: () -> Unit) {
 }
 
 /**
- * One bar for the whole session, filled from the left by the sides answered so far in the
- * colour of how each went - a Forgot at once - with the counts under it. Nothing says how many
- * are left: a session has no size, and the empty part of the track shows it well enough.
+ * One bar for the whole session: a place per side, and one more for each Forgot, since that
+ * side comes round again. Every answer fills a place from the left in the colour of its button
+ * - a Forgot at once - with the counts under it, so the bar is full when the queue is through.
+ * Nothing says how many are left: a session has no size, and the empty track shows it.
  */
 @Composable
 private fun SessionProgress(session: MemorizationSession.State, colors: SessionColors) {
     val results = session.results
-    val total = session.total.coerceAtLeast(1).toFloat()
+    val total = session.slots.coerceAtLeast(1).toFloat()
     val good by animateFloatAsState(results.easy / total, tween(BAR_MS), label = "good")
     val hard by animateFloatAsState(results.hard / total, tween(BAR_MS), label = "hard")
     val forgot by animateFloatAsState(results.forgot / total, tween(BAR_MS), label = "forgot")
