@@ -25,7 +25,9 @@ can be added when a statistic wants it, and earlier rows stay correct as plain A
 The screen follows the design handoff "Переворот карточки на Hard" (variant 1a dark, 2a light):
 no close button - Back does that - and "Enough for today" in a row above the bar that is there
 only while it is offered; a bar filled by the sides
-closed so far in the colour of how each went, with the three counts under it and no "N left";
+answered so far, each once in the colour of its worst answer - a Forgot at once, so the tap is
+seen to land, even though the side is still owed - with the three counts under it and no "N
+left";
 buttons in the order Forgot - Hard - Good with their names inside. The handoff's example line on
 the back is left out: a pair has no example.
 

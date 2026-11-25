@@ -74,8 +74,8 @@ order), shown one at a time; a side rated Again returns to the back of the queue
 rated Hard or Good. A session has no size. It ends one of three ways - the queue drains, the
 learner taps **Enough for today**, or they leave the screen - and the **Review log** records
 which, with how many sides were closed and how many were not got to. Its progress is the sides
-closed so far, each in the colour of how it went - one forgotten on the way counts as forgotten
-however it ended - and never says how many are left.
+answered so far, each once, in the colour of its worst answer - a Forgot shows at once, while
+the side is still owed - and never says how many are left.
 _Avoid_: memorization list, wordsToLearn, round, daily limit, cap
 
 **Enough for today**:

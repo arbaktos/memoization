@@ -35,8 +35,8 @@ class MemorizationSession(
         val waiting: Int,
         /** True once enough has been answered that stopping here is offered; see [stop]. */
         val stopOffered: Boolean,
-        /** The closed sides by how they went, for the session's progress bar. */
-        val closed: Closed = Closed(),
+        /** How the sides answered so far went, for the session's progress bar. */
+        val results: Results = Results(),
     ) {
         val isFinished: Boolean get() = current == null
 
@@ -55,11 +55,12 @@ class MemorizationSession(
     }
 
     /**
-     * Sides closed so far, by how they went. A side counts once, when it is closed - rated
-     * Hard or Good - and a side forgotten on the way counts as [forgot] however it ended, so
-     * the tally adds up to the sides done and a full bar means the queue is through.
+     * The sides answered so far, each counted once by its worst answer in this session. A
+     * Forgot counts at once, though the side is still owed - the learner sees the tap land -
+     * and recalling it later adds nothing; Hard and Good count when they close the side. The
+     * total can so run ahead of the sides done while forgotten ones wait to be recalled.
      */
-    data class Closed(val good: Int = 0, val hard: Int = 0, val forgot: Int = 0) {
+    data class Results(val good: Int = 0, val hard: Int = 0, val forgot: Int = 0) {
         val total: Int get() = good + hard + forgot
     }
 
@@ -89,7 +90,7 @@ class MemorizationSession(
     private val lapsedIds = mutableSetOf<Long>()
     private var serial = 0
     private var waiting = 0
-    private var closed = Closed()
+    private var results = Results()
 
     fun state(): State = State(
         current = queue.firstOrNull(),
@@ -98,7 +99,7 @@ class MemorizationSession(
         serial = serial,
         waiting = waiting,
         stopOffered = queue.isNotEmpty() && serial >= offerStopFrom,
-        closed = closed,
+        results = results,
     )
 
     /** Answers given so far, every tap counted - what "Enough for today" is measured in. */
@@ -142,10 +143,10 @@ class MemorizationSession(
             }
             else -> if (lapsed) scheduler.dueFrom(item.side, now) else scheduler.review(item.side, rating, now)
         }
-        if (rating != Rating.Again) closed = when {
-            lapsed -> closed.copy(forgot = closed.forgot + 1)
-            rating == Rating.Hard -> closed.copy(hard = closed.hard + 1)
-            else -> closed.copy(good = closed.good + 1)
+        if (!lapsed) results = when (rating) {
+            Rating.Again -> results.copy(forgot = results.forgot + 1)
+            Rating.Hard -> results.copy(hard = results.hard + 1)
+            else -> results.copy(good = results.good + 1)
         }
         val answer = Answer(
             sideId = item.id,

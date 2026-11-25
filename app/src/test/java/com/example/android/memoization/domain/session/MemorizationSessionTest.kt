@@ -175,20 +175,22 @@ class MemorizationSessionTest {
     }
 
     @Test
-    fun `closed sides are tallied by result, a side forgotten on the way counting as forgot`() {
+    fun `results count a forgot at once and a side only once, by its worst answer`() {
         val s = session(1, 2, 3, 4)
-        assertEquals(MemorizationSession.Closed(), s.state().closed)
+        assertEquals(MemorizationSession.Results(), s.state().results)
 
         s.rate(Rating.Good, now)
         s.rate(Rating.Hard, now)
-        val afterAgain = s.rate(Rating.Again, now).state.closed
-        assertEquals("a forgotten side still owed is not closed yet", MemorizationSession.Closed(good = 1, hard = 1), afterAgain)
+        val afterAgain = s.rate(Rating.Again, now).state.results
+        assertEquals("a forgot shows at once", MemorizationSession.Results(good = 1, hard = 1, forgot = 1), afterAgain)
 
         s.rate(Rating.Good, now)
+        // The forgotten side comes round: a second Forgot, then recalled - neither adds to it.
+        assertEquals(MemorizationSession.Results(good = 2, hard = 1, forgot = 1), s.rate(Rating.Again, now).state.results)
         val recalled = s.rate(Rating.Good, now).state
         assertTrue(recalled.isFinished)
-        assertEquals(MemorizationSession.Closed(good = 2, hard = 1, forgot = 1), recalled.closed)
-        assertEquals(recalled.total - recalled.remaining, recalled.closed.total)
+        assertEquals(MemorizationSession.Results(good = 2, hard = 1, forgot = 1), recalled.results)
+        assertEquals(recalled.total, recalled.results.total)
     }
 
     @Test

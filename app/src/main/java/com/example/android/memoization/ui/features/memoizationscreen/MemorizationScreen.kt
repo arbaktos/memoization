@@ -169,19 +169,19 @@ private fun Header(colors: SessionColors, onStop: () -> Unit) {
 }
 
 /**
- * One bar for the whole session, filled from the left by the sides closed so far in the colour
- * of how each went, with the counts under it. Nothing says how many are left: a session has no
- * size, and the empty part of the track shows it well enough.
+ * One bar for the whole session, filled from the left by the sides answered so far in the
+ * colour of how each went - a Forgot at once - with the counts under it. Nothing says how many
+ * are left: a session has no size, and the empty part of the track shows it well enough.
  */
 @Composable
 private fun SessionProgress(session: MemorizationSession.State, colors: SessionColors) {
-    val closed = session.closed
+    val results = session.results
     val total = session.total.coerceAtLeast(1).toFloat()
-    val good by animateFloatAsState(closed.good / total, tween(BAR_MS), label = "good")
-    val hard by animateFloatAsState(closed.hard / total, tween(BAR_MS), label = "hard")
-    val forgot by animateFloatAsState(closed.forgot / total, tween(BAR_MS), label = "forgot")
+    val good by animateFloatAsState(results.good / total, tween(BAR_MS), label = "good")
+    val hard by animateFloatAsState(results.hard / total, tween(BAR_MS), label = "hard")
+    val forgot by animateFloatAsState(results.forgot / total, tween(BAR_MS), label = "forgot")
     val progressLabel = stringResource(R.string.session_progress, session.total - session.remaining, session.total)
-    val legendLabel = stringResource(R.string.session_legend, closed.good, closed.hard, closed.forgot)
+    val legendLabel = stringResource(R.string.session_legend, results.good, results.hard, results.forgot)
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         BoxWithConstraints(
@@ -204,9 +204,9 @@ private fun SessionProgress(session: MemorizationSession.State, colors: SessionC
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            LegendItem(colors.goodBar, closed.good, colors)
-            LegendItem(colors.hardBar, closed.hard, colors)
-            LegendItem(colors.forgotBar, closed.forgot, colors)
+            LegendItem(colors.goodBar, results.good, colors)
+            LegendItem(colors.hardBar, results.hard, colors)
+            LegendItem(colors.forgotBar, results.forgot, colors)
         }
     }
 }
