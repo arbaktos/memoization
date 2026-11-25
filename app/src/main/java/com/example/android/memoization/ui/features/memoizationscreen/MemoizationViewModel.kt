@@ -97,10 +97,10 @@ class MemoizationViewModel @Inject constructor(
         }
     }
 
-    /** Good: rated, and the next side straight away. */
-    fun onGood() {
+    /** Easy: rated, and the next side straight away. */
+    fun onEasy() {
         if (_state.value?.turned != null) return
-        rate(Rating.Good)?.let { _state.value = faceUp(it) }
+        rate(Rating.Easy)?.let { _state.value = faceUp(it) }
     }
 
     /**
@@ -129,12 +129,13 @@ class MemoizationViewModel @Inject constructor(
     }
 
     /**
-     * The answer to the check after Hard. Right keeps the Hard; wrong is a Forgot, exactly as
-     * if it had been pressed in the first place. The side's time on screen runs to here.
+     * The answer to the check after Hard. Right is rated Good - hard to get to, but got; wrong
+     * is rated Hard - something came back, not the answer. Neither sends the side round again.
+     * The side's time on screen runs to here.
      */
     fun onCheck(right: Boolean) {
         if (_state.value?.turned != Turned.CHECK) return
-        rate(if (right) Rating.Hard else Rating.Again)?.let { _state.value = faceUp(it) }
+        rate(if (right) Rating.Good else Rating.Hard)?.let { _state.value = faceUp(it) }
     }
 
     /** Rates the side the session is on and writes the answer; returns the session after it. */

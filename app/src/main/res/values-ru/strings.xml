@@ -30,7 +30,7 @@
     <string name="word2_label">Значение</string>
     <string name="confirm_deletion">Удалить</string>
     <string name="undo">Отменить</string>
-    <string name="good">Помню</string>
+    <string name="easy">Легко</string>
     <string name="hard">Трудно</string>
     <string name="wrong">Не помню</string>
     <string name="edit_stack_desc">Изменить стек</string>
@@ -80,7 +80,7 @@
     <string name="practice_new_side_caption">Новая сторона начинается с нуля</string>
     <string name="practice_smart_switch_caption">Умное переключение: сначала слово → значение; когда слово выучено, пара переходит на значение → слово</string>
     <string name="session_progress">Готово %1$d из %2$d</string>
-    <string name="session_legend">Помню %1$d, трудно %2$d, не помню %3$d</string>
+    <string name="session_legend">Легко %1$d, трудно %2$d, не помню %3$d</string>
     <string name="next">Дальше</string>
     <string name="check_question">Получилось вспомнить?</string>
     <string name="check_no">Нет ;(</string>

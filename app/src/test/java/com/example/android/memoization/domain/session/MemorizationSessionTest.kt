@@ -179,18 +179,31 @@ class MemorizationSessionTest {
         val s = session(1, 2, 3, 4)
         assertEquals(MemorizationSession.Results(), s.state().results)
 
-        s.rate(Rating.Good, now)
+        s.rate(Rating.Easy, now)
         s.rate(Rating.Hard, now)
         val afterAgain = s.rate(Rating.Again, now).state.results
-        assertEquals("a forgot shows at once", MemorizationSession.Results(good = 1, hard = 1, forgot = 1), afterAgain)
+        assertEquals("a forgot shows at once", MemorizationSession.Results(easy = 1, hard = 1, forgot = 1), afterAgain)
 
+        // Good comes from Hard checked right: it counts with Hard, by the button pressed.
         s.rate(Rating.Good, now)
         // The forgotten side comes round: a second Forgot, then recalled - neither adds to it.
-        assertEquals(MemorizationSession.Results(good = 2, hard = 1, forgot = 1), s.rate(Rating.Again, now).state.results)
-        val recalled = s.rate(Rating.Good, now).state
+        assertEquals(MemorizationSession.Results(easy = 1, hard = 2, forgot = 1), s.rate(Rating.Again, now).state.results)
+        val recalled = s.rate(Rating.Easy, now).state
         assertTrue(recalled.isFinished)
-        assertEquals(MemorizationSession.Results(good = 2, hard = 1, forgot = 1), recalled.results)
+        assertEquals(MemorizationSession.Results(easy = 1, hard = 2, forgot = 1), recalled.results)
         assertEquals(recalled.total, recalled.results.total)
+    }
+
+    @Test
+    fun `easy schedules a side further out than good, and hard closes it without a lapse`() {
+        val easy = session(1).rate(Rating.Easy, now)
+        val good = session(1).rate(Rating.Good, now)
+        val hard = session(1).rate(Rating.Hard, now)
+
+        assertTrue(easy.toPersist!!.due!! > good.toPersist!!.due!!)
+        assertTrue(easy.state.isFinished)
+        assertTrue("hard is not sent round again", hard.state.isFinished)
+        assertEquals(0, hard.toPersist!!.lapses)
     }
 
     @Test

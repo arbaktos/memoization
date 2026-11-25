@@ -75,7 +75,7 @@ fun MemorizationScreen(
 
     MemorizationBody(
         screen = state,
-        onGood = viewModel::onGood,
+        onEasy = viewModel::onEasy,
         onHard = viewModel::onHard,
         onForgot = viewModel::onForgot,
         onCheck = viewModel::onCheck,
@@ -88,7 +88,7 @@ fun MemorizationScreen(
 @Composable
 fun MemorizationBody(
     screen: MemoizationViewModel.Screen?,
-    onGood: () -> Unit,
+    onEasy: () -> Unit,
     onHard: () -> Unit,
     onForgot: () -> Unit,
     onCheck: (right: Boolean) -> Unit,
@@ -143,7 +143,7 @@ fun MemorizationBody(
                 turned = current.turned,
                 enabled = enabled,
                 colors = colors,
-                onGood = onGood,
+                onEasy = onEasy,
                 onHard = onHard,
                 onForgot = onForgot,
                 onCheck = onCheck,
@@ -177,11 +177,11 @@ private fun Header(colors: SessionColors, onStop: () -> Unit) {
 private fun SessionProgress(session: MemorizationSession.State, colors: SessionColors) {
     val results = session.results
     val total = session.total.coerceAtLeast(1).toFloat()
-    val good by animateFloatAsState(results.good / total, tween(BAR_MS), label = "good")
+    val good by animateFloatAsState(results.easy / total, tween(BAR_MS), label = "good")
     val hard by animateFloatAsState(results.hard / total, tween(BAR_MS), label = "hard")
     val forgot by animateFloatAsState(results.forgot / total, tween(BAR_MS), label = "forgot")
     val progressLabel = stringResource(R.string.session_progress, session.total - session.remaining, session.total)
-    val legendLabel = stringResource(R.string.session_legend, results.good, results.hard, results.forgot)
+    val legendLabel = stringResource(R.string.session_legend, results.easy, results.hard, results.forgot)
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         BoxWithConstraints(
@@ -204,7 +204,7 @@ private fun SessionProgress(session: MemorizationSession.State, colors: SessionC
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            LegendItem(colors.goodBar, results.good, colors)
+            LegendItem(colors.goodBar, results.easy, colors)
             LegendItem(colors.hardBar, results.hard, colors)
             LegendItem(colors.forgotBar, results.forgot, colors)
         }
@@ -284,7 +284,7 @@ private fun SessionCard(
 }
 
 /**
- * Forgot / Hard / Good on the front; after Hard, the check in their place; after Forgot, the
+ * Forgot / Hard / Easy on the front; after Hard, the check in their place; after Forgot, the
  * way on. The block has a fixed height so the card does not move when one set gives way to
  * another.
  */
@@ -293,7 +293,7 @@ private fun AnswerButtons(
     turned: Turned?,
     enabled: Boolean,
     colors: SessionColors,
-    onGood: () -> Unit,
+    onEasy: () -> Unit,
     onHard: () -> Unit,
     onForgot: () -> Unit,
     onCheck: (right: Boolean) -> Unit,
@@ -360,7 +360,7 @@ private fun AnswerButtons(
                     }
                 }
                 null -> {
-                    // Rising from Forgot to Good, so Good sits under the right thumb.
+                    // Rising from Forgot to Easy, so Easy sits under the right thumb.
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         AnswerButton(
                             label = stringResource(R.string.wrong),
@@ -379,11 +379,11 @@ private fun AnswerButtons(
                             modifier = Modifier.weight(1f),
                         )
                         AnswerButton(
-                            label = stringResource(R.string.good),
+                            label = stringResource(R.string.easy),
                             textColor = colors.onResult,
                             fill = colors.goodFill,
                             enabled = enabled,
-                            onClick = tap(onGood),
+                            onClick = tap(onEasy),
                             modifier = Modifier.weight(1f),
                         )
                     }

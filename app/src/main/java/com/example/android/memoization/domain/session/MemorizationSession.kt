@@ -8,7 +8,7 @@ import kotlin.random.Random
 /**
  * One sitting with a stack: everything due, in the order given (see dueSessionSides: the most
  * forgotten first), worked through one at a time. A side rated Again goes to the back of the
- * queue and keeps coming round until it is rated Hard or Good, so nothing leaves the session
+ * queue and keeps coming round until it is rated anything else, so nothing leaves the session
  * unrecalled. There is no size: the session ends when the queue is empty, when the learner
  * says they have had enough ([stop]), or when they leave the screen.
  *
@@ -55,13 +55,14 @@ class MemorizationSession(
     }
 
     /**
-     * The sides answered so far, each counted once by its worst answer in this session. A
-     * Forgot counts at once, though the side is still owed - the learner sees the tap land -
-     * and recalling it later adds nothing; Hard and Good count when they close the side. The
-     * total can so run ahead of the sides done while forgotten ones wait to be recalled.
+     * The sides answered so far, each counted once by its worst answer in this session, by the
+     * button that gave it: [easy] for Easy, [hard] for Hard either way the check went (Good or
+     * Hard), [forgot] for Again. A Forgot counts at once, though the side is still owed - the
+     * learner sees the tap land - and recalling it later adds nothing. The total can so run
+     * ahead of the sides done while forgotten ones wait to be recalled.
      */
-    data class Results(val good: Int = 0, val hard: Int = 0, val forgot: Int = 0) {
-        val total: Int get() = good + hard + forgot
+    data class Results(val easy: Int = 0, val hard: Int = 0, val forgot: Int = 0) {
+        val total: Int get() = easy + hard + forgot
     }
 
     data class Outcome(
@@ -123,7 +124,7 @@ class MemorizationSession(
      * is still due, in the stack's count and in the next sitting, whenever that is. A second
      * Again changes nothing more.
      *
-     * Hard/Good on a side answered right first time: written as scheduled. Hard/Good after an
+     * Hard/Good/Easy on a side not forgotten first: written as scheduled. Any of them after an
      * Again in this session: the recall is not rated again - the lapse set the stability -
      * it only lets the lapse's schedule start, so the due date moves out and nothing else.
      */
@@ -145,8 +146,8 @@ class MemorizationSession(
         }
         if (!lapsed) results = when (rating) {
             Rating.Again -> results.copy(forgot = results.forgot + 1)
-            Rating.Hard -> results.copy(hard = results.hard + 1)
-            else -> results.copy(good = results.good + 1)
+            Rating.Hard, Rating.Good -> results.copy(hard = results.hard + 1)
+            Rating.Easy -> results.copy(easy = results.easy + 1)
         }
         val answer = Answer(
             sideId = item.id,

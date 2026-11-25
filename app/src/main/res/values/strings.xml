@@ -28,7 +28,7 @@
     <string name="word2_label">Explanation</string>
     <string name="confirm_deletion">Do you want to delete</string>
     <string name="undo">Undo</string>
-    <string name="good">Good</string>
+    <string name="easy">Easy</string>
     <string name="hard">Hard</string>
     <string name="wrong">Forgot</string>
     <string name="edit_stack_desc">Edit memo stack</string>
@@ -78,7 +78,7 @@
     <string name="practice_new_side_caption">A new side starts from scratch</string>
     <string name="practice_smart_switch_caption">Smart switch: word \u2192 meaning first; once a word is known the pair switches to meaning \u2192 word instead</string>
     <string name="session_progress">%1$d of %2$d done</string>
-    <string name="session_legend">Good %1$d, Hard %2$d, Forgot %3$d</string>
+    <string name="session_legend">Easy %1$d, Hard %2$d, Forgot %3$d</string>
     <string name="next">Next</string>
     <string name="check_question">Did you get it right?</string>
     <string name="check_no">Forgot</string>

@@ -26,8 +26,9 @@ _Avoid_: mode, direction setting
 
 **Smart switch**:
 The default practice sides: one side of a pair at a time. A pair is practised word to meaning
-first; once the word side reaches Level3 - a memory holding a week - the pair hands over to its
-meaning side from the next day on: the meaning side enters as **New**, and the word side is no
+first; once the word side reaches Level3 - a memory holding a week - from at least two answers
+(a first Easy alone gets a new side there), the pair hands over to its meaning side from the
+next day on: the meaning side enters as **New**, and the word side is no
 longer scheduled. A meaning side
 that has been rated keeps the pair even if the word side lapses below that. Both sides at once
 is what **Both sides** is for.
@@ -48,15 +49,16 @@ A reading of a side's stability, for colour: Level1 under 2 days, Level2 under 7
 _Avoid_: score, status, stored level
 
 **Rating**:
-The learner's answer to a side - Again, Hard or Good, which is also what the three buttons say.
-Again drops stability sharply but not to nothing and keeps the side **Due** until it is
-recalled; Hard grows it a little, Good grows it fully. Recalling a side after Again in the same
-**Session** is not a rating: it only lets the lapse's schedule start. Hard is not taken at its
-word: it turns the card over to the answer, and the learner says whether they had it right - yes
-keeps the Hard, no is an Again, as if it had been pressed first. Nothing is rated until then.
-Again is rated at once and turns the card over too, so the learner sees what they could not
-recall; Good never shows the answer.
-_Avoid_: a fourth rating (FSRS has one, this app does not), icon, click
+The learner's answer to a side, one of FSRS's four: Again, Hard, Good, Easy. Three buttons
+give them - Forgot, Hard, Easy. Forgot is Again: stability drops sharply but not to nothing and
+the side stays **Due** until it is recalled. Easy grows stability most. Hard is not taken at its
+word: it turns the card over to the answer, and the learner says whether they had it right -
+yes is Good, a full grow; no is Hard, a small one, with no lapse. Nothing is rated until then,
+and neither sends the side round again. Recalling a side after Again in the same **Session** is
+not a rating: it only lets the lapse's schedule start. Forgot is rated at once and turns the
+card over too, so the learner sees what they could not recall; Easy never shows the answer.
+_Avoid_: Good for the Easy button (it was once so, and the screen said one thing while the
+scheduler got another), icon, click
 
 **New**:
 A side that has never been rated; it is due at once, and its first rating sets its stability.
@@ -71,11 +73,11 @@ _Avoid_: to learn, toShow, unrepeated
 One sitting with a stack: all of its due practised sides, the most forgotten first (lowest
 FSRS retrievability; among ties the weaker memory; never-practised last; equals in random
 order), shown one at a time; a side rated Again returns to the back of the queue until it is
-rated Hard or Good. A session has no size. It ends one of three ways - the queue drains, the
+rated anything else. A session has no size. It ends one of three ways - the queue drains, the
 learner taps **Enough for today**, or they leave the screen - and the **Review log** records
 which, with how many sides were closed and how many were not got to. Its progress is the sides
-answered so far, each once, in the colour of its worst answer - a Forgot shows at once, while
-the side is still owed - and never says how many are left.
+answered so far, each once, in the colour of the button behind its worst answer - a Forgot
+shows at once, while the side is still owed - and never says how many are left.
 _Avoid_: memorization list, wordsToLearn, round, daily limit, cap
 
 **Enough for today**:
