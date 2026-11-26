@@ -4,6 +4,8 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -126,3 +128,22 @@ private val Light = StackListColors(
 
 @Composable
 fun stackListColors(dark: Boolean = isSystemInDarkTheme()): StackListColors = if (dark) Dark else Light
+
+/** How bright Study is at the least urgent review: this share of the accent over the grey. */
+private const val MIN_STUDY_BRIGHTNESS = 0.35f
+
+/**
+ * Study's fill and text for a review [urgency] from 0 to 1: a muted teal when little is about to
+ * be forgotten, the full accent - as it always was - when much is. The text takes whichever of
+ * the dark and the light gives more contrast on that fill.
+ */
+fun StackListColors.study(urgency: Float): Pair<Color, Color> {
+    val fill = lerp(studyAheadFill, accent, MIN_STUDY_BRIGHTNESS + (1 - MIN_STUDY_BRIGHTNESS) * urgency.coerceIn(0f, 1f))
+    val content = listOf(onAccent, text).maxBy { contrast(it, fill) }
+    return fill to content
+}
+
+private fun contrast(a: Color, b: Color): Float {
+    val (light, dark) = listOf(a.luminance(), b.luminance()).sortedDescending()
+    return (light + 0.05f) / (dark + 0.05f)
+}

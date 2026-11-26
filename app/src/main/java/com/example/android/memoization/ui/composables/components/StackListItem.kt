@@ -40,11 +40,14 @@ import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.data.model.PracticeSides
 import com.example.android.memoization.data.model.StackLevels
 import com.example.android.memoization.data.model.levels
+import com.example.android.memoization.domain.session.reviewUrgency
 import com.example.android.memoization.ui.features.folderscreen.StackListColors
+import com.example.android.memoization.ui.features.folderscreen.study
 
 /**
  * One stack in the list (design handoff "Список колод", 6c/6e): name and size, the pairs by
- * level as four bars, Study and Add. With nothing due, Study turns grey and studies ahead.
+ * level as four bars, Study and Add. Study is as bright as the review is urgent; with nothing
+ * due, it turns grey and studies ahead.
  */
 @Composable
 fun StackListItem(
@@ -61,6 +64,7 @@ fun StackListItem(
     // ever change, and a remembered value would freeze at first composition.
     val hasDue = stack.hasDue(practice)
     val levels = stack.levels(practice)
+    val (studyFill, studyText) = colors.study(if (hasDue) stack.reviewUrgency(practice) else 0f)
     val shape = RoundedCornerShape(24.dp)
     Column(
         modifier = modifier
@@ -98,13 +102,13 @@ fun StackListItem(
                     .weight(1f)
                     .height(48.dp)
                     .clip(buttonShape)
-                    .background(if (hasDue) colors.accent else colors.studyAheadFill)
+                    .background(if (hasDue) studyFill else colors.studyAheadFill)
                     .clickable(role = Role.Button) { onPlay(!hasDue) },
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = stringResource(if (hasDue) R.string.study else R.string.study_anyway),
-                    color = if (hasDue) colors.onAccent else colors.studyAheadText,
+                    color = if (hasDue) studyText else colors.studyAheadText,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                 )

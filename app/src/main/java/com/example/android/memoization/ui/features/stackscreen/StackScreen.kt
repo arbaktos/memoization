@@ -36,6 +36,8 @@ import com.example.android.memoization.data.model.step
 import com.example.android.memoization.ui.features.folderscreen.FolderViewModel
 import com.example.android.memoization.ui.features.folderscreen.StackListColors
 import com.example.android.memoization.ui.features.folderscreen.stackListColors
+import com.example.android.memoization.ui.features.folderscreen.study
+import com.example.android.memoization.domain.session.reviewUrgency
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -528,6 +530,7 @@ fun DisplayStack(
                     onStudy = if (currentStack.hasDue(practice)) {
                         { navigateToMemorization(currentStack.stackId) }
                     } else null,
+                    studyUrgency = currentStack.reviewUrgency(practice),
                 )
             }
         },
@@ -579,9 +582,12 @@ fun DisplayStack(
     )
 }
 
-/** Add a word and Study, stacked at the bottom right; Study only when [onStudy] is given. */
+/**
+ * Add a word and Study, stacked at the bottom right; Study only when [onStudy] is given, as
+ * bright as the review is urgent.
+ */
 @Composable
-fun StackFabs(colors: StackListColors, onAdd: () -> Unit, onStudy: (() -> Unit)?) {
+fun StackFabs(colors: StackListColors, onAdd: () -> Unit, onStudy: (() -> Unit)?, studyUrgency: Float = 1f) {
     val shape = RoundedCornerShape(18.dp)
     val fab = Modifier
         .height(56.dp)
@@ -602,18 +608,19 @@ fun StackFabs(colors: StackListColors, onAdd: () -> Unit, onStudy: (() -> Unit)?
             Icon(Icons.Filled.Add, stringResource(R.string.add_new_card), tint = colors.plusIcon, modifier = Modifier.size(22.dp))
         }
         if (onStudy != null) {
+            val (studyFill, studyText) = colors.study(studyUrgency)
             Row(
                 modifier = fab
-                    .background(colors.accent)
+                    .background(studyFill)
                     .clickable(role = Role.Button, onClick = onStudy)
                     .padding(start = 18.dp, end = 22.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Icon(Icons.Filled.PlayArrow, null, tint = colors.onAccent, modifier = Modifier.size(18.dp))
+                Icon(Icons.Filled.PlayArrow, null, tint = studyText, modifier = Modifier.size(18.dp))
                 Text(
                     text = stringResource(R.string.study),
-                    color = colors.onAccent,
+                    color = studyText,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                 )
