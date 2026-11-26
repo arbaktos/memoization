@@ -152,4 +152,13 @@
         <item quantity="other">Удалить %d слова?</item>
     </plurals>
     <string name="delete_words_text">Сразу после удаления это можно отменить.</string>
+    <string name="new_word_title">Новое слово</string>
+    <string name="edit_word_title">Изменить слово</string>
+    <string name="save">Сохранить</string>
+    <string name="save_and_next">Сохранить и ещё</string>
+    <string name="saved">Сохранено</string>
+    <string name="auto_translated_hint">Автоперевод · можно исправить</string>
+    <string name="draft_restored">Несохранённое слово с прошлого раза</string>
+    <string name="clear">Очистить</string>
+    <string name="close">Закрыть</string>
 </resources>

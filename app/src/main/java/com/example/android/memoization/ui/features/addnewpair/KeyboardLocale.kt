@@ -17,3 +17,7 @@ fun keyboardLocaleTag(apiCode: String?): String? {
     val locale = Locale.forLanguageTag(tag)
     return locale.toLanguageTag().takeIf { locale.language.isNotEmpty() && it != "und" }
 }
+
+/** The language's short code for a field's label, "SR" for "sr-Cyrl_RS"; null when there is none. */
+fun languageLabel(apiCode: String?): String? =
+    keyboardLocaleTag(apiCode)?.let { Locale.forLanguageTag(it).language.uppercase(Locale.ROOT) }

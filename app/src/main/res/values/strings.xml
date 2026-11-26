@@ -140,4 +140,13 @@
         <item quantity="other">Delete %d words?</item>
     </plurals>
     <string name="delete_words_text">You can undo this right after.</string>
+    <string name="new_word_title">New word</string>
+    <string name="edit_word_title">Edit word</string>
+    <string name="save">Save</string>
+    <string name="save_and_next">Save &amp; next</string>
+    <string name="saved">Saved</string>
+    <string name="auto_translated_hint">Auto-translated · tap to edit</string>
+    <string name="draft_restored">Unsaved word from last time</string>
+    <string name="clear">Clear</string>
+    <string name="close">Close</string>
 </resources>

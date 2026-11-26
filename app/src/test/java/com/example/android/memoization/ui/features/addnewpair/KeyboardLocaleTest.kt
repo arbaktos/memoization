@@ -29,4 +29,13 @@ class KeyboardLocaleTest {
         assertNull(keyboardLocaleTag("_"))
         assertNull(keyboardLocaleTag("???"))
     }
+
+    @Test
+    fun `a field's label takes the language alone, in capitals`() {
+        assertEquals("SR", languageLabel("sr-Cyrl_RS"))
+        assertEquals("ES", languageLabel("es_ES"))
+        assertEquals("RU", languageLabel("ru"))
+        assertNull(languageLabel(null))
+        assertNull(languageLabel("???"))
+    }
 }
