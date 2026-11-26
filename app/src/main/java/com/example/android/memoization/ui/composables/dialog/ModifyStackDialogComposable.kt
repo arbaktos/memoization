@@ -1,5 +1,6 @@
 package com.example.android.memoization.ui.composables.dialog
 
+import com.example.android.memoization.ui.features.addnewpair.languageDisplayName
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -76,13 +77,14 @@ fun ModifyStackDialog(
     var toLanguage by rememberSaveable { mutableStateOf(stack?.toLanguage) }
     var pickerFor by remember { mutableStateOf<LanguageSlot?>(null) }
 
-    // The stack stores the api code; the learner should read "English", not "en_GB".
+    // The stack stores the api code; the learner should read "Английский", not "en_GB".
     val languages by languagesViewModel.languages.collectAsStateWithLifecycle()
     val nameOf: (String?) -> String? = { code ->
         code?.let {
-            (languages as? LoadingState.Collected)?.content
+            val apiName = (languages as? LoadingState.Collected)?.content
                 ?.firstOrNull { language -> language.full_code == it }
                 ?.englishName ?: it
+            languageDisplayName(it, apiName)
         }
     }
 

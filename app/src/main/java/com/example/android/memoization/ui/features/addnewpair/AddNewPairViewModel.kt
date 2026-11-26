@@ -1,5 +1,6 @@
 package com.example.android.memoization.ui.features.addnewpair
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.example.android.memoization.R
@@ -98,6 +99,7 @@ class AddNewPairViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     private var currentWordPair: WordPair? = null
+    private val TAG = "AddNewPairViewModel"
 
     /** Known at once when adding; when editing, once the pair is loaded. */
     private val stackId = MutableStateFlow<Long?>(savedStateHandle[STACK_ID])
@@ -161,7 +163,12 @@ class AddNewPairViewModel @Inject constructor(
                         _autoTranslated.value = true
                     }
                 }
-                is TranslationState.Error -> updateToastMessage(state.errorMessage ?: R.string.translation_error)
+                is TranslationState.Error -> {
+                    // The api's or the network's own words are English and technical; the
+                    // learner reads ours, the log keeps theirs.
+                    Log.w(TAG, "Translation failed: ${state.errorMessage}")
+                    updateToastMessage(R.string.translation_error)
+                }
                 is TranslationState.Loading -> Unit
             }
             _translating.value = false

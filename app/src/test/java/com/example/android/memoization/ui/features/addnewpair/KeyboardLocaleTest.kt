@@ -38,4 +38,18 @@ class KeyboardLocaleTest {
         assertNull(languageLabel(null))
         assertNull(languageLabel("???"))
     }
+
+    @Test
+    fun `a language is named in the learner's own language`() {
+        val ru = java.util.Locale.forLanguageTag("ru")
+        assertEquals("Испанский (Испания)", languageDisplayName("es_ES", "Spanish", ru))
+        assertEquals("Сербский (латиница, Сербия)", languageDisplayName("sr-Latn_RS", "Serbian (Latin)", ru))
+        assertEquals("Spanish (Spain)", languageDisplayName("es_ES", "Spanish", java.util.Locale.ENGLISH))
+    }
+
+    @Test
+    fun `a code the system cannot name keeps the api's name`() {
+        assertEquals("Klingon", languageDisplayName("???", "Klingon", java.util.Locale.ENGLISH))
+        assertEquals("Esperanto?", languageDisplayName(null, "Esperanto?", java.util.Locale.ENGLISH))
+    }
 }
