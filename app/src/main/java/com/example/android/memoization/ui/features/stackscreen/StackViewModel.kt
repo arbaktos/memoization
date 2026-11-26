@@ -90,22 +90,41 @@ class StackViewModel @Inject constructor(
     }
 
 
-    /** Only the id is needed to bring it back: deleting hides the row, it does not remove it. */
-    private var lastDeletedId: Long? = null
-
-    fun deletePair(wordPair: WordPair) {
-        lastDeletedId = wordPair.wordPairId
-        viewModelScope.launch {
-            hideWordPairUseCase(wordPair.wordPairId)
-        }
+    /**
+     * Deleting hides the pairs, it does not remove them: the ids are all an undo needs, and the
+     * pairs come back with their progress.
+     */
+    fun deletePairs(wordPairIds: Collection<Long>) {
+        viewModelScope.launch { hideWordPairUseCase(wordPairIds) }
     }
 
-    fun undoDelete() {
-        val restored = lastDeletedId ?: return
-        lastDeletedId = null
-        viewModelScope.launch {
-            hideWordPairUseCase(restored, hidden = false)
-        }
+    fun restorePairs(wordPairIds: Collection<Long>) {
+        viewModelScope.launch { hideWordPairUseCase(wordPairIds, hidden = false) }
+    }
+
+    /** The pairs picked for deletion, or null outside selection mode; kept here to survive rotation. */
+    val selection = MutableStateFlow<Set<Long>?>(null)
+
+    fun startSelection(wordPairId: Long) {
+        selection.value = setOf(wordPairId)
+    }
+
+    /** Taking the last pair out of the selection closes selection mode. */
+    fun toggleSelected(wordPairId: Long) {
+        val current = selection.value ?: return
+        selection.value = (if (wordPairId in current) current - wordPairId else current + wordPairId).ifEmpty { null }
+    }
+
+    fun clearSelection() {
+        selection.value = null
+    }
+
+    /** Hides the selected pairs, leaves selection mode and returns them for the undo. */
+    fun deleteSelected(): Set<Long> {
+        val deleted = selection.value.orEmpty()
+        selection.value = null
+        deletePairs(deleted)
+        return deleted
     }
 
     /** Copies and merge proposals among the stack's visible pairs, recomputed on every change. */

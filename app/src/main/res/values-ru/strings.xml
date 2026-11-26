@@ -28,7 +28,6 @@
 
     <string name="word_to_learn">Слово</string>
     <string name="word2_label">Значение</string>
-    <string name="confirm_deletion">Удалить %1$s/%2$s?</string>
     <string name="undo">Отменить</string>
     <string name="easy">Легко</string>
     <string name="hard">Трудно</string>
@@ -136,4 +135,21 @@
     <string name="stack_deleted">Стек «%s» удалён со всеми словами</string>
     <string name="reminder_channel_name">Напоминания</string>
     <string name="reminder_channel_description">Напоминания учить слова</string>
+    <string name="word_deleted">«%s» удалено</string>
+    <plurals name="words_deleted">
+        <item quantity="one">%d слово удалено</item>
+        <item quantity="few">%d слова удалены</item>
+        <item quantity="many">%d слов удалено</item>
+        <item quantity="other">%d слова удалены</item>
+    </plurals>
+    <string name="selected_count">Выбрано: %d</string>
+    <string name="close_selection">Отменить выбор</string>
+    <string name="delete_selected">Удалить выбранные</string>
+    <plurals name="delete_words_title">
+        <item quantity="one">Удалить %d слово?</item>
+        <item quantity="few">Удалить %d слова?</item>
+        <item quantity="many">Удалить %d слов?</item>
+        <item quantity="other">Удалить %d слова?</item>
+    </plurals>
+    <string name="delete_words_text">Сразу после удаления это можно отменить.</string>
 </resources>

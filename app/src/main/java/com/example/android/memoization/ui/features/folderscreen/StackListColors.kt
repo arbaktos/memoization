@@ -36,7 +36,21 @@ data class StackListColors(
     val plusIcon: Color,
     val fabShadow: Color,
     val menu: Color,
+    /** Delete text and icons on a plain background: the menu item, the trash in selection mode. */
     val danger: Color,
+    /** Deleting words (handoff "Удаление карточки", 10a-10d): the fill behind a swiped row and the dialog's Delete. */
+    val deleteFill: Color,
+    val onDeleteFill: Color,
+    val snackbar: Color,
+    val onSnackbar: Color,
+    val snackbarAction: Color,
+    val snackbarShadow: Color,
+    val selectedRow: Color,
+    val checkboxOutline: Color,
+    val dialog: Color,
+    val cancelFill: Color,
+    /** How much the screen darkens behind the delete dialog. */
+    val scrim: Float,
 )
 
 private val Dark = StackListColors(
@@ -61,6 +75,17 @@ private val Dark = StackListColors(
     fabShadow = Color.Black.copy(alpha = 0.35f),
     menu = Color(0xFF3A3A40),
     danger = Color(0xFFF58A98),
+    deleteFill = Color(0xFFE5627A),
+    onDeleteFill = Color(0xFF1A1A1C),
+    snackbar = Color(0xFFECECEE),
+    onSnackbar = Color(0xFF1C1C1F),
+    snackbarAction = Color(0xFF13776E),
+    snackbarShadow = Color.Black.copy(alpha = 0.4f),
+    selectedRow = Color(0xFF28403D),
+    checkboxOutline = Color(0xFF6A6A72),
+    dialog = Color(0xFF2A2A2E),
+    cancelFill = Color(0xFF424248),
+    scrim = 0.55f,
 )
 
 private val Light = StackListColors(
@@ -85,6 +110,18 @@ private val Light = StackListColors(
     fabShadow = Color(0xFF14141E).copy(alpha = 0.14f),
     menu = Color(0xFFFFFFFF),
     danger = Color(0xFFB5304F),
+    deleteFill = Color(0xFFEC6A80),
+    onDeleteFill = Color(0xFF1A1A1C),
+    snackbar = Color(0xFF2A2A2E),
+    onSnackbar = Color(0xFFECECEE),
+    snackbarAction = Color(0xFF6FCBBF),
+    snackbarShadow = Color(0xFF14141E).copy(alpha = 0.18f),
+    selectedRow = Color(0xFFE1F4F1),
+    checkboxOutline = Color(0xFFB5B5B0),
+    dialog = Color(0xFFFFFFFF),
+    cancelFill = Color(0xFFECECE8),
+    // The handoff's scrim is a dark blue-grey at 40%; the window dim is black, at the same strength.
+    scrim = 0.4f,
 )
 
 @Composable

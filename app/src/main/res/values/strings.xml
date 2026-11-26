@@ -26,7 +26,6 @@
 
     <string name="word_to_learn">Word to learn</string>
     <string name="word2_label">Explanation</string>
-    <string name="confirm_deletion">Do you want to delete %1$s/%2$s?</string>
     <string name="undo">Undo</string>
     <string name="easy">Easy</string>
     <string name="hard">Hard</string>
@@ -128,4 +127,17 @@
     <string name="stack_deleted">Deletion of %s with all the words</string>
     <string name="reminder_channel_name">Reminders</string>
     <string name="reminder_channel_description">Reminders to learn the words</string>
+    <string name="word_deleted">“%s” deleted</string>
+    <plurals name="words_deleted">
+        <item quantity="one">%d word deleted</item>
+        <item quantity="other">%d words deleted</item>
+    </plurals>
+    <string name="selected_count">%d selected</string>
+    <string name="close_selection">Cancel selection</string>
+    <string name="delete_selected">Delete selected</string>
+    <plurals name="delete_words_title">
+        <item quantity="one">Delete %d word?</item>
+        <item quantity="other">Delete %d words?</item>
+    </plurals>
+    <string name="delete_words_text">You can undo this right after.</string>
 </resources>

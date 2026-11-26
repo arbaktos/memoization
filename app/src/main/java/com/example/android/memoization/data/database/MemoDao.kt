@@ -69,8 +69,8 @@ interface MemoDao {
     suspend fun updateWordPair(wordPairEntity: WordPairEntity)
 
     /** Deleting a pair only hides it; nothing in the learning database is ever thrown away. */
-    @Query("UPDATE wordpair_entity_table SET isVisible = :visible WHERE wordPairId = :wordPairId")
-    suspend fun setWordPairVisible(wordPairId: Long, visible: Boolean)
+    @Query("UPDATE wordpair_entity_table SET isVisible = :visible WHERE wordPairId IN (:wordPairIds)")
+    suspend fun setWordPairsVisible(wordPairIds: Collection<Long>, visible: Boolean)
 
     @Query("SELECT * FROM wordpair_entity_table WHERE wordPairId LIKE :wpId")
     fun getWordPairByIdFlow(wpId: Long): Flow<WordPairEntity>
@@ -125,7 +125,7 @@ interface MemoDao {
             setWordPairWords(plan.keepPairId, plan.word1, plan.word2)
             plan.sides.forEach { updateSide(SideEntity.from(it)) }
             plan.moveReviews.forEach { (from, to) -> moveReviews(from, to) }
-            plan.hidePairIds.forEach { setWordPairVisible(it, visible = false) }
+            setWordPairsVisible(plan.hidePairIds, visible = false)
         }
     }
 
