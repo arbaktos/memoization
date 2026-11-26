@@ -1,5 +1,7 @@
 package com.example.android.memoization.ui.features.folderscreen
 
+import androidx.compose.ui.platform.LocalContext
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -85,12 +87,13 @@ fun FoldersScreen(
     val state by viewModel.getDataToDisplay().collectAsState(initial = LoadingState.Loading)
     val toShowDialog = viewModel.showAddStackDialog.observeAsState(false)
     val colors = stackListColors()
+    val context = LocalContext.current
     val hiddenFromStackScreen by viewModel.hiddenFromStackScreen.collectAsState()
     LaunchedEffect(hiddenFromStackScreen) {
         val stackId = hiddenFromStackScreen ?: return@LaunchedEffect
         val name = viewModel.hiddenStackName()
         viewModel.onHiddenStackShown()
-        if (scaffoldState.snackbarHostState.showOnStackDeleteSnackBar(name) == SnackbarResult.ActionPerformed) {
+        if (scaffoldState.snackbarHostState.showOnStackDeleteSnackBar(name, context) == SnackbarResult.ActionPerformed) {
             viewModel.unhideStack(stackId)
         }
     }
@@ -178,6 +181,7 @@ fun StackList(
 ) {
     val scope = rememberCoroutineScope()
     val practice by viewModel.practiceSides.collectAsState()
+    val context = LocalContext.current
     val colors = stackListColors()
     LazyColumn(
         state = listState,
@@ -213,7 +217,7 @@ fun StackList(
                     scope.launch {
                         // Hidden, never deleted; undo just puts it back.
                         viewModel.hideStack(stack)
-                        if (scaffoldState.snackbarHostState.showOnStackDeleteSnackBar(stack) ==
+                        if (scaffoldState.snackbarHostState.showOnStackDeleteSnackBar(stack, context) ==
                             SnackbarResult.ActionPerformed
                         ) {
                             viewModel.unhideStack(stack)
@@ -335,13 +339,13 @@ private fun NewStackFab(colors: StackListColors, onClick: () -> Unit) {
 }
 
 
-suspend fun SnackbarHostState.showOnStackDeleteSnackBar(stack: MemoStack): SnackbarResult =
-    showOnStackDeleteSnackBar(stack.name)
+suspend fun SnackbarHostState.showOnStackDeleteSnackBar(stack: MemoStack, context: Context): SnackbarResult =
+    showOnStackDeleteSnackBar(stack.name, context)
 
-suspend fun SnackbarHostState.showOnStackDeleteSnackBar(name: String): SnackbarResult {
+suspend fun SnackbarHostState.showOnStackDeleteSnackBar(name: String, context: Context): SnackbarResult {
     return showSnackbar(
-        message = "Deletion of $name with all the words",
-        actionLabel = "Undo",
+        message = context.getString(R.string.stack_deleted, name),
+        actionLabel = context.getString(R.string.undo),
         duration = SnackbarDuration.Short
     )
 }

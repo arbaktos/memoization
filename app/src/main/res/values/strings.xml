@@ -125,4 +125,5 @@
     <string name="stack_menu">Stack menu</string>
     <string name="unpin_stack">Unpin this stack</string>
     <string name="delete_stack">Delete stack</string>
+    <string name="stack_deleted">Deletion of %s with all the words</string>
 </resources>

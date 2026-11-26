@@ -133,4 +133,5 @@
     <string name="stack_menu">Меню стека</string>
     <string name="unpin_stack">Открепить стек</string>
     <string name="delete_stack">Удалить стек</string>
+    <string name="stack_deleted">Стек «%s» удалён со всеми словами</string>
 </resources>
