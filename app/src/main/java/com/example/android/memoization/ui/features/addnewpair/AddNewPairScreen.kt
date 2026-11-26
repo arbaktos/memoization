@@ -190,7 +190,8 @@ fun AddNewPairScreen(
                     onWordChange = viewModel::onWordChange,
                     onMeaningChange = viewModel::onMeaningChange,
                     onTranslate = viewModel::onTranslate,
-                    onDone = if (viewModel.editMode) save else saveAndNext,
+                    // Done on the keyboard is Save, adding or editing; Save & next is the button.
+                    onDone = save,
                 )
             }
             SaveButtons(
