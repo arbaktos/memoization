@@ -28,7 +28,7 @@
 
     <string name="word_to_learn">Слово</string>
     <string name="word2_label">Значение</string>
-    <string name="confirm_deletion">Удалить</string>
+    <string name="confirm_deletion">Удалить %1$s/%2$s?</string>
     <string name="undo">Отменить</string>
     <string name="easy">Легко</string>
     <string name="hard">Трудно</string>
@@ -134,4 +134,6 @@
     <string name="unpin_stack">Открепить стек</string>
     <string name="delete_stack">Удалить стек</string>
     <string name="stack_deleted">Стек «%s» удалён со всеми словами</string>
+    <string name="reminder_channel_name">Напоминания</string>
+    <string name="reminder_channel_description">Напоминания учить слова</string>
 </resources>

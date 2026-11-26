@@ -26,7 +26,7 @@
 
     <string name="word_to_learn">Word to learn</string>
     <string name="word2_label">Explanation</string>
-    <string name="confirm_deletion">Do you want to delete</string>
+    <string name="confirm_deletion">Do you want to delete %1$s/%2$s?</string>
     <string name="undo">Undo</string>
     <string name="easy">Easy</string>
     <string name="hard">Hard</string>
@@ -126,4 +126,6 @@
     <string name="unpin_stack">Unpin this stack</string>
     <string name="delete_stack">Delete stack</string>
     <string name="stack_deleted">Deletion of %s with all the words</string>
+    <string name="reminder_channel_name">Reminders</string>
+    <string name="reminder_channel_description">Reminders to learn the words</string>
 </resources>

@@ -639,7 +639,7 @@ suspend fun SnackbarHostState.showOnDeleteSnackBar(
     context: Context
 ): SnackbarResult {
     val result = this.showSnackbar(
-        message = context.getString(R.string.confirm_deletion) + "${wordPair.word1}/${wordPair.word2}?",
+        message = context.getString(R.string.confirm_deletion, wordPair.word1, wordPair.word2.orEmpty()),
         actionLabel = context.getString(R.string.undo),
         duration = SnackbarDuration.Long
     )
