@@ -149,4 +149,7 @@
     <string name="draft_restored">Unsaved word from last time</string>
     <string name="clear">Clear</string>
     <string name="close">Close</string>
+    <string name="deleted_count">Deleted · %d</string>
+    <string name="restore">Restore</string>
+    <string name="restored">“%s” restored</string>
 </resources>

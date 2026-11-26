@@ -13,6 +13,7 @@ data class WordPair(
     override var wordPairId: Long = 0,
     override var isVisible: Boolean = true,
     val sides: List<Side> = emptyList(),
+    override val deletedAt: Long? = null,
 ) : BaseWordPair, DismissableItem {
 
     fun activeSides(

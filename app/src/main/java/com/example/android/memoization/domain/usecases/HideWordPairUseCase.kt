@@ -15,6 +15,6 @@ class HideWordPairUseCaseImpl @Inject constructor(
     private val repository: WordPairRepository
 ) : HideWordPairUseCase {
     override suspend fun invoke(wordPairIds: Collection<Long>, hidden: Boolean) {
-        if (wordPairIds.isNotEmpty()) repository.setVisible(wordPairIds, !hidden)
+        if (wordPairIds.isNotEmpty()) repository.setDeleted(wordPairIds, deleted = hidden)
     }
 }

@@ -36,9 +36,12 @@ interface MemoDao {
     @Update
     suspend fun updateStack(stackEntity: StackEntity)
 
-    /** Hiding is how a stack is deleted; its words stay, so it can always come back. */
-    @Query("UPDATE stack_entity_table SET isVisible = :visible WHERE stackId = :stackId")
-    suspend fun setStackVisible(stackId: Long, visible: Boolean)
+    /**
+     * Deleting a stack hides it and notes when; its words stay, so it can always come back.
+     * A null [deletedAt] restores it.
+     */
+    @Query("UPDATE stack_entity_table SET isVisible = (:deletedAt IS NULL), deletedAt = :deletedAt WHERE stackId = :stackId")
+    suspend fun setStackDeleted(stackId: Long, deletedAt: Long?)
 
     /** One more "Enough for today" on this stack, in place: no snapshot of the row to go stale. */
     @Query(
@@ -68,9 +71,19 @@ interface MemoDao {
     @Update
     suspend fun updateWordPair(wordPairEntity: WordPairEntity)
 
-    /** Deleting a pair only hides it; nothing in the learning database is ever thrown away. */
+    /** Hides pairs without deleting them: what a duplicates merge does to the copies it folds away. */
     @Query("UPDATE wordpair_entity_table SET isVisible = :visible WHERE wordPairId IN (:wordPairIds)")
     suspend fun setWordPairsVisible(wordPairIds: Collection<Long>, visible: Boolean)
+
+    /**
+     * Deleting pairs hides them and notes when, for the Deleted section; nothing in the learning
+     * database is ever thrown away. A null [deletedAt] restores them.
+     */
+    @Query(
+        "UPDATE wordpair_entity_table SET isVisible = (:deletedAt IS NULL), deletedAt = :deletedAt " +
+            "WHERE wordPairId IN (:wordPairIds)"
+    )
+    suspend fun setWordPairsDeleted(wordPairIds: Collection<Long>, deletedAt: Long?)
 
     @Query("SELECT * FROM wordpair_entity_table WHERE wordPairId LIKE :wpId")
     fun getWordPairByIdFlow(wpId: Long): Flow<WordPairEntity>

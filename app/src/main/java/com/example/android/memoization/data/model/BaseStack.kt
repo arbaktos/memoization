@@ -7,6 +7,8 @@ interface BaseStack {
     val stackId: Long
     var hasWords: Boolean
     var isVisible: Boolean
+    /** When the learner deleted the stack; null while it is not deleted. See [isVisible]. */
+    val deletedAt: Long?
     var pinnedTime: Long?
     val fromLanguage: String?
     val toLanguage:String?

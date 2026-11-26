@@ -53,6 +53,14 @@ data class StackListColors(
     val cancelFill: Color,
     /** How much the screen darkens behind the delete dialog. */
     val scrim: Float,
+    /** The Deleted section (handoff "Удалённые", 12a-12c): header, chevron, the dashed rows. */
+    val deletedHeader: Color,
+    val deletedChevron: Color,
+    val deletedOutline: Color,
+    val deletedName: Color,
+    val deletedCaption: Color,
+    val restoreOutline: Color,
+    val restoreContent: Color,
 )
 
 private val Dark = StackListColors(
@@ -88,6 +96,13 @@ private val Dark = StackListColors(
     dialog = Color(0xFF2A2A2E),
     cancelFill = Color(0xFF424248),
     scrim = 0.55f,
+    deletedHeader = Color(0xFFCFCFD4),
+    deletedChevron = Color(0xFF8D8D95),
+    deletedOutline = Color(0xFF44444B),
+    deletedName = Color(0xFF9A9AA2),
+    deletedCaption = Color(0xFF7A7A82),
+    restoreOutline = Color(0xFF4A4A52),
+    restoreContent = Color(0xFFCFCFD4),
 )
 
 private val Light = StackListColors(
@@ -124,6 +139,13 @@ private val Light = StackListColors(
     cancelFill = Color(0xFFECECE8),
     // The handoff's scrim is a dark blue-grey at 40%; the window dim is black, at the same strength.
     scrim = 0.4f,
+    deletedHeader = Color(0xFF3A3A40),
+    deletedChevron = Color(0xFF7A7A82),
+    deletedOutline = Color(0xFFD0D0CB),
+    deletedName = Color(0xFF7A7A82),
+    deletedCaption = Color(0xFF9A9AA2),
+    restoreOutline = Color(0xFFD6D6D2),
+    restoreContent = Color(0xFF3A3A40),
 )
 
 @Composable

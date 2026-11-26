@@ -16,7 +16,7 @@ import com.example.android.memoization.data.database.wordpairdb.WordPairEntity
         StackEntity::class, WordPairEntity::class, SideEntity::class,
         SessionEntity::class, ReviewLogEntity::class, DismissedMatchEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = true
 )
 abstract class MemoDatabase : RoomDatabase() {
@@ -29,7 +29,7 @@ abstract class MemoDatabase : RoomDatabase() {
          * a crash is recoverable, a wiped vocabulary is not.
          */
         val MIGRATIONS: Array<Migration> = arrayOf(
-            MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
+            MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7,
         )
     }
 }
@@ -221,6 +221,22 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
             )
             """.trimIndent()
         )
+    }
+}
+
+/**
+ * Stacks and pairs note when they were deleted, for the Deleted section they can be restored
+ * from. Whatever was hidden before this version counts as deleted now - at the moment of the
+ * migration, since when is not known. That includes copies a duplicates merge had folded away:
+ * the learner chose to see them too. From here on a merge hides without deleting.
+ */
+val MIGRATION_6_7 = object : Migration(6, 7) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `stack_entity_table` ADD COLUMN `deletedAt` INTEGER")
+        db.execSQL("ALTER TABLE `wordpair_entity_table` ADD COLUMN `deletedAt` INTEGER")
+        val now = "CAST(strftime('%s', 'now') AS INTEGER) * 1000"
+        db.execSQL("UPDATE `stack_entity_table` SET `deletedAt` = $now WHERE `isVisible` = 0")
+        db.execSQL("UPDATE `wordpair_entity_table` SET `deletedAt` = $now WHERE `isVisible` = 0")
     }
 }
 

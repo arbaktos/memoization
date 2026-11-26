@@ -92,6 +92,8 @@ import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.domain.search.PairSearch
 import com.example.android.memoization.extensions.checkLength
 import com.example.android.memoization.ui.composables.components.SwipeToReveal
+import com.example.android.memoization.ui.composables.components.DeletedRow
+import com.example.android.memoization.ui.composables.components.deletedSection
 import com.example.android.memoization.ui.composables.dialog.EditStackDialog
 import com.example.android.memoization.ui.features.folderscreen.TDEBUG
 import com.example.android.memoization.ui.icons.ClickableVectorIcon
@@ -133,6 +135,16 @@ fun StackScreen(
                 viewModel.restorePairs(ids)
                 restored = ids
             }
+        }
+    }
+    // Back from the Deleted section, with its progress; the list brings it into view.
+    val restorePair: (WordPair) -> Unit = { wordPair ->
+        val ids = setOf(wordPair.wordPairId)
+        viewModel.restorePairs(ids)
+        restored = ids
+        scope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar(context.getString(R.string.restored, wordPair.word1))
         }
     }
     val deletePair: (WordPair) -> Unit = { wordPair ->
@@ -213,6 +225,7 @@ fun StackScreen(
         selection = selection,
         restored = restored,
         onRestoredShown = { restored = emptySet() },
+        onRestorePair = restorePair,
         onEditStack = { viewModel.showEditStackDialog(true) },
         onDismissDialog = { viewModel.showEditStackDialog(false) },
         onPinStack = viewModel::togglePin,
@@ -261,6 +274,7 @@ fun DisplayStackState(
     selection: WordSelection = WordSelection.NONE,
     restored: Set<Long> = emptySet(),
     onRestoredShown: () -> Unit = {},
+    onRestorePair: (WordPair) -> Unit = {},
 ) {
 
     when (state) {
@@ -287,6 +301,7 @@ fun DisplayStackState(
             selection = selection,
             restored = restored,
             onRestoredShown = onRestoredShown,
+            onRestorePair = onRestorePair,
         )
 
         is LoadingState.Loading -> DisplayLoadingStack()
@@ -460,6 +475,7 @@ fun DisplayStack(
     selection: WordSelection = WordSelection.NONE,
     restored: Set<Long> = emptySet(),
     onRestoredShown: () -> Unit = {},
+    onRestorePair: (WordPair) -> Unit = {},
 ) {
     val lazyListState = rememberLazyListState()
     // Newest first: ids grow with insertion, so this is "last added on top".
@@ -569,6 +585,10 @@ fun DisplayStack(
                             practice = practice,
                             listState = lazyListState,
                             selection = selection,
+                            // The Deleted section is for browsing; a search looks among the words in use.
+                            deleted = if (searchQuery == null) currentStack.deletedWords else emptyList(),
+                            deletedSectionKey = "stack-${currentStack.stackId}",
+                            onRestore = onRestorePair,
                         )
                     }
                 }
@@ -639,6 +659,9 @@ fun WordList(
     listState: LazyListState,
     words: List<WordPair>,
     selection: WordSelection = WordSelection.NONE,
+    deleted: List<WordPair> = emptyList(),
+    deletedSectionKey: String = "",
+    onRestore: (WordPair) -> Unit = {},
 ) {
     // One row open at a time; a swipe on another row closes it.
     var openId by remember { mutableStateOf<Long?>(null) }
@@ -679,6 +702,15 @@ fun WordList(
                     },
                 )
             }
+        }
+        deletedSection(deletedSectionKey, deleted, itemKey = { it.wordPairId }, colors = colors) { pair ->
+            DeletedRow(
+                title = pair.word1,
+                caption = pair.word2,
+                colors = colors,
+                onRestore = { onRestore(pair) },
+                modifier = Modifier.animateItem(),
+            )
         }
     }
 }

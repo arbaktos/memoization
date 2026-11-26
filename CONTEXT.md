@@ -151,9 +151,18 @@ as targets of their own, and sharing to one goes straight to the pair.
 _Avoid_: intent, quick add, import
 
 **Hidden**:
-A word pair or stack the learner has deleted. Nothing leaves the database - the row and its
-progress stay, so an undo, or a restore, can bring it back.
-_Avoid_: deleted, removed, trashed
+A word pair or stack out of sight: left out of sessions, counts and lists. Nothing leaves the
+database - the row and its progress stay. A pair or stack is Hidden either because the learner
+**Deleted** it or, for a pair, because a merge folded it into another.
+_Avoid_: removed, trashed
+
+**Deleted**:
+Hidden by the learner, with the time it happened (`deletedAt`). Deleted stacks and pairs wait at
+the end of their list in a collapsible Deleted section, latest first, and Restore brings them
+back with their progress, for as long as they wait - there is no expiry. A copy folded away by a
+merge is Hidden but not Deleted, so it never shows there. Whatever was Hidden before version 7
+of the database counts as Deleted, merge copies included: the learner chose to see them too.
+_Avoid_: removed, trashed
 
 **Copy**:
 A word pair added again to the same stack exactly as before - word and meaning the same up to
@@ -269,8 +278,6 @@ _Avoid_: include scheduling, preserve state
   lossy by construction. A plain two-column Anki text export already imports.
 - Desired retention is fixed at 0.9 (ADR 0003). A setting is possible later, as are FSRS
   parameters fitted to this learner's own review history.
-- **Hidden** pairs and stacks have no way back in the UI yet; a restore screen is the missing
-  half of "nothing is ever deleted".
 - A **Session** lives in memory. If the process dies mid-session the queue is rebuilt from the
   due sides, and a side rated Again and not yet recalled is among them, since a lapse keeps
   the side **Due**; only its place in the queue is lost.

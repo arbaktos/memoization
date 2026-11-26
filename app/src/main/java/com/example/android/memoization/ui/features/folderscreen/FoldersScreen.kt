@@ -1,5 +1,8 @@
 package com.example.android.memoization.ui.features.folderscreen
 
+import androidx.compose.ui.res.pluralStringResource
+import com.example.android.memoization.ui.composables.components.deletedSection
+import com.example.android.memoization.ui.composables.components.DeletedRow
 import androidx.compose.ui.platform.LocalContext
 import android.content.Context
 import android.util.Log
@@ -89,6 +92,7 @@ fun FoldersScreen(
     val colors = stackListColors()
     val context = LocalContext.current
     val hiddenFromStackScreen by viewModel.hiddenFromStackScreen.collectAsState()
+    val deletedStacks by viewModel.deletedStacks.collectAsState()
     LaunchedEffect(hiddenFromStackScreen) {
         val stackId = hiddenFromStackScreen ?: return@LaunchedEffect
         val name = viewModel.hiddenStackName()
@@ -103,7 +107,7 @@ fun FoldersScreen(
             backgroundColor = colors.background,
             floatingActionButton = {
                 val collectedState = state
-                if (collectedState is LoadingState.Collected && collectedState.content.isNotEmpty()) {
+                if (collectedState is LoadingState.Collected && (collectedState.content.isNotEmpty() || deletedStacks.isNotEmpty())) {
                     NewStackFab(colors) { viewModel.showAddStackDialog(true) }
                 }
             },
@@ -166,7 +170,9 @@ fun FolderColumn(
     navController: NavController,
     scaffoldState: ScaffoldState
 ) {
-    if (state.content.isEmpty()) InvitationToCreateStack { viewModel.showAddStackDialog(true) }
+    // With every stack deleted the list stays, for its Deleted section.
+    val deleted by viewModel.deletedStacks.collectAsState()
+    if (state.content.isEmpty() && deleted.isEmpty()) InvitationToCreateStack { viewModel.showAddStackDialog(true) }
     else StackList(listState, state, viewModel, navController, scaffoldState)
 }
 
@@ -183,6 +189,7 @@ fun StackList(
     val practice by viewModel.practiceSides.collectAsState()
     val context = LocalContext.current
     val colors = stackListColors()
+    val deleted by viewModel.deletedStacks.collectAsState()
     LazyColumn(
         state = listState,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -227,9 +234,26 @@ fun StackList(
             )
 
         }
+        deletedSection(STACK_LIST_SECTION, deleted, itemKey = { it.stackId }, colors = colors) { stack ->
+            DeletedRow(
+                title = stack.name,
+                caption = pluralStringResource(R.plurals.stack_word_count, stack.words.size, stack.words.size),
+                colors = colors,
+                onRestore = {
+                    viewModel.unhideStack(stack)
+                    scope.launch {
+                        scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+                        scaffoldState.snackbarHostState.showSnackbar(context.getString(R.string.restored, stack.name))
+                    }
+                },
+                modifier = Modifier.animateItem(),
+            )
+        }
     }
 }
 
+
+private const val STACK_LIST_SECTION = "stack-list"
 
 //TODO change design
 @Preview

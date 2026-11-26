@@ -84,7 +84,7 @@ class StackViewModel @Inject constructor(
     /** Delete from the menu: hidden, never deleted - the stack list offers the undo. */
     fun hideStack(onHidden: () -> Unit) {
         viewModelScope.launch {
-            stackRepository.setStackVisible(stackId, false)
+            stackRepository.setStackDeleted(stackId, deleted = true)
             onHidden()
         }
     }

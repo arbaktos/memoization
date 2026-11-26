@@ -13,7 +13,11 @@ data class MemoStack(
     override var pinnedTime: Long? = null,
     override val tiredSessions: Int = 0,
     override val tiredAnswersSum: Int = 0,
+    override val deletedAt: Long? = null,
 ) : BaseStack, DismissableItem {
+
+    /** The pairs the learner deleted, the latest first: the stack screen's Deleted section. */
+    var deletedWords: List<WordPair> = emptyList()
 
     var words: MutableList<WordPair> = mutableListOf()
         set(value) {

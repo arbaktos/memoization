@@ -14,9 +14,9 @@ class WordPairRepository @Inject constructor(private val memoDao: MemoDao) {
     suspend fun insertWordPair(wordPair: BaseWordPair): Long =
         memoDao.insertWordPairWithSides(WordPairEntity.create(wordPair))
 
-    /** Deleting only hides the pair; its sides and their progress stay for an undo. */
-    suspend fun setVisible(wordPairIds: Collection<Long>, visible: Boolean) {
-        memoDao.setWordPairsVisible(wordPairIds, visible)
+    /** Deleting only hides the pairs and notes when; their sides and progress stay for a restore. */
+    suspend fun setDeleted(wordPairIds: Collection<Long>, deleted: Boolean) {
+        memoDao.setWordPairsDeleted(wordPairIds, if (deleted) System.currentTimeMillis() else null)
     }
 
     suspend fun updateWordPairInDb(wordPair: BaseWordPair) {

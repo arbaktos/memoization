@@ -21,6 +21,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import com.example.android.memoization.data.database.stackdb.toMemoStack
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -59,10 +61,15 @@ class FolderViewModel @Inject constructor(
         _showAddStackDialog.postValue(toShow)
     }
 
-    /** Deleting a stack hides it; the words stay, so an undo costs nothing. */
-    fun hideStack(stack: MemoStack) = updateStack(stack.copy(isVisible = false))
+    /** Deleting a stack hides it; the words stay, so an undo or a restore costs nothing. */
+    fun hideStack(stack: MemoStack) = unhideStack(stack.stackId, hidden = true)
 
-    fun unhideStack(stack: MemoStack) = updateStack(stack.copy(isVisible = true))
+    fun unhideStack(stack: MemoStack) = unhideStack(stack.stackId)
+
+    /** The stacks the learner deleted, the latest first: the list's Deleted section. */
+    val deletedStacks: StateFlow<List<MemoStack>> = stackRepository.getStacksWithWords()
+        .map { stacks -> stacks.map { it.toMemoStack() }.filter { it.deletedAt != null }.sortedByDescending { it.deletedAt } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_COLLECTING_AFTER_MS), emptyList())
 
     /** A stack deleted from its own screen, handed back here so the list can offer the undo. */
     val hiddenFromStackScreen: StateFlow<Long?> = savedStateHandle.getStateFlow(HIDDEN_STACK_ID, null)
@@ -74,8 +81,8 @@ class FolderViewModel @Inject constructor(
         handle[HIDDEN_STACK_ID] = null
     }
 
-    fun unhideStack(stackId: Long) {
-        viewModelScope.launch { stackRepository.setStackVisible(stackId, true) }
+    fun unhideStack(stackId: Long, hidden: Boolean = false) {
+        viewModelScope.launch { stackRepository.setStackDeleted(stackId, deleted = hidden) }
     }
 
     fun addStackAndOpenIt(stack: MemoStack, navController: NavController) {
