@@ -20,6 +20,8 @@ class WordPairTest {
         state = if (stability == null) SideState.New else SideState.Review,
         stability = stability,
         due = dueInDays?.let { now + it * DAY_MILLIS },
+        // A rated side has answers enough for the Smart switch hand-over.
+        reps = if (stability == null) 0 else 2,
     )
 
     private fun pair(vararg sides: Side) = WordPair(

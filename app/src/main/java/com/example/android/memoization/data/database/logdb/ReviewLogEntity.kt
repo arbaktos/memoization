@@ -7,7 +7,7 @@ import com.example.android.memoization.data.database.TableNames
 
 /**
  * One answer given in a session - every tap, including the answer to a side brought back
- * after Forgot, which the scheduler ignores but the learner did give.
+ * after Forgot, which only lets the lapse's schedule start but the learner did give.
  *
  * The side's schedule *after* the answer is kept here because the side row only holds the
  * latest: the growth curve, time-to-Learned and the streak's obligation days all need the

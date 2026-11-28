@@ -8,13 +8,13 @@ import javax.inject.Inject
  * "restore" screen - can bring it back with its progress intact.
  */
 interface HideWordPairUseCase {
-    suspend operator fun invoke(wordPairId: Long, hidden: Boolean = true)
+    suspend operator fun invoke(wordPairIds: Collection<Long>, hidden: Boolean = true)
 }
 
 class HideWordPairUseCaseImpl @Inject constructor(
     private val repository: WordPairRepository
 ) : HideWordPairUseCase {
-    override suspend fun invoke(wordPairId: Long, hidden: Boolean) {
-        repository.setVisible(wordPairId, !hidden)
+    override suspend fun invoke(wordPairIds: Collection<Long>, hidden: Boolean) {
+        if (wordPairIds.isNotEmpty()) repository.setDeleted(wordPairIds, deleted = hidden)
     }
 }

@@ -10,7 +10,8 @@ import java.util.TimeZone
 enum class PracticeSides {
     /**
      * One side at a time, word to meaning first. Once the word side is known well enough -
-     * Level3, a memory holding a week - the pair hands over to its meaning side: the word is
+     * Level3, a memory holding a week, from at least two answers, so one Easy on a word never
+     * seen before is not enough - the pair hands over to its meaning side: the word is
      * no longer asked for, the learner is shown the meaning and recalls the word. The hand-over
      * takes effect the day after the word side got there, so a word settled in this sitting is
      * not asked for from the other side in the same sitting. It holds from then on, so a lapse of the word
@@ -46,9 +47,19 @@ enum class PracticeSides {
         /** The level the word side must reach before Smart switch hands over to the meaning side. */
         val HANDOVER_LEVEL: WordStatus = WordStatus.Level3
 
-        /** At the hand-over level, and rated there before today: the switch waits for the next day. */
+        /**
+         * Answers the word side must have before the hand-over: a first Easy alone puts a new
+         * side past [HANDOVER_LEVEL], and one answer is too little to drop a direction on.
+         */
+        const val HANDOVER_MIN_ANSWERS = 2
+
+        /**
+         * At the hand-over level from enough answers, and rated there before today: the switch
+         * waits for the next day.
+         */
         private fun isKnown(side: Side, now: Long, zone: TimeZone): Boolean =
             side.level.frequency >= HANDOVER_LEVEL.frequency &&
+                side.reps >= HANDOVER_MIN_ANSWERS &&
                 (side.lastReview == null || localDay(side.lastReview, zone) < localDay(now, zone))
 
         /** Stored as the enum name; anything unknown falls back to the default. */

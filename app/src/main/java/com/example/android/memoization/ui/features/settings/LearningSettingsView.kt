@@ -53,6 +53,9 @@ fun LearningView(modifier: Modifier = Modifier, preferenceStorage: DataStore<Pre
             preferenceStorage.putValueScoped(DatastoreKey.PRACTICE_SIDES, it.name, scope)
         }
         Row(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp)) {
+            SettingsTileSubtitle(R.string.practice_library_caption)
+        }
+        Row(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 2.dp)) {
             SettingsTileSubtitle(R.string.practice_smart_switch_caption)
         }
         Row(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 2.dp)) {
@@ -85,3 +88,12 @@ private fun PracticeSidesOption(
         }
     }
 }
+
+/** How each Practice sides option is called on screen. */
+val PracticeSides.labelRes: Int
+    get() = when (this) {
+        PracticeSides.SMART_SWITCH -> R.string.practice_smart_switch
+        PracticeSides.WORD_TO_MEANING -> R.string.practice_word_to_meaning
+        PracticeSides.MEANING_TO_WORD -> R.string.practice_meaning_to_word
+        PracticeSides.BOTH -> R.string.practice_both
+    }

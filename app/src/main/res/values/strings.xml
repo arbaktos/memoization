@@ -13,7 +13,6 @@
     </plurals>
     <string name="pin_stack">Pin this stack</string>
     <string name="add_wordpair">Add new wordpair</string>
-    <string name="wrods_to_learn">Words to repeat: </string>
     <string name="learn">Learn</string>
     <string name="learn_this_stack">Learn this stack</string>
     <string name="word_indicator">Indicator how well do you know the word</string>
@@ -27,9 +26,8 @@
 
     <string name="word_to_learn">Word to learn</string>
     <string name="word2_label">Explanation</string>
-    <string name="confirm_deletion">Do you want to delete</string>
     <string name="undo">Undo</string>
-    <string name="good">Good</string>
+    <string name="easy">Easy</string>
     <string name="hard">Hard</string>
     <string name="wrong">Forgot</string>
     <string name="edit_stack_desc">Edit memo stack</string>
@@ -79,6 +77,11 @@
     <string name="practice_new_side_caption">A new side starts from scratch</string>
     <string name="practice_smart_switch_caption">Smart switch: word \u2192 meaning first; once a word is known the pair switches to meaning \u2192 word instead</string>
     <string name="session_progress">%1$d of %2$d done</string>
+    <string name="session_legend">Easy %1$d, Hard %2$d, Forgot %3$d</string>
+    <string name="next">Next</string>
+    <string name="check_question">Did you get it right?</string>
+    <string name="check_no">Forgot</string>
+    <string name="check_yes">Yes</string>
     <string name="share_pick_stack">Which stack does it go to?</string>
     <string name="untitled_stack">Stack</string>
     <plurals name="stack_word_count">
@@ -101,4 +104,73 @@
         <item quantity="one">%d day</item>
         <item quantity="other">%d days</item>
     </plurals>
+    <plurals name="summary_practised">
+        <item quantity="one">%d word practised</item>
+        <item quantity="other">%d words practised</item>
+    </plurals>
+    <string name="summary_on_track_title">Right on track</string>
+    <string name="summary_on_track_text">These words will come back sooner. Recalling with effort is exactly what makes words stick.</string>
+    <string name="summary_productive_title">A productive session</string>
+    <string name="summary_productive_text">You found the words that need work. Each one comes back sooner, and every hard recall makes it stronger. Mistakes are where the learning happens.</string>
+    <string name="summary_great_recall_title">Great recall</string>
+    <string name="summary_great_recall_text">Words you know well will show up less often.</string>
+    <string name="study">Study</string>
+    <string name="study_anyway">Study anyway</string>
+    <string name="new_stack">New stack</string>
+    <string name="stack_level_new">New %d</string>
+    <string name="stack_level_learning">Learning %d</string>
+    <string name="stack_level_known">Known %d</string>
+    <string name="stack_level_learned">Learned %d</string>
+    <string name="stack_menu">Stack menu</string>
+    <string name="unpin_stack">Unpin this stack</string>
+    <string name="delete_stack">Delete stack</string>
+    <string name="stack_deleted">Deletion of %s with all the words</string>
+    <string name="reminder_channel_name">Reminders</string>
+    <string name="reminder_channel_description">Reminders to learn the words</string>
+    <string name="word_deleted">“%s” deleted</string>
+    <plurals name="words_deleted">
+        <item quantity="one">%d word deleted</item>
+        <item quantity="other">%d words deleted</item>
+    </plurals>
+    <string name="selected_count">%d selected</string>
+    <string name="close_selection">Cancel selection</string>
+    <string name="delete_selected">Delete selected</string>
+    <plurals name="delete_words_title">
+        <item quantity="one">Delete %d word?</item>
+        <item quantity="other">Delete %d words?</item>
+    </plurals>
+    <string name="delete_words_text">You can undo this right after.</string>
+    <string name="new_word_title">New word</string>
+    <string name="edit_word_title">Edit word</string>
+    <string name="save">Save</string>
+    <string name="save_and_next">Save &amp; next</string>
+    <string name="saved">Saved</string>
+    <string name="auto_translated_hint">Auto-translated · tap to edit</string>
+    <string name="draft_restored">Unsaved word from last time</string>
+    <string name="clear">Clear</string>
+    <string name="close">Close</string>
+    <string name="deleted_count">Deleted · %d</string>
+    <string name="restore">Restore</string>
+    <string name="restored">“%s” restored</string>
+    <string name="import_from_anki">Import from Anki</string>
+    <string name="anki_importing">Importing from Anki…</string>
+    <plurals name="anki_imported_words">
+        <item quantity="one">%d word added</item>
+        <item quantity="other">%d words added</item>
+    </plurals>
+    <string name="anki_already_imported">Already imported: %d words updated</string>
+    <string name="anki_updated_words">updated: %d</string>
+    <string name="anki_kept_for_later">not shown yet: %d</string>
+    <string name="anki_import_nothing">No words found in the file</string>
+    <string name="anki_import_not_anki">This isn\'t an Anki deck file</string>
+    <string name="anki_import_failed">Couldn\'t import the deck</string>
+    <string name="practice_section_stack">Practise sides</string>
+    <string name="practice_as_in_settings">As in settings · %s</string>
+    <string name="practice_library_caption">For stacks that have no choice of their own</string>
+    <string name="anki_reset_progress">Reset learning progress</string>
+    <string name="reset_progress">Reset progress</string>
+    <string name="reset_progress_title">Reset progress of “%s”?</string>
+    <string name="reset_progress_text">Every word in the stack becomes new and is learned from scratch. The answer history stays. You can undo the reset right after it.</string>
+    <string name="reset">Reset</string>
+    <string name="progress_reset">Progress reset</string>
 </resources>

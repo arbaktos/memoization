@@ -10,13 +10,20 @@ class PracticeSidesTest {
     private val now = 1_800_000_000_000L
     private val utc: TimeZone = TimeZone.getTimeZone("UTC")
 
-    private fun side(shown: Shown, stability: Double? = null, lastReview: Long? = null) = Side(
+    /** A rated side has two answers unless said otherwise: enough for the hand-over. */
+    private fun side(
+        shown: Shown,
+        stability: Double? = null,
+        lastReview: Long? = null,
+        reps: Int = if (stability == null) 0 else 2,
+    ) = Side(
         sideId = if (shown == Shown.WORD) 1 else 2,
         wordPairId = 1,
         shown = shown,
         state = if (stability == null) SideState.New else SideState.Review,
         stability = stability,
         lastReview = lastReview,
+        reps = reps,
     )
 
     private fun shownOf(practice: PracticeSides, vararg sides: Side) =
@@ -58,6 +65,19 @@ class PracticeSidesTest {
         assertEquals(
             listOf(Shown.MEANING),
             shownOf(PracticeSides.SMART_SWITCH, side(Shown.WORD, 7.0), side(Shown.MEANING)),
+        )
+    }
+
+    @Test
+    fun `smart switch waits for a second answer, so one easy on a new word does not hand over`() {
+        // A first Easy puts a new side straight at about 8.3 days, past Level3.
+        assertEquals(
+            listOf(Shown.WORD),
+            shownOf(PracticeSides.SMART_SWITCH, side(Shown.WORD, 8.3, reps = 1), side(Shown.MEANING)),
+        )
+        assertEquals(
+            listOf(Shown.MEANING),
+            shownOf(PracticeSides.SMART_SWITCH, side(Shown.WORD, 8.3, reps = 2), side(Shown.MEANING)),
         )
     }
 

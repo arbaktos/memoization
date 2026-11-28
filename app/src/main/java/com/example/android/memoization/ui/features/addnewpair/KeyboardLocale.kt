@@ -17,3 +17,21 @@ fun keyboardLocaleTag(apiCode: String?): String? {
     val locale = Locale.forLanguageTag(tag)
     return locale.toLanguageTag().takeIf { locale.language.isNotEmpty() && it != "und" }
 }
+
+/** The language's short code for a field's label, "SR" for "sr-Cyrl_RS"; null when there is none. */
+fun languageLabel(apiCode: String?): String? =
+    keyboardLocaleTag(apiCode)?.let { Locale.forLanguageTag(it).language.uppercase(Locale.ROOT) }
+
+/**
+ * The language's name in the learner's own language - "Сербский (латиница, Сербия)" for
+ * "sr-Latn_RS" on a Russian phone - from the system's own list of names. The translation api
+ * names languages in English only; its name, [fallback], stays for a code the system cannot name.
+ */
+fun languageDisplayName(apiCode: String?, fallback: String, inLocale: Locale = Locale.getDefault()): String {
+    val tag = keyboardLocaleTag(apiCode) ?: return fallback
+    val locale = Locale.forLanguageTag(tag)
+    val name = locale.getDisplayName(inLocale)
+    // Without a name of its own the system just echoes the code back.
+    if (name.isBlank() || name.equals(locale.language, ignoreCase = true) || name.equals(tag, ignoreCase = true)) return fallback
+    return name.replaceFirstChar { it.titlecase(inLocale) }
+}

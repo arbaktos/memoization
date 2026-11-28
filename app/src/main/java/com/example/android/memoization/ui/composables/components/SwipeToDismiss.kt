@@ -8,6 +8,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +37,12 @@ fun SwipeToDismiss(
             }
             true
         })
+
+    // The swipe state is saved under the item's key, so an item back in the list - restored, or
+    // undone - would come back still swiped away. Being in the list means it is not dismissed.
+    LaunchedEffect(Unit) {
+        if (dismissState.currentValue != DismissValue.Default) dismissState.snapTo(DismissValue.Default)
+    }
 
     SwipeToDismiss(
         directions = setOf(DismissDirection.EndToStart),

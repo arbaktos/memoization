@@ -1,5 +1,6 @@
 package com.example.android.memoization.ui.composables.dialog
 
+import com.example.android.memoization.ui.features.addnewpair.languageDisplayName
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -97,10 +98,12 @@ private fun LanguageRow(language: LanguageItem, onClick: () -> Unit) {
             .clickable(onClick = onClick)
             .padding(vertical = 12.dp)
     ) {
-        Text(text = language.englishName)
-        if (!language.codeName.equals(language.englishName, ignoreCase = true)) {
+        // In the learner's own language; the api's English name below, as the api has it.
+        val name = languageDisplayName(language.full_code, language.englishName)
+        Text(text = name)
+        if (!language.englishName.equals(name, ignoreCase = true)) {
             Text(
-                text = language.codeName,
+                text = language.englishName,
                 fontSize = 13.sp,
                 color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
             )

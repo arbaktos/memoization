@@ -124,7 +124,7 @@ class MigrationTest {
             )
         }
 
-        val db = helper.runMigrationsAndValidate(testDb, 6, true, *MemoDatabase.MIGRATIONS)
+        val db = helper.runMigrationsAndValidate(testDb, 9, true, *MemoDatabase.MIGRATIONS)
 
         db.query("SELECT stability FROM side_entity_table WHERE wordPairId = 1 AND shown = 0").use {
             it.moveToFirst()
@@ -302,6 +302,97 @@ class MigrationTest {
     }
 
     @Test
+    fun migration6To7_marksWhatWasHiddenAsDeletedAndTouchesNothingElse() {
+        helper.createDatabase(testDb, 6).use { db ->
+            db.insert("stack_entity_table", 0, ContentValues().apply {
+                put("name", "Serbian"); put("numRep", 0); put("stackId", 1L); put("hasWords", 1); put("isVisible", 1)
+                put("tiredSessions", 0); put("tiredAnswersSum", 0)
+            })
+            db.insert("stack_entity_table", 0, ContentValues().apply {
+                put("name", "Old"); put("numRep", 0); put("stackId", 2L); put("hasWords", 0); put("isVisible", 0)
+                put("tiredSessions", 0); put("tiredAnswersSum", 0)
+            })
+            db.execSQL(
+                "INSERT INTO wordpair_entity_table (parentStackId, word1, word2, wordPairId, isVisible) " +
+                    "VALUES (1, 'sada', 'сейчас', 1, 1), (1, 'kuca', 'дом', 2, 0)"
+            )
+        }
+
+        val before = System.currentTimeMillis() - 1_000
+        val db = helper.runMigrationsAndValidate(testDb, 7, true, MIGRATION_6_7)
+
+        db.query("SELECT isVisible, deletedAt FROM stack_entity_table ORDER BY stackId").use {
+            it.moveToFirst(); assertEquals(1, it.getInt(0)); assertTrue(it.isNull(1))
+            it.moveToNext(); assertEquals(0, it.getInt(0)); assertTrue(it.getLong(1) >= before)
+        }
+        db.query("SELECT word1, isVisible, deletedAt FROM wordpair_entity_table ORDER BY wordPairId").use {
+            it.moveToFirst(); assertEquals("sada", it.getString(0)); assertEquals(1, it.getInt(1)); assertTrue(it.isNull(2))
+            it.moveToNext(); assertEquals("kuca", it.getString(0)); assertEquals(0, it.getInt(1)); assertTrue(it.getLong(2) >= before)
+        }
+    }
+
+    @Test
+    fun migration7To8_addsTheAnkiTablesEmptyAndTouchesNothingElse() {
+        helper.createDatabase(testDb, 7).use { db ->
+            db.execSQL(
+                "INSERT INTO wordpair_entity_table (parentStackId, word1, word2, wordPairId, isVisible) " +
+                    "VALUES (1, 'sada', 'сейчас', 1, 1)"
+            )
+        }
+
+        val db = helper.runMigrationsAndValidate(testDb, 8, true, MIGRATION_7_8)
+
+        for (table in listOf("anki_note_table", "anki_card_table", "anki_revlog_table")) {
+            db.query("SELECT COUNT(*) FROM $table").use { it.moveToFirst(); assertEquals(0, it.getInt(0)) }
+        }
+        db.query("SELECT word1 FROM wordpair_entity_table").use { it.moveToFirst(); assertEquals("sada", it.getString(0)) }
+    }
+
+    @Test
+    fun migration8To9_leavesEveryStackFollowingTheLibrary() {
+        helper.createDatabase(testDb, 8).use { db ->
+            db.insert("stack_entity_table", 0, ContentValues().apply {
+                put("name", "Serbian"); put("numRep", 0); put("stackId", 1L); put("hasWords", 1); put("isVisible", 1)
+                put("tiredSessions", 0); put("tiredAnswersSum", 0)
+            })
+        }
+
+        val db = helper.runMigrationsAndValidate(testDb, 9, true, MIGRATION_8_9)
+
+        db.query("SELECT name, practiceSides FROM stack_entity_table").use {
+            it.moveToFirst(); assertEquals("Serbian", it.getString(0)); assertTrue(it.isNull(1))
+        }
+    }
+
+    @Test
+    fun deletingHidesAndNotesWhenAndRestoringBringsItBack() = runBlocking {
+        val db = Room.inMemoryDatabaseBuilder(
+            InstrumentationRegistry.getInstrumentation().targetContext,
+            MemoDatabase::class.java
+        ).build()
+        val dao = db.memoDao
+        val stack = dao.insertStack(com.example.android.memoization.data.database.stackdb.StackEntity(name = "Serbian"))
+        val pair = dao.insertWordPairWithSides(
+            com.example.android.memoization.data.database.wordpairdb.WordPairEntity(parentStackId = stack, word1 = "sada", word2 = "сейчас")
+        )
+
+        dao.setWordPairsDeleted(listOf(pair), lastRep)
+        dao.setStackDeleted(stack, lastRep)
+        assertFalse(dao.findWordPairById(pair).isVisible)
+        assertEquals(lastRep, dao.findWordPairById(pair).deletedAt)
+        assertFalse(dao.getStackById(stack).isVisible)
+        assertEquals(lastRep, dao.getStackById(stack).deletedAt)
+
+        dao.setWordPairsDeleted(listOf(pair), null)
+        dao.setStackDeleted(stack, null)
+        assertTrue(dao.findWordPairById(pair).isVisible)
+        assertNull(dao.findWordPairById(pair).deletedAt)
+        assertTrue(dao.getStackById(stack).isVisible)
+        assertNull(dao.getStackById(stack).deletedAt)
+        db.close()
+    }
+
+    @Test
     fun mergingKeepsTheOldestPairMovesItsAnswersAndHidesTheRest() = runBlocking {
         val db = Room.inMemoryDatabaseBuilder(
             InstrumentationRegistry.getInstrumentation().targetContext,
@@ -335,6 +426,8 @@ class MigrationTest {
         assertEquals("сейчас, теперь", kept.word2)
         assertTrue(kept.isVisible)
         assertFalse(dao.findWordPairById(copy).isVisible)
+        // Hidden, not deleted: a merged copy never shows in the Deleted section.
+        assertNull(dao.findWordPairById(copy).deletedAt)
         // The copy was never practised, so the learned word side starts again as New.
         val keptSides = dao.getSidesForPair(old)
         assertEquals(oldSides.map { it.sideId }, keptSides.map { it.sideId })

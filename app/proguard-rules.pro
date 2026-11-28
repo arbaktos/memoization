@@ -21,3 +21,11 @@
 #-renamesourcefileattribute SourceFile
 -keepnames class androidx.navigation.fragment.NavHostFragment
 -keep class * extends androidx.fragment.app.Fragment{}
+# zstd-jni finds its Java classes from native code by name.
+-keep class com.github.luben.zstd.** { *; }
+
+# OkHttp 4.8 can use these TLS providers when a platform has them; Android has none of them,
+# and OkHttp only reaches for them after checking they exist.
+-dontwarn org.bouncycastle.jsse.**
+-dontwarn org.conscrypt.**
+-dontwarn org.openjsse.**

@@ -1,5 +1,7 @@
 package com.example.android.memoization.ui.features.language
 
+import java.text.Collator
+import com.example.android.memoization.ui.features.addnewpair.languageDisplayName
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.android.memoization.utils.LoadingState
@@ -32,7 +34,10 @@ class LanguagesViewModel @Inject constructor(
             _languages.value = when (val state = translationRepo.getLanguages()) {
                 is TranslationState.Success<*> -> {
                     @Suppress("UNCHECKED_CAST")
-                    LoadingState.Collected(state.content as List<LanguageItem>)
+                    val languages = state.content as List<LanguageItem>
+                    // In the order of the names the learner reads, which are in their language.
+                    val collator = Collator.getInstance()
+                    LoadingState.Collected(languages.sortedWith(compareBy(collator) { languageDisplayName(it.full_code, it.englishName) }))
                 }
 
                 is TranslationState.Error -> LoadingState.Error
@@ -41,12 +46,13 @@ class LanguagesViewModel @Inject constructor(
         }
     }
 
-    /** Matches on what the learner is likely to type: the name, or the code like "es_ES". */
+    /** Matches on what the learner is likely to type: either name, or the code like "es_ES". */
     fun filter(all: List<LanguageItem>, query: String): List<LanguageItem> {
         val trimmed = query.trim()
         if (trimmed.isEmpty()) return all
         return all.filter {
             it.englishName.contains(trimmed, ignoreCase = true) ||
+                    languageDisplayName(it.full_code, it.englishName).contains(trimmed, ignoreCase = true) ||
                     it.codeName.contains(trimmed, ignoreCase = true) ||
                     it.full_code.contains(trimmed, ignoreCase = true)
         }

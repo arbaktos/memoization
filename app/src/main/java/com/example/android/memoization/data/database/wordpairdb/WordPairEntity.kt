@@ -14,7 +14,8 @@ data class WordPairEntity(
     override var word2: String?,
     @PrimaryKey(autoGenerate = true)
     override val wordPairId: Long = 0,
-    override var isVisible: Boolean = true
+    override var isVisible: Boolean = true,
+    override val deletedAt: Long? = null,
 ) : BaseWordPair {
     fun toWordPair(sides: List<Side> = emptyList()): WordPair {
         return WordPair(
@@ -24,6 +25,7 @@ data class WordPairEntity(
             wordPairId = this.wordPairId,
             isVisible = this.isVisible,
             sides = sides,
+            deletedAt = this.deletedAt,
         )
     }
 
@@ -34,7 +36,8 @@ data class WordPairEntity(
                 word1 = wordPair.word1,
                 word2 = wordPair.word2,
                 wordPairId = wordPair.wordPairId,
-                isVisible = wordPair.isVisible
+                isVisible = wordPair.isVisible,
+                deletedAt = wordPair.deletedAt,
             )
         }
     }

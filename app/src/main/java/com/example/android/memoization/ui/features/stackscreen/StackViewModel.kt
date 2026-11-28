@@ -8,6 +8,7 @@ import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.data.model.PracticeSides
 import com.example.android.memoization.data.repository.DuplicatesRepository
 import com.example.android.memoization.data.repository.LearningSettingsRepository
+import com.example.android.memoization.data.repository.StackRepository
 import com.example.android.memoization.domain.duplicates.CopyGroup
 import com.example.android.memoization.domain.duplicates.DuplicateReport
 import com.example.android.memoization.domain.duplicates.Duplicates
@@ -27,6 +28,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.example.android.memoization.data.model.Side
+import com.example.android.memoization.data.repository.SideRepository
 
 @HiltViewModel
 class StackViewModel @Inject constructor(
@@ -35,6 +38,8 @@ class StackViewModel @Inject constructor(
     private val updateStackUseCase: UpdateStackUseCase,
     private val hideWordPairUseCase: HideWordPairUseCase,
     private val duplicatesRepository: DuplicatesRepository,
+    private val stackRepository: StackRepository,
+    private val sideRepository: SideRepository,
     learningSettings: LearningSettingsRepository,
 ) : BaseViewModel<LoadingState<MemoStack>>() {
 
@@ -62,13 +67,19 @@ class StackViewModel @Inject constructor(
         searchQuery.value = query
     }
 
-    val practiceSides = learningSettings.practiceSides.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(STOP_COLLECTING_AFTER_MS), PracticeSides.DEFAULT
-    )
-
     // Built once: collectAsStateWithLifecycle keys on the flow instance, so a new
     // one per recomposition would restart collection and recompose forever.
     private val stackWithWords: Flow<LoadingState<MemoStack>> by lazy { getStackUseCase(stackId) }
+
+    /** The library's setting, for the edit dialog's "As in settings". */
+    val libraryPractice = learningSettings.practiceSides.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(STOP_COLLECTING_AFTER_MS), PracticeSides.DEFAULT
+    )
+
+    /** The sides this stack practises: its own choice, else the library's. */
+    val practiceSides = combine(libraryPractice, stackWithWords) { library, state ->
+        (state as? LoadingState.Collected)?.content?.practice(library) ?: library
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_COLLECTING_AFTER_MS), PracticeSides.DEFAULT)
 
     fun updateStackInDb(stack: MemoStack) {
         viewModelScope.launch {
@@ -76,23 +87,65 @@ class StackViewModel @Inject constructor(
         }
     }
 
+    fun togglePin(stack: MemoStack) =
+        updateStackInDb(stack.copy(pinnedTime = if (stack.pinnedTime == null) System.currentTimeMillis() else null))
 
-    /** Only the id is needed to bring it back: deleting hides the row, it does not remove it. */
-    private var lastDeletedId: Long? = null
+    /**
+     * Every side of the stack's pairs back to New. The answers given stay in the review log;
+     * [onReset] gets the sides as they were, for the undo.
+     */
+    fun resetProgress(onReset: (List<Side>) -> Unit) {
+        viewModelScope.launch { onReset(sideRepository.resetStack(stackId)) }
+    }
 
-    fun deletePair(wordPair: WordPair) {
-        lastDeletedId = wordPair.wordPairId
+    fun undoResetProgress(before: List<Side>) {
+        viewModelScope.launch { sideRepository.restore(before) }
+    }
+
+    /** Delete from the menu: hidden, never deleted - the stack list offers the undo. */
+    fun hideStack(onHidden: () -> Unit) {
         viewModelScope.launch {
-            hideWordPairUseCase(wordPair.wordPairId)
+            stackRepository.setStackDeleted(stackId, deleted = true)
+            onHidden()
         }
     }
 
-    fun undoDelete() {
-        val restored = lastDeletedId ?: return
-        lastDeletedId = null
-        viewModelScope.launch {
-            hideWordPairUseCase(restored, hidden = false)
-        }
+
+    /**
+     * Deleting hides the pairs, it does not remove them: the ids are all an undo needs, and the
+     * pairs come back with their progress.
+     */
+    fun deletePairs(wordPairIds: Collection<Long>) {
+        viewModelScope.launch { hideWordPairUseCase(wordPairIds) }
+    }
+
+    fun restorePairs(wordPairIds: Collection<Long>) {
+        viewModelScope.launch { hideWordPairUseCase(wordPairIds, hidden = false) }
+    }
+
+    /** The pairs picked for deletion, or null outside selection mode; kept here to survive rotation. */
+    val selection = MutableStateFlow<Set<Long>?>(null)
+
+    fun startSelection(wordPairId: Long) {
+        selection.value = setOf(wordPairId)
+    }
+
+    /** Taking the last pair out of the selection closes selection mode. */
+    fun toggleSelected(wordPairId: Long) {
+        val current = selection.value ?: return
+        selection.value = (if (wordPairId in current) current - wordPairId else current + wordPairId).ifEmpty { null }
+    }
+
+    fun clearSelection() {
+        selection.value = null
+    }
+
+    /** Hides the selected pairs, leaves selection mode and returns them for the undo. */
+    fun deleteSelected(): Set<Long> {
+        val deleted = selection.value.orEmpty()
+        selection.value = null
+        deletePairs(deleted)
+        return deleted
     }
 
     /** Copies and merge proposals among the stack's visible pairs, recomputed on every change. */

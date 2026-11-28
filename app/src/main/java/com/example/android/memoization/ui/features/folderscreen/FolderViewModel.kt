@@ -1,7 +1,17 @@
 package com.example.android.memoization.ui.features.folderscreen
 
+import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.LiveData
+import com.example.android.memoization.data.anki.AnkiImportResult
+import com.example.android.memoization.data.anki.AnkiImporter
+import com.example.android.memoization.data.anki.NotAnAnkiPackageException
+import com.example.android.memoization.ui.composables.dialog.AnkiImportOptions
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withContext
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.android.memoization.data.database.stackdb.StackEntity
@@ -20,6 +30,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import com.example.android.memoization.data.database.stackdb.toMemoStack
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -27,10 +40,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class FolderViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private var stackRepository: StackRepository,
     val getStacksWithWordsUseCase: GetStacksWithWordsUseCase,
     val updateStackUseCase: UpdateStackUseCase,
     learningSettings: LearningSettingsRepository,
+    private val ankiImporter: AnkiImporter,
 ) : BaseViewModel<LoadingState<List<MemoStack>>>() {
 
     val practiceSides = learningSettings.practiceSides.stateIn(
@@ -52,14 +67,65 @@ class FolderViewModel @Inject constructor(
         }
     }
 
+    private val _ankiImport = MutableStateFlow<AnkiImportState>(AnkiImportState.Idle)
+    val ankiImport: StateFlow<AnkiImportState> = _ankiImport.asStateFlow()
+
+    /** Chosen in the dialog before the file picker opens; kept across the trip to it. */
+    fun setAnkiImportOptions(options: AnkiImportOptions) {
+        handle[ANKI_PRACTICE] = options.practiceSides
+        handle[ANKI_RESET] = options.resetProgress
+    }
+
+    /** Imports the Anki package the learner picked; the screen shows the outcome once. */
+    fun importAnki(uri: Uri) {
+        val practiceSides = handle.get<String>(ANKI_PRACTICE)
+        val resetProgress = handle.get<Boolean>(ANKI_RESET) ?: false
+        if (_ankiImport.value == AnkiImportState.Running) return
+        _ankiImport.value = AnkiImportState.Running
+        viewModelScope.launch {
+            _ankiImport.value = try {
+                AnkiImportState.Done(withContext(Dispatchers.IO) { ankiImporter.import(uri, practiceSides, resetProgress) })
+            } catch (e: NotAnAnkiPackageException) {
+                Log.w(TAG, "Not an Anki package", e)
+                AnkiImportState.NotAnki
+            } catch (e: Exception) {
+                Log.e(TAG, "Anki import failed", e)
+                AnkiImportState.Failed
+            }
+        }
+    }
+
+    fun onAnkiImportReported() {
+        if (_ankiImport.value != AnkiImportState.Running) _ankiImport.value = AnkiImportState.Idle
+    }
+
     fun showAddStackDialog(toShow: Boolean) {
         _showAddStackDialog.postValue(toShow)
     }
 
-    /** Deleting a stack hides it; the words stay, so an undo costs nothing. */
-    fun hideStack(stack: MemoStack) = updateStack(stack.copy(isVisible = false))
+    /** Deleting a stack hides it; the words stay, so an undo or a restore costs nothing. */
+    fun hideStack(stack: MemoStack) = unhideStack(stack.stackId, hidden = true)
 
-    fun unhideStack(stack: MemoStack) = updateStack(stack.copy(isVisible = true))
+    fun unhideStack(stack: MemoStack) = unhideStack(stack.stackId)
+
+    /** The stacks the learner deleted, the latest first: the list's Deleted section. */
+    val deletedStacks: StateFlow<List<MemoStack>> = stackRepository.getStacksWithWords()
+        .map { stacks -> stacks.map { it.toMemoStack() }.filter { it.deletedAt != null }.sortedByDescending { it.deletedAt } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_COLLECTING_AFTER_MS), emptyList())
+
+    /** A stack deleted from its own screen, handed back here so the list can offer the undo. */
+    val hiddenFromStackScreen: StateFlow<Long?> = savedStateHandle.getStateFlow(HIDDEN_STACK_ID, null)
+    private val handle = savedStateHandle
+
+    fun hiddenStackName(): String = handle.get<String>(HIDDEN_STACK_NAME).orEmpty()
+
+    fun onHiddenStackShown() {
+        handle[HIDDEN_STACK_ID] = null
+    }
+
+    fun unhideStack(stackId: Long, hidden: Boolean = false) {
+        viewModelScope.launch { stackRepository.setStackDeleted(stackId, deleted = hidden) }
+    }
 
     fun addStackAndOpenIt(stack: MemoStack, navController: NavController) {
         viewModelScope.launch {
@@ -84,16 +150,31 @@ class FolderViewModel @Inject constructor(
         return stacksWithWords
     }
 
-    fun onPlayWords(navController: NavController, stackId: Long) {
-        navController.navigateToMemorization(stackId)
+    /** Study: what is due, or - with nothing due - every practised side ahead of time. */
+    fun onPlayWords(navController: NavController, stackId: Long, ahead: Boolean) {
+        navController.navigateToMemorization(stackId, ahead)
     }
 
-    private companion object {
-        const val STOP_COLLECTING_AFTER_MS = 5_000L
+    companion object {
+        private const val TAG = "FolderViewModel"
+        private const val STOP_COLLECTING_AFTER_MS = 5_000L
+        /** Keys in the stack list's saved state, set by the stack screen as it closes. */
+        const val HIDDEN_STACK_ID = "hiddenStackId"
+        const val HIDDEN_STACK_NAME = "hiddenStackName"
+        private const val ANKI_PRACTICE = "ankiPractice"
+        private const val ANKI_RESET = "ankiReset"
     }
 
     fun onPin(stack: MemoStack) {
         if (stack.pinnedTime == null) updateStack(stack.copy(pinnedTime = System.currentTimeMillis()))
         else updateStack(stack.copy(pinnedTime = null))
     }
+}
+
+sealed interface AnkiImportState {
+    object Idle : AnkiImportState
+    object Running : AnkiImportState
+    data class Done(val result: AnkiImportResult) : AnkiImportState
+    object NotAnki : AnkiImportState
+    object Failed : AnkiImportState
 }

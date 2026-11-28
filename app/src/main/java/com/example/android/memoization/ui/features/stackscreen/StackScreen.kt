@@ -4,7 +4,40 @@ import android.content.Context
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.IconButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.semantics.Role
+import com.example.android.memoization.data.model.Shown
+import com.example.android.memoization.data.model.covers
+import com.example.android.memoization.data.model.step
+import com.example.android.memoization.ui.features.folderscreen.FolderViewModel
+import com.example.android.memoization.ui.features.folderscreen.StackListColors
+import com.example.android.memoization.ui.features.folderscreen.stackListColors
+import com.example.android.memoization.ui.features.folderscreen.study
+import com.example.android.memoization.domain.session.reviewUrgency
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,21 +50,13 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarDuration
@@ -66,17 +91,15 @@ import com.example.android.memoization.data.model.PracticeSides
 import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.domain.search.PairSearch
 import com.example.android.memoization.extensions.checkLength
-import com.example.android.memoization.ui.composables.components.AddNewCardFab
-import com.example.android.memoization.ui.composables.components.CustomAddFab
-import com.example.android.memoization.ui.composables.components.RowIcon
 import com.example.android.memoization.ui.composables.components.SwipeToReveal
+import com.example.android.memoization.ui.composables.components.DeletedRow
+import com.example.android.memoization.ui.composables.components.deletedSection
 import com.example.android.memoization.ui.composables.dialog.EditStackDialog
 import com.example.android.memoization.ui.features.folderscreen.TDEBUG
 import com.example.android.memoization.ui.icons.ClickableVectorIcon
 import com.example.android.memoization.ui.navigateToMemorization
 import com.example.android.memoization.ui.navigateToEditPair
 import com.example.android.memoization.ui.navigateToNewPair
-import com.example.android.memoization.ui.theme.indicatorColors
 import com.example.android.memoization.utils.LoadingState
 import kotlinx.coroutines.launch
 
@@ -100,14 +123,56 @@ fun StackScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
-    // Deleting is immediate; the snackbar puts the row back if it was a mistake.
-    val deletePair: (WordPair) -> Unit = { wordPair ->
-        viewModel.deletePair(wordPair)
+    val selected by viewModel.selection.collectAsStateWithLifecycle()
+    var confirmDelete by rememberSaveable { mutableStateOf(false) }
+    // Rows the undo put back, for the list to bring into view.
+    var restored by remember { mutableStateOf(emptySet<Long>()) }
+
+    // Deleting is immediate; the snackbar puts the rows back if it was a mistake.
+    val offerUndo: (String, Set<Long>) -> Unit = { message, ids ->
         scope.launch {
-            val result = snackbarHostState.showOnDeleteSnackBar(wordPair, context)
-            Log.d(TDEBUG, "snackbar result = $result")
-            if (result == SnackbarResult.ActionPerformed) viewModel.undoDelete()
+            if (snackbarHostState.showUndo(message, context.getString(R.string.undo))) {
+                viewModel.restorePairs(ids)
+                restored = ids
+            }
         }
+    }
+    // Back from the Deleted section, with its progress; the list brings it into view.
+    val restorePair: (WordPair) -> Unit = { wordPair ->
+        val ids = setOf(wordPair.wordPairId)
+        viewModel.restorePairs(ids)
+        restored = ids
+        scope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar(context.getString(R.string.restored, wordPair.word1))
+        }
+    }
+    val deletePair: (WordPair) -> Unit = { wordPair ->
+        val ids = setOf(wordPair.wordPairId)
+        viewModel.deletePairs(ids)
+        offerUndo(context.getString(R.string.word_deleted, wordPair.word1), ids)
+    }
+    val selection = WordSelection(
+        selected = selected,
+        onStart = viewModel::startSelection,
+        onToggle = viewModel::toggleSelected,
+        onClear = viewModel::clearSelection,
+        onDelete = { confirmDelete = true },
+    )
+    val pickedCount = selected?.size ?: 0
+    // The stack whose progress the learner asked to reset, while the question is open.
+    var resetting by remember { mutableStateOf<MemoStack?>(null) }
+    if (confirmDelete && pickedCount > 0) {
+        DeleteWordsDialog(
+            count = pickedCount,
+            colors = stackListColors(),
+            onCancel = { confirmDelete = false },
+            onDelete = {
+                confirmDelete = false
+                val ids = viewModel.deleteSelected()
+                offerUndo(context.resources.getQuantityString(R.plurals.words_deleted, ids.size, ids.size), ids)
+            },
+        )
     }
 
     val navigateToNewPair = remember(navController) {
@@ -159,15 +224,51 @@ fun StackScreen(
         deletePair = deletePair,
         practice = practice,
         snackbarHostState = snackbarHostState,
+        selection = selection,
+        restored = restored,
+        onRestoredShown = { restored = emptySet() },
+        onRestorePair = restorePair,
         onEditStack = { viewModel.showEditStackDialog(true) },
         onDismissDialog = { viewModel.showEditStackDialog(false) },
+        onPinStack = viewModel::togglePin,
+        onDeleteStack = { stack ->
+            viewModel.hideStack {
+                // The list offers the undo, as it does after a swipe.
+                navController.previousBackStackEntry?.savedStateHandle?.apply {
+                    set(FolderViewModel.HIDDEN_STACK_NAME, stack.name)
+                    set(FolderViewModel.HIDDEN_STACK_ID, stack.stackId)
+                }
+                navController.popBackStack()
+            }
+        },
         searchQuery = searchQuery,
         onOpenSearch = viewModel::openSearch,
         onCloseSearch = viewModel::closeSearch,
         onSearchQueryChange = viewModel::onSearchQueryChange,
         duplicatesToReview = duplicates.toReview,
         onReviewDuplicates = viewModel::startDuplicatesReview,
+        onResetProgress = { resetting = it },
     )
+
+    resetting?.let { stack ->
+        ConfirmDialog(
+            title = stringResource(R.string.reset_progress_title, stack.name),
+            text = stringResource(R.string.reset_progress_text),
+            confirm = stringResource(R.string.reset),
+            colors = stackListColors(),
+            onCancel = { resetting = null },
+            onConfirm = {
+                resetting = null
+                viewModel.resetProgress { before ->
+                    scope.launch {
+                        if (snackbarHostState.showUndo(context.getString(R.string.progress_reset), context.getString(R.string.undo))) {
+                            viewModel.undoResetProgress(before)
+                        }
+                    }
+                }
+            },
+        )
+    }
 }
 
 
@@ -185,12 +286,19 @@ fun DisplayStackState(
     onEditStack: () -> Unit,
     onDismissDialog: () -> Unit,
     snackbarHostState: SnackbarHostState,
+    onPinStack: (MemoStack) -> Unit = {},
+    onDeleteStack: (MemoStack) -> Unit = {},
     searchQuery: String? = null,
     onOpenSearch: () -> Unit = {},
     onCloseSearch: () -> Unit = {},
     onSearchQueryChange: (String) -> Unit = {},
     duplicatesToReview: Int = 0,
     onReviewDuplicates: () -> Unit = {},
+    selection: WordSelection = WordSelection.NONE,
+    restored: Set<Long> = emptySet(),
+    onRestoredShown: () -> Unit = {},
+    onRestorePair: (WordPair) -> Unit = {},
+    onResetProgress: (MemoStack) -> Unit = {},
 ) {
 
     when (state) {
@@ -206,12 +314,19 @@ fun DisplayStackState(
             onEditStack = onEditStack,
             onDismissDialog = onDismissDialog,
             snackbarHostState = snackbarHostState,
+            onPinStack = onPinStack,
+            onDeleteStack = onDeleteStack,
+            onResetProgress = onResetProgress,
             searchQuery = searchQuery,
             onOpenSearch = onOpenSearch,
             onCloseSearch = onCloseSearch,
             onSearchQueryChange = onSearchQueryChange,
             duplicatesToReview = duplicatesToReview,
             onReviewDuplicates = onReviewDuplicates,
+            selection = selection,
+            restored = restored,
+            onRestoredShown = onRestoredShown,
+            onRestorePair = onRestorePair,
         )
 
         is LoadingState.Loading -> DisplayLoadingStack()
@@ -225,52 +340,75 @@ fun DisplayStackError() {
 }
 
 /**
- * The stack's name with its pencil right beside it, and the search at the far end.
- *
- * MotionAppBar leaves its children unconstrained, so the title never gets laid out -
- * a plain bar until that motion scene is fixed.
+ * The stack's name and size, search, and a menu for the rest: edit, pin, delete (design handoff
+ * "Экран колоды", header from 8a).
  */
 @Composable
 fun StackAppBar(
     stackName: String,
+    colors: StackListColors,
     modifier: Modifier = Modifier,
+    wordCount: Int? = null,
+    pinned: Boolean = false,
     onSearch: (() -> Unit)? = null,
     onEdit: (() -> Unit)? = null,
+    onPin: (() -> Unit)? = null,
+    onDelete: (() -> Unit)? = null,
+    onResetProgress: (() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+            .padding(start = 20.dp, end = 8.dp, top = 16.dp, bottom = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f)
-        ) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 text = stackName,
-                fontSize = 28.sp,
+                color = colors.text,
+                fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f, fill = false)
             )
-            if (onEdit != null) {
-                ClickableVectorIcon(
-                    imageVector = Icons.Outlined.Edit,
-                    contentDescription = R.string.edit_stack_desc,
-                    onClick = onEdit,
-                    modifier = Modifier.padding(start = 12.dp)
+            if (wordCount != null) {
+                Text(
+                    text = pluralStringResource(R.plurals.stack_word_count, wordCount, wordCount),
+                    color = colors.secondaryText,
+                    fontSize = 14.sp,
                 )
             }
         }
         if (onSearch != null) {
-            ClickableVectorIcon(
-                imageVector = Icons.Filled.Search,
-                contentDescription = R.string.search_desc,
-                onClick = onSearch,
-                modifier = Modifier.padding(start = 16.dp)
-            )
+            IconButton(onClick = onSearch) {
+                Icon(Icons.Filled.Search, stringResource(R.string.search_desc), tint = colors.icon)
+            }
+        }
+        if (onEdit != null && onPin != null && onDelete != null) {
+            var open by remember { mutableStateOf(false) }
+            Box {
+                IconButton(onClick = { open = true }) {
+                    Icon(Icons.Filled.MoreVert, stringResource(R.string.stack_menu), tint = colors.icon)
+                }
+                DropdownMenu(
+                    expanded = open,
+                    onDismissRequest = { open = false },
+                    shape = RoundedCornerShape(16.dp),
+                    containerColor = colors.menu,
+                ) {
+                    val item: @Composable (Int, Color, () -> Unit) -> Unit = { label, color, action ->
+                        DropdownMenuItem(
+                            text = { Text(stringResource(label), color = color, fontSize = 15.sp) },
+                            onClick = { open = false; action() },
+                            modifier = Modifier.height(44.dp),
+                        )
+                    }
+                    item(R.string.edit_stack_desc, colors.text, onEdit)
+                    item(if (pinned) R.string.unpin_stack else R.string.pin_stack, colors.text, onPin)
+                    if (onResetProgress != null) item(R.string.reset_progress, colors.text, onResetProgress)
+                    item(R.string.delete_stack, colors.danger, onDelete)
+                }
+            }
         }
     }
 }
@@ -329,15 +467,8 @@ fun StackSearchBar(
 @Composable
 fun DisplayLoadingStack() {
     Scaffold(
-        topBar = { StackAppBar(stackName = stringResource(id = R.string.loading)) },
-        floatingActionButtonPosition = FabPosition.End,
-        floatingActionButton = {
-            Column {
-                AddNewCardFab(
-                    onAdd = { }
-                )
-            }
-        },
+        containerColor = stackListColors().background,
+        topBar = { StackAppBar(stackName = stringResource(id = R.string.loading), colors = stackListColors()) },
         content = { innerPadding ->
             Box(modifier = Modifier.padding(innerPadding)) {
                 LinearProgressIndicator()
@@ -360,17 +491,33 @@ fun DisplayStack(
     onEditStack: () -> Unit,
     onDismissDialog: () -> Unit,
     navigateToEditPair: (wordPair: WordPair, stack: MemoStack) -> Unit,
+    onPinStack: (MemoStack) -> Unit = {},
+    onDeleteStack: (MemoStack) -> Unit = {},
     searchQuery: String? = null,
     onOpenSearch: () -> Unit = {},
     onCloseSearch: () -> Unit = {},
     onSearchQueryChange: (String) -> Unit = {},
     duplicatesToReview: Int = 0,
     onReviewDuplicates: () -> Unit = {},
+    selection: WordSelection = WordSelection.NONE,
+    restored: Set<Long> = emptySet(),
+    onRestoredShown: () -> Unit = {},
+    onRestorePair: (WordPair) -> Unit = {},
+    onResetProgress: (MemoStack) -> Unit = {},
 ) {
     val lazyListState = rememberLazyListState()
     // Newest first: ids grow with insertion, so this is "last added on top".
     val words = remember(currentStack.words, searchQuery) {
         PairSearch.filter(currentStack.words.sortedByDescending { it.wordPairId }, searchQuery ?: "")
+    }
+    // The list keeps its first visible row in place, so a row put back above it would come back
+    // out of sight; scroll up to it. Waits for the row to be back in the list.
+    LaunchedEffect(words, restored) {
+        if (restored.isEmpty()) return@LaunchedEffect
+        val index = words.indexOfFirst { it.wordPairId in restored }
+        if (index < 0) return@LaunchedEffect
+        if (index < lazyListState.firstVisibleItemIndex) lazyListState.animateScrollToItem(index)
+        onRestoredShown()
     }
 
     if (showDialog) {
@@ -381,10 +528,19 @@ fun DisplayStack(
         )
     }
 
+    val colors = stackListColors()
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = colors.background,
         topBar = {
-            if (searchQuery != null) {
+            val selected = selection.selected
+            if (selected != null) {
+                SelectionAppBar(
+                    count = selected.size,
+                    colors = colors,
+                    onClose = selection.onClear,
+                    onDelete = selection.onDelete,
+                )
+            } else if (searchQuery != null) {
                 StackSearchBar(
                     query = searchQuery,
                     onQueryChange = onSearchQueryChange,
@@ -393,26 +549,42 @@ fun DisplayStack(
             } else {
                 StackAppBar(
                     stackName = currentStack.name,
+                    colors = colors,
+                    wordCount = currentStack.words.size,
+                    pinned = currentStack.pinnedTime != null,
                     onSearch = onOpenSearch,
                     onEdit = onEditStack,
+                    onPin = { onPinStack(currentStack) },
+                    onDelete = { onDeleteStack(currentStack) },
+                    onResetProgress = { onResetProgress(currentStack) },
                 )
             }
         },
         floatingActionButtonPosition = FabPosition.End,
         floatingActionButton = {
-            Column {
-                CustomAddFab(
-                    isVisible = true,
-                    onClick = { navigateToNewPair(currentStack) }
-                )
-                StackFab(
-                    { navigateToMemorization(currentStack.stackId) },
-                    hasWordsToLearn = currentStack.hasDue(practice)
+            // Out of the way while selecting, and while the snackbar is up so as not to cover it.
+            AnimatedVisibility(
+                visible = selection.selected == null && snackbarHostState.currentSnackbarData == null,
+                enter = fadeIn(),
+                exit = fadeOut(),
+            ) {
+                StackFabs(
+                    colors = colors,
+                    onAdd = { navigateToNewPair(currentStack) },
+                    // Not offered when nothing is due; the stack list has Study anyway for that.
+                    onStudy = if (currentStack.hasDue(practice)) {
+                        { navigateToMemorization(currentStack.stackId) }
+                    } else null,
+                    studyUrgency = currentStack.reviewUrgency(practice),
                 )
             }
         },
         content = { innerPadding ->
-            Box(modifier = Modifier.padding(innerPadding)) {
+            Box(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()
+            ) {
                 if (words.isEmpty() && !searchQuery.isNullOrBlank()) {
                     Text(
                         text = stringResource(R.string.no_pairs_found),
@@ -429,45 +601,79 @@ fun DisplayStack(
                             DuplicatesStrip(
                                 toReview = duplicatesToReview,
                                 onReview = onReviewDuplicates,
-                                modifier = Modifier.fillMaxWidth(0.9f),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
                             )
                         }
                         WordList(
+                            colors = colors,
                             words = words,
                             navigateToEditPair = { navigateToEditPair(it, currentStack) },
                             deletePair = deletePair,
                             practice = practice,
                             listState = lazyListState,
+                            selection = selection,
+                            // The Deleted section is for browsing; a search looks among the words in use.
+                            deleted = if (searchQuery == null) currentStack.deletedWords else emptyList(),
+                            deletedSectionKey = "stack-${currentStack.stackId}",
+                            onRestore = onRestorePair,
                         )
                     }
+                }
+                // Here rather than in the Scaffold's slot, which lifts it over the buttons while
+                // they fade out.
+                SnackbarHost(snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter)) { data ->
+                    UndoSnackbar(data, colors)
                 }
             }
         }
     )
 }
 
+/**
+ * Add a word and Study, stacked at the bottom right; Study only when [onStudy] is given, as
+ * bright as the review is urgent.
+ */
 @Composable
-fun StackFab(navigateToMemorization: () -> Unit, hasWordsToLearn: Boolean) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        if (hasWordsToLearn) {
-            ExtendedFloatingActionButton(
-                text = {
-                    Text(
-                        text = stringResource(R.string.learn),
-//                            color = MaterialTheme.colors.surface
-                    )
-                },
-                onClick = navigateToMemorization,
-                icon = {
-                    Icon(
-                        imageVector = Icons.Filled.PlayArrow,
-                        contentDescription = stringResource(R.string.learn_this_stack),
-//                            tint = MaterialTheme.colors.surface
-                    )
-                },
-                modifier = Modifier
-                    .padding(8.dp)
-            )
+fun StackFabs(colors: StackListColors, onAdd: () -> Unit, onStudy: (() -> Unit)?, studyUrgency: Float = 1f) {
+    val shape = RoundedCornerShape(18.dp)
+    val fab = Modifier
+        .height(56.dp)
+        .shadow(12.dp, shape, ambientColor = colors.fabShadow, spotColor = colors.fabShadow)
+        .clip(shape)
+    Column(
+        modifier = Modifier.padding(bottom = 12.dp),
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(
+            modifier = fab
+                .size(56.dp)
+                .background(colors.plusFill)
+                .clickable(role = Role.Button, onClick = onAdd),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(Icons.Filled.Add, stringResource(R.string.add_new_card), tint = colors.plusIcon, modifier = Modifier.size(22.dp))
+        }
+        if (onStudy != null) {
+            val (studyFill, studyText) = colors.study(studyUrgency)
+            Row(
+                modifier = fab
+                    .background(studyFill)
+                    .clickable(role = Role.Button, onClick = onStudy)
+                    .padding(start = 18.dp, end = 22.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Icon(Icons.Filled.PlayArrow, null, tint = studyText, modifier = Modifier.size(18.dp))
+                Text(
+                    text = stringResource(R.string.study),
+                    color = studyText,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
         }
     }
 }
@@ -475,87 +681,138 @@ fun StackFab(navigateToMemorization: () -> Unit, hasWordsToLearn: Boolean) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun WordList(
+    colors: StackListColors,
     deletePair: (wordPair: WordPair) -> Unit,
     practice: PracticeSides,
     navigateToEditPair: (wordPair: WordPair) -> Unit,
     listState: LazyListState,
     words: List<WordPair>,
+    selection: WordSelection = WordSelection.NONE,
+    deleted: List<WordPair> = emptyList(),
+    deletedSectionKey: String = "",
+    onRestore: (WordPair) -> Unit = {},
 ) {
+    // One row open at a time; a swipe on another row closes it.
+    var openId by remember { mutableStateOf<Long?>(null) }
+    val selected = selection.selected
+    LaunchedEffect(selected != null) { if (selected != null) openId = null }
+    val haptic = LocalHapticFeedback.current
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        // Room under the last row for the two buttons.
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 168.dp),
         modifier = Modifier.fillMaxWidth(),
         state = listState,
     ) {
         items(words, key = { it.wordPairId }) { wordPair ->
+            val id = wordPair.wordPairId
             SwipeToReveal(
+                open = openId == id,
+                onOpenChange = { open -> openId = if (open) id else openId.takeUnless { it == id } },
+                onSwipeStart = { if (openId != id) openId = null },
                 onDelete = { deletePair(wordPair) },
-                modifier = Modifier.fillMaxWidth(0.9f)
+                colors = colors,
+                shape = WORD_ROW_SHAPE,
+                enabled = selected == null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateItem(fadeOutSpec = tween(ROW_REMOVE_MS), placementSpec = tween(ROW_REMOVE_MS)),
             ) {
                 WordPairListItem(
                     wordPair = wordPair,
                     practice = practice,
-                    onEditNavigate = navigateToEditPair,
-                    modifier = Modifier//.animateItemPlacement()
+                    colors = colors,
+                    selected = selected?.let { id in it },
+                    onClick = { if (selected != null) selection.onToggle(id) else navigateToEditPair(wordPair) },
+                    onLongClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        if (selected != null) selection.onToggle(id) else selection.onStart(id)
+                    },
                 )
             }
+        }
+        deletedSection(deletedSectionKey, deleted, itemKey = { it.wordPairId }, colors = colors) { pair ->
+            DeletedRow(
+                title = pair.word1,
+                caption = pair.word2,
+                colors = colors,
+                onRestore = { onRestore(pair) },
+                modifier = Modifier.animateItem(),
+            )
         }
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
+private val WORD_ROW_SHAPE = RoundedCornerShape(18.dp)
+private const val ROW_REMOVE_MS = 200
+
+/**
+ * A word and its meaning on one surface, each with a dot for how well that side is known: the
+ * word's dot is the side shown as the word, the meaning's the side shown as the meaning. A side
+ * the practice setting never asks for has no dot, only the space for one.
+ *
+ * [selected] is null outside selection mode; in it, a round check stands in front of the text.
+ */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun WordPairListItem(
     wordPair: WordPair,
     practice: PracticeSides,
-    onEditNavigate: (wordPair: WordPair) -> Unit,
-    modifier: Modifier = Modifier
+    colors: StackListColors,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    selected: Boolean? = null,
+    onLongClick: () -> Unit = {},
 ) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(4.dp),
+    val shape = WORD_ROW_SHAPE
+    Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 4.dp, bottom = 4.dp)
-            .clickable {
-                onEditNavigate(wordPair)
-            }
+            .shadow(colors.rowElevation, shape, ambientColor = colors.cardShadow, spotColor = colors.cardShadow)
+            .clip(shape)
+            .background(if (selected == true) colors.selectedRow else colors.card)
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(8.dp)
-        ) {
-
-            RowIcon(
-                iconSource = Icons.Filled.Circle,
-                contentDesc = stringResource(R.string.word_indicator),
-                tint = indicatorColors(wordPair.level(practice)),
-                modifier = Modifier.padding(start = 10.dp)
-            )
-            ListItem(
-                headlineContent = {
-                    Text(
-                        wordPair.word1.checkLength(),
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                },
-                supportingContent = {
-                    wordPair.word2?.checkLength()
-                        ?.let { Text(it, maxLines = 2, overflow = TextOverflow.Ellipsis) }
+        if (selected != null) SelectCircle(selected, colors)
+        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            SideLine(wordPair, Shown.WORD, practice, colors) {
+                Text(
+                    wordPair.word1.checkLength(),
+                    color = colors.text,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            wordPair.word2?.checkLength()?.let { meaning ->
+                SideLine(wordPair, Shown.MEANING, practice, colors) {
+                    Text(meaning, color = colors.secondaryText, fontSize = 14.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
-            )
+            }
         }
     }
 }
 
-suspend fun SnackbarHostState.showOnDeleteSnackBar(
+@Composable
+private fun SideLine(
     wordPair: WordPair,
-    context: Context
-): SnackbarResult {
-    val result = this.showSnackbar(
-        message = context.getString(R.string.confirm_deletion) + "${wordPair.word1}/${wordPair.word2}?",
-        actionLabel = context.getString(R.string.undo),
-        duration = SnackbarDuration.Long
-    )
-    return result
+    shown: Shown,
+    practice: PracticeSides,
+    colors: StackListColors,
+    text: @Composable () -> Unit,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        val dot = if (practice.covers(shown)) wordPair.sides.firstOrNull { it.shown == shown }?.step ?: 0 else null
+        Box(
+            Modifier
+                .size(8.dp)
+                .then(if (dot != null) Modifier.background(colors.levels[dot], CircleShape) else Modifier)
+        )
+        text()
+    }
 }

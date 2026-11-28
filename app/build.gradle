@@ -147,4 +147,8 @@ dependencies {
 
     // JSON serialization library, works with the Kotlin serialization plugin.
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.0"
+    // Anki packages since 2.1.50 are zstd-compressed: the collection, the media map, every media file.
+    // 1.5.7-4: its native libraries are 16 KB page compatible (1.5.6-x and some 1.5.7-x are not:
+    // Android 15+ warns about them, RELRO not page-aligned), and from 1.5.7-20 it needs compileSdk 37.
+    implementation "com.github.luben:zstd-jni:1.5.7-4@aar"
 }

@@ -19,15 +19,17 @@ carrying its own stability, difficulty and due date.
 _Avoid_: card, direction, face
 
 **Practice sides**:
-The learner's choice, for the whole library, of which sides to practise: **Smart switch** (the
-default), word to meaning, meaning to word, or both. A pair always has both sides; this decides
-which are scheduled.
+The learner's choice of which sides to practise: **Smart switch** (the default), word to
+meaning, meaning to word, or both. Set for the whole library in the settings; a **Stack** can
+choose its own when it is created or edited, and otherwise follows the library's ("As in
+settings"). A pair always has both sides; this decides which are scheduled.
 _Avoid_: mode, direction setting
 
 **Smart switch**:
 The default practice sides: one side of a pair at a time. A pair is practised word to meaning
-first; once the word side reaches Level3 - a memory holding a week - the pair hands over to its
-meaning side from the next day on: the meaning side enters as **New**, and the word side is no
+first; once the word side reaches Level3 - a memory holding a week - from at least two answers
+(a first Easy alone gets a new side there), the pair hands over to its meaning side from the
+next day on: the meaning side enters as **New**, and the word side is no
 longer scheduled. A meaning side
 that has been rated keeps the pair even if the word side lapses below that. Both sides at once
 is what **Both sides** is for.
@@ -45,12 +47,23 @@ _Avoid_: level, hardness
 **Level**:
 A reading of a side's stability, for colour: Level1 under 2 days, Level2 under 7, Level3 under
 14, Level4 under 30, Learned beyond. A pair shows the level of its weakest practised side.
+The stack list folds them into four bars: new (a practised side never answered), learning
+(Level1-2), known (Level3-4) and learned. The stack screen shows the same four steps as a dot
+beside each side of a pair - the word's dot for the word side, the meaning's for the meaning
+side - and no dot for a side the **Practice sides** setting never asks for.
 _Avoid_: score, status, stored level
 
 **Rating**:
-The learner's answer to a side - Again, Hard or Good, which is also what the three buttons say.
-Again drops stability sharply but not to nothing, Hard grows it a little, Good grows it fully.
-_Avoid_: a fourth rating (FSRS has one, this app does not), icon, click
+The learner's answer to a side, one of FSRS's four: Again, Hard, Good, Easy. Three buttons
+give them - Forgot, Hard, Easy. Forgot is Again: stability drops sharply but not to nothing and
+the side stays **Due** until it is recalled. Easy grows stability most. Hard is not taken at its
+word: it turns the card over to the answer, and the learner says whether they had it right -
+yes is Good, a full grow; no is Hard, a small one, with no lapse. Nothing is rated until then,
+and neither sends the side round again. Recalling a side after Again in the same **Session** is
+not a rating: it only lets the lapse's schedule start. Forgot is rated at once and turns the
+card over too, so the learner sees what they could not recall; Easy never shows the answer.
+_Avoid_: Good for the Easy button (it was once so, and the screen said one thing while the
+scheduler got another), icon, click
 
 **New**:
 A side that has never been rated; it is due at once, and its first rating sets its stability.
@@ -62,12 +75,41 @@ any of its practised sides is.
 _Avoid_: to learn, toShow, unrepeated
 
 **Session**:
-One sitting with a stack: up to 37 of its due practised sides, the most forgotten first (lowest
-FSRS retrievability; among ties the weaker memory), shuffled
-once on entry and shown one at a time; a side rated Again returns to the back of the queue until
-it is rated Hard or Good. The cap is per session, not per day: another sitting takes the next
-batch.
-_Avoid_: memorization list, wordsToLearn, round, daily limit
+One sitting with a stack: all of its due practised sides, the most forgotten first (lowest
+FSRS retrievability; among ties the weaker memory; never-practised last; equals in random
+order), shown one at a time; a side rated Again returns to the back of the queue until it is
+rated anything else. A session has no size. It ends one of three ways - the queue drains, the
+learner taps **Enough for today**, or they leave the screen - and the **Review log** records
+which, with how many sides were closed and how many were not got to. Its progress has a place per
+side and one more per Forgot, for the repeat; every answer fills one in the colour of its
+button, so the bar is full when the queue is through. It never says how many are left.
+_Avoid_: memorization list, wordsToLearn, round, daily limit, cap
+
+**Session summary**:
+What the learner is shown when a **Session** ends, however it ended - Back included, once
+anything was answered: how many sides were practised, each counted once by its first answer
+(Easy, Hard, Forgot), and a message chosen by the mistakes - sides practised before whose first
+answer was Forgot - against what FSRS expected for them: within 15 % of that, never narrower
+than one either way, "right on track"; more, "a productive session"; fewer, "great recall".
+The number of mistakes is never shown; the wording treats them as part of learning.
+_Avoid_: report, score, result screen
+
+**Enough for today**:
+The learner's way to end a **Session** early. Offered once they have answered as many sides as
+the stack's **Stamina** says; the sides not got to simply stay **Due**.
+_Avoid_: I'm tired, quit, give up
+
+**Study anyway**:
+A **Session** started from the stack list when nothing is **Due**: every practised side, due
+or not, the most forgotten first. FSRS rates the early answers for what they are.
+_Avoid_: cram, extra practice, review ahead
+
+**Stamina**:
+Where the learner tends to stop with a stack: the running mean of answers per **Session** ended
+with **Enough for today**, kept per **Stack**. The offer comes at three quarters of that mean -
+30 answers until the stack has been stopped once, never earlier than 10 - so a stop can fall
+below the mean and pull it either way.
+_Avoid_: limit, fatigue score, threshold
 
 **Review log**:
 A row per answer the learner gives - every tap, including the answer to a side brought back
@@ -110,9 +152,41 @@ as targets of their own, and sharing to one goes straight to the pair.
 _Avoid_: intent, quick add, import
 
 **Hidden**:
-A word pair or stack the learner has deleted. Nothing leaves the database - the row and its
-progress stay, so an undo, or a restore, can bring it back.
-_Avoid_: deleted, removed, trashed
+A word pair or stack out of sight: left out of sessions, counts and lists. Nothing leaves the
+database - the row and its progress stay. A pair or stack is Hidden either because the learner
+**Deleted** it or, for a pair, because a merge folded it into another.
+_Avoid_: removed, trashed
+
+**Deleted**:
+Hidden by the learner, with the time it happened (`deletedAt`). Deleted stacks and pairs wait at
+the end of their list in a collapsible Deleted section, latest first, and Restore brings them
+back with their progress, for as long as they wait - there is no expiry. A copy folded away by a
+merge is Hidden but not Deleted, so it never shows there. Whatever was Hidden before version 7
+of the database counts as Deleted, merge copies included: the learner chose to see them too.
+_Avoid_: removed, trashed
+
+**Imported note**:
+A note from an Anki package (.apkg/.colpkg), kept whole whether or not it became a word pair:
+every field as Anki stored it with its name, the note type, tags, deck, its cards with Anki's
+own schedule, and Anki's review history; its media is copied into the app. A note whose type
+is a plain one and whose first two fields have text becomes a **Word pair** - the first field
+the word, the second the meaning, formatting and media left out - in a **Stack** per Anki deck
+("Испанский::Глаголы" reads "Испанский · Глаголы"). Card 1 becomes the word side, card 2 the
+meaning side, each carrying on from where Anki had it: FSRS stability and difficulty as they
+are, or with only SM-2 the interval as stability and the ease as difficulty; a card on its
+learning steps with no FSRS memory starts **New**. Cloze notes, and notes without two fields of
+text, are kept but not shown. Anki's note id (guid) makes a second import of the same deck
+update the words of the pairs it made, never their progress, and add only what is new.
+In the New stack dialog the learner chooses the imported stacks' **Practice sides** and whether
+to reset learning progress: with it, the new pairs start **New**, Anki's progress kept only on
+the imported cards.
+_Avoid_: deck (for a stack), card (for a side)
+
+**Reset progress**:
+Every side of every pair in a **Stack** - deleted pairs included, so a restore does not bring the
+old schedule back - starts over as **New**. The **Review log** keeps every answer given; an
+Undo right after puts the sides back as they were.
+_Avoid_: clear, wipe, start over
 
 **Copy**:
 A word pair added again to the same stack exactly as before - word and meaning the same up to
@@ -181,7 +255,8 @@ _Avoid_: include scheduling, preserve state
 - **Practice sides** decides which **Sides** of every pair are scheduled; under **Smart
   switch** that depends on the word side's **Level**
 - A **Session** holds the **Due** practised **Sides** of exactly one **Stack**; each **Rating**
-  given in it updates one **Side**
+  given in it updates one **Side**; a **Stack** has one **Stamina**, which decides when the
+  **Session** offers **Enough for today**
 - Every **Rating** adds a row to the **Review log**, and every **Session** one; **Statistics**
   and the **Weekly card** are read from the **Review log**; a **Streak** counts **Obligation
   days** with a finished **Session**
@@ -222,13 +297,12 @@ _Avoid_: include scheduling, preserve state
 
 ## Open questions
 
-- Anki interoperability (`.apkg`) is deferred, not rejected. Both apps now schedule with
-  stability and difficulty per side, so the mapping that ADR 0001 called lossy is no longer
-  lossy by construction. A plain two-column Anki text export already imports.
+- Anki import is one way: nothing goes back to Anki, and Anki's review history is kept (see
+  **Imported note**) but not turned into **Review log** rows, so the statistics start from the
+  first answer given here. What the kept notes could become - more fields on a card, media,
+  cloze - is open.
 - Desired retention is fixed at 0.9 (ADR 0003). A setting is possible later, as are FSRS
   parameters fitted to this learner's own review history.
-- **Hidden** pairs and stacks have no way back in the UI yet; a restore screen is the missing
-  half of "nothing is ever deleted".
 - A **Session** lives in memory. If the process dies mid-session the queue is rebuilt from the
-  due sides; a side already rated Again that day has been rescheduled and returns tomorrow,
-  not later in the same sitting. Accepted for now.
+  due sides, and a side rated Again and not yet recalled is among them, since a lapse keeps
+  the side **Due**; only its place in the queue is lost.

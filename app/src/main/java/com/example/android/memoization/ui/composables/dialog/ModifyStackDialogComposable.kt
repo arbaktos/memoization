@@ -1,6 +1,14 @@
 package com.example.android.memoization.ui.composables.dialog
 
+import com.example.android.memoization.ui.features.addnewpair.languageDisplayName
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material.Checkbox
+import androidx.compose.material.RadioButton
+import androidx.compose.ui.semantics.Role
+import com.example.android.memoization.data.model.PracticeSides
+import com.example.android.memoization.ui.features.settings.labelRes
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -36,12 +44,14 @@ fun AddStackDialog(
     onStackAdded: (stack: MemoStack) -> Unit,
     stack: MemoStack? = null,
     onDismiss: () -> Unit,
+    onImportFromAnki: ((AnkiImportOptions) -> Unit)? = null,
 ) {
     ModifyStackDialog(
         onDismiss = onDismiss,
         stack = stack,
         onConfirm = onStackAdded,
-        modifier = modifier
+        modifier = modifier,
+        onImportFromAnki = onImportFromAnki,
     )
 }
 
@@ -69,20 +79,27 @@ fun ModifyStackDialog(
     onConfirm: (stack: MemoStack) -> Unit,
     stack: MemoStack? = null,
     modifier: Modifier = Modifier,
+    onImportFromAnki: ((AnkiImportOptions) -> Unit)? = null,
     languagesViewModel: LanguagesViewModel = hiltViewModel(),
+    stackDialogViewModel: StackDialogViewModel = hiltViewModel(),
 ) {
     var text by rememberSaveable { mutableStateOf(stack?.name ?: "") }
+    // The stack's own Practice sides by name; null follows the library's.
+    var practice by rememberSaveable { mutableStateOf(stack?.practiceSides) }
+    var resetAnkiProgress by rememberSaveable { mutableStateOf(false) }
+    val libraryPractice by stackDialogViewModel.libraryPractice.collectAsStateWithLifecycle()
     var fromLanguage by rememberSaveable { mutableStateOf(stack?.fromLanguage) }
     var toLanguage by rememberSaveable { mutableStateOf(stack?.toLanguage) }
     var pickerFor by remember { mutableStateOf<LanguageSlot?>(null) }
 
-    // The stack stores the api code; the learner should read "English", not "en_GB".
+    // The stack stores the api code; the learner should read "Английский", not "en_GB".
     val languages by languagesViewModel.languages.collectAsStateWithLifecycle()
     val nameOf: (String?) -> String? = { code ->
         code?.let {
-            (languages as? LoadingState.Collected)?.content
+            val apiName = (languages as? LoadingState.Collected)?.content
                 ?.firstOrNull { language -> language.full_code == it }
                 ?.englishName ?: it
+            languageDisplayName(it, apiName)
         }
     }
 
@@ -93,11 +110,13 @@ fun ModifyStackDialog(
             val edited = stack?.copy(
                 name = text,
                 fromLanguage = fromLanguage,
-                toLanguage = toLanguage
+                toLanguage = toLanguage,
+                practiceSides = practice,
             ) ?: MemoStack(
                 name = text,
                 fromLanguage = fromLanguage,
-                toLanguage = toLanguage
+                toLanguage = toLanguage,
+                practiceSides = practice,
             )
             onConfirm(edited)
             onDismiss()
@@ -128,6 +147,49 @@ fun ModifyStackDialog(
             value = nameOf(toLanguage),
             onClick = { pickerFor = LanguageSlot.To }
         )
+
+        Text(
+            text = stringResource(R.string.practice_section_stack),
+            modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+        )
+        PracticeChoice(
+            label = stringResource(R.string.practice_as_in_settings, stringResource(libraryPractice.labelRes)),
+            selected = practice == null,
+            onClick = { practice = null }
+        )
+        PracticeSides.entries.forEach { option ->
+            PracticeChoice(
+                label = stringResource(option.labelRes),
+                selected = practice == option.name,
+                onClick = { practice = option.name }
+            )
+        }
+
+        // A new stack can also come whole, from a deck made in Anki; the choice above goes to
+        // the stacks it makes.
+        if (onImportFromAnki != null) {
+            Text(
+                text = stringResource(R.string.import_from_anki),
+                color = MaterialTheme.colors.primary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onImportFromAnki(AnkiImportOptions(practice, resetAnkiProgress)) }
+                    .padding(top = 12.dp, bottom = 4.dp)
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .toggleable(value = resetAnkiProgress, role = Role.Checkbox) { resetAnkiProgress = it }
+                    .padding(vertical = 4.dp)
+            ) {
+                Checkbox(checked = resetAnkiProgress, onCheckedChange = null)
+                Text(
+                    text = stringResource(R.string.anki_reset_progress),
+                    modifier = Modifier.padding(start = 12.dp)
+                )
+            }
+        }
     }
 
     pickerFor?.let { slot ->
@@ -145,6 +207,23 @@ fun ModifyStackDialog(
             },
             onDismissRequest = { pickerFor = null }
         )
+    }
+}
+
+/** What the learner chose for an Anki import in the New stack dialog. */
+data class AnkiImportOptions(val practiceSides: String?, val resetProgress: Boolean)
+
+@Composable
+private fun PracticeChoice(label: String, selected: Boolean, onClick: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+            .padding(vertical = 4.dp)
+    ) {
+        RadioButton(selected = selected, onClick = null)
+        Text(text = label, modifier = Modifier.padding(start = 12.dp))
     }
 }
 

@@ -175,7 +175,93 @@ class MemorizationSessionTest {
     }
 
     @Test
-    fun `every answer is reported for the log, requeued ones with no schedule change`() {
+    fun `every answer fills a slot by its button, and every forgot adds a slot for the repeat`() {
+        val s = session(1, 2, 3, 4)
+        assertEquals(MemorizationSession.Results(), s.state().results)
+        assertEquals(4, s.state().slots)
+
+        s.rate(Rating.Easy, now)
+        s.rate(Rating.Hard, now)
+        val afterAgain = s.rate(Rating.Again, now).state
+        assertEquals("a forgot shows at once", MemorizationSession.Results(easy = 1, hard = 1, forgot = 1), afterAgain.results)
+        assertEquals("and the repeat gets a slot of its own", 5, afterAgain.slots)
+
+        // Good comes from Hard checked right: it counts with Hard, by the button pressed.
+        s.rate(Rating.Good, now)
+        // The forgotten side comes round and is forgotten again: one more slot.
+        assertEquals(6, s.rate(Rating.Again, now).state.slots)
+        val recalled = s.rate(Rating.Easy, now).state
+        assertTrue(recalled.isFinished)
+        assertEquals(MemorizationSession.Results(easy = 2, hard = 2, forgot = 2), recalled.results)
+        assertEquals("a full bar is a finished session", recalled.slots, recalled.results.total)
+    }
+
+    private fun newItem(id: Long) = SessionSide(
+        Side(sideId = id, wordPairId = id, shown = Shown.WORD), front = "front$id", back = "back$id"
+    )
+
+    @Test
+    fun `the summary counts first answers only, mistakes among sides practised before`() {
+        val s = MemorizationSession(listOf(item(1), item(2), newItem(3)), Random(1), scheduler)
+
+        s.rate(Rating.Again, now)   // side 1: a mistake
+        s.rate(Rating.Hard, now)    // side 2: Hard is a recall, not a mistake
+        s.rate(Rating.Again, now)   // side 3: new, so not a mistake
+        s.rate(Rating.Again, now)   // side 1 again: a repeat, not a second mistake
+        s.rate(Rating.Easy, now)    // side 3 recalled
+        val summary = s.summary()
+        s.rate(Rating.Good, now)    // side 1 recalled
+
+        assertEquals(3, summary.practised)
+        assertEquals(
+            "each side once, by its first answer",
+            MemorizationSession.Results(easy = 0, hard = 1, forgot = 2),
+            summary.firstAnswers,
+        )
+        val mistakes = summary.mistakes!!
+        assertEquals(1, mistakes.count)
+        assertEquals(2, mistakes.reviewed)
+        val forgetting = 1 - scheduler.retrievability(side(1), now)!!
+        assertEquals("what FSRS expected for the two sides practised before", 2 * forgetting, mistakes.expected, 1e-9)
+    }
+
+    @Test
+    fun `the summary's first answers add up to the sides practised, repeats left out`() {
+        val s = MemorizationSession(listOf(item(1), item(2), newItem(3)), Random(1), scheduler)
+        s.rate(Rating.Easy, now)
+        s.rate(Rating.Again, now)
+        s.rate(Rating.Good, now)    // side 3
+        s.rate(Rating.Good, now)    // side 2 recalled: a repeat
+        s.stop()
+
+        val summary = s.summary()
+        assertEquals(3, summary.practised)
+        assertEquals(summary.practised, summary.firstAnswers.total)
+        assertEquals(MemorizationSession.Results(easy = 1, hard = 1, forgot = 1), summary.firstAnswers)
+    }
+
+    @Test
+    fun `a session of only new sides has no mistakes to judge`() {
+        val s = MemorizationSession(listOf(newItem(1)), Random(1), scheduler)
+        s.rate(Rating.Again, now)
+
+        assertNull(s.summary().mistakes)
+    }
+
+    @Test
+    fun `easy schedules a side further out than good, and hard closes it without a lapse`() {
+        val easy = session(1).rate(Rating.Easy, now)
+        val good = session(1).rate(Rating.Good, now)
+        val hard = session(1).rate(Rating.Hard, now)
+
+        assertTrue(easy.toPersist!!.due!! > good.toPersist!!.due!!)
+        assertTrue(easy.state.isFinished)
+        assertTrue("hard is not sent round again", hard.state.isFinished)
+        assertEquals(0, hard.toPersist!!.lapses)
+    }
+
+    @Test
+    fun `every answer is reported for the log, with whether it changed the schedule`() {
         val s = session(1, 2)
         val first = s.state().current!!
 
@@ -183,16 +269,29 @@ class MemorizationSessionTest {
         assertEquals(first.id, again.answer.sideId)
         assertEquals(Rating.Again, again.answer.rating)
         assertFalse(again.answer.requeued)
+        assertTrue(again.answer.rescheduled)
         assertEquals(again.toPersist, again.answer.after)
 
-        // The other side, then the lapsed one comes round: its answer is requeued and the
-        // side it reports is the one already rescheduled by the Again.
+        // The other side, then the lapsed one comes round: its answer is requeued, and the
+        // side it reports is the lapsed one with its due date now set.
         s.rate(Rating.Good, now)
         val back = s.rate(Rating.Good, now)
         assertEquals(first.id, back.answer.sideId)
         assertTrue(back.answer.requeued)
-        assertNull(back.toPersist)
-        assertEquals(again.toPersist, back.answer.after)
+        assertTrue(back.answer.rescheduled)
+        assertEquals(back.toPersist, back.answer.after)
+    }
+
+    @Test
+    fun `a second again is reported as changing nothing`() {
+        val s = session(1)
+        s.rate(Rating.Again, now)
+
+        val second = s.rate(Rating.Again, now)
+
+        assertTrue(second.answer.requeued)
+        assertFalse(second.answer.rescheduled)
+        assertNull(second.toPersist)
     }
 
     @Test
@@ -224,10 +323,11 @@ class MemorizationSessionTest {
         assertEquals(lapsed.id, persisted.sideId)
         assertTrue("stability should fall", persisted.stability!! < 5.0)
         assertEquals(1, persisted.lapses)
+        assertEquals("a lapsed side stays due until it is recalled", now, persisted.due)
         assertEquals(3, outcome.state.remaining)
         assertNotEquals(lapsed.id, outcome.state.current?.id)
 
-        // Work through the other two; the lapsed side comes round last, already rescheduled.
+        // Work through the other two; the lapsed side comes round last, with the lapse on it.
         s.rate(Rating.Good, now)
         s.rate(Rating.Good, now)
         assertEquals(lapsed.id, s.state().current?.id)
@@ -244,25 +344,44 @@ class MemorizationSessionTest {
     }
 
     @Test
-    fun `good after again closes the side without a new schedule`() {
+    fun `good after again lets the lapse's schedule start, without re-rating the side`() {
         val s = session(1)
 
-        s.rate(Rating.Again, now)
+        val lapse = s.rate(Rating.Again, now).toPersist!!
         val outcome = s.rate(Rating.Good, now)
+        val recalled = outcome.toPersist!!
 
-        assertNull(outcome.toPersist)
         assertTrue(outcome.state.isFinished)
+        assertEquals(lapse.stability, recalled.stability)
+        assertEquals(lapse.difficulty, recalled.difficulty)
+        assertEquals(lapse.lapses, recalled.lapses)
+        assertEquals(lapse.reps, recalled.reps)
+        assertTrue("due should move out of today", recalled.due!! > now)
+        assertEquals(now + DAY_MILLIS, recalled.due)
     }
 
     @Test
-    fun `hard after again also closes the side without a write`() {
+    fun `hard after again does the same as good`() {
         val s = session(1)
 
-        s.rate(Rating.Again, now)
+        val lapse = s.rate(Rating.Again, now).toPersist!!
         val outcome = s.rate(Rating.Hard, now)
+        val recalled = outcome.toPersist!!
 
-        assertNull(outcome.toPersist)
         assertTrue(outcome.state.isFinished)
+        assertEquals(lapse.stability, recalled.stability)
+        assertEquals(now + DAY_MILLIS, recalled.due)
+    }
+
+    @Test
+    fun `a lapse not recalled before the session ends is still due`() {
+        val s = MemorizationSession(listOf(item(1), item(2)), Random(1), scheduler, offerStopFrom = 1)
+
+        val lapse = s.rate(Rating.Again, now).toPersist!!
+        s.stop()
+
+        assertEquals(now, lapse.due)
+        assertTrue(lapse.isDue(now, TimeZone.getTimeZone("UTC")))
     }
 
     @Test

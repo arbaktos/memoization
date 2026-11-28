@@ -1,6 +1,5 @@
 package ru.vasilisasycheva.translation.api
 
-import com.example.android.memoization.data.api.ApiLanguage
 import retrofit2.Response
 import retrofit2.http.*
 

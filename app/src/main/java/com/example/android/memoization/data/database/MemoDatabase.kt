@@ -4,6 +4,10 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.android.memoization.data.database.ankidb.AnkiCardEntity
+import com.example.android.memoization.data.database.ankidb.AnkiDao
+import com.example.android.memoization.data.database.ankidb.AnkiNoteEntity
+import com.example.android.memoization.data.database.ankidb.AnkiRevlogEntity
 import com.example.android.memoization.data.database.dismisseddb.DismissedMatchEntity
 import com.example.android.memoization.data.database.logdb.ReviewLogEntity
 import com.example.android.memoization.data.database.logdb.SessionEntity
@@ -15,12 +19,14 @@ import com.example.android.memoization.data.database.wordpairdb.WordPairEntity
     entities = [
         StackEntity::class, WordPairEntity::class, SideEntity::class,
         SessionEntity::class, ReviewLogEntity::class, DismissedMatchEntity::class,
+        AnkiNoteEntity::class, AnkiCardEntity::class, AnkiRevlogEntity::class,
     ],
-    version = 6,
+    version = 9,
     exportSchema = true
 )
 abstract class MemoDatabase : RoomDatabase() {
     abstract val memoDao: MemoDao
+    abstract val ankiDao: AnkiDao
 
     companion object {
         /**
@@ -29,7 +35,8 @@ abstract class MemoDatabase : RoomDatabase() {
          * a crash is recoverable, a wiped vocabulary is not.
          */
         val MIGRATIONS: Array<Migration> = arrayOf(
-            MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
+            MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7,
+            MIGRATION_7_8, MIGRATION_8_9,
         )
     }
 }
@@ -221,6 +228,104 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
             )
             """.trimIndent()
         )
+    }
+}
+
+/**
+ * Stacks and pairs note when they were deleted, for the Deleted section they can be restored
+ * from. Whatever was hidden before this version counts as deleted now - at the moment of the
+ * migration, since when is not known. That includes copies a duplicates merge had folded away:
+ * the learner chose to see them too. From here on a merge hides without deleting.
+ */
+val MIGRATION_6_7 = object : Migration(6, 7) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `stack_entity_table` ADD COLUMN `deletedAt` INTEGER")
+        db.execSQL("ALTER TABLE `wordpair_entity_table` ADD COLUMN `deletedAt` INTEGER")
+        val now = "CAST(strftime('%s', 'now') AS INTEGER) * 1000"
+        db.execSQL("UPDATE `stack_entity_table` SET `deletedAt` = $now WHERE `isVisible` = 0")
+        db.execSQL("UPDATE `wordpair_entity_table` SET `deletedAt` = $now WHERE `isVisible` = 0")
+    }
+}
+
+/**
+ * Decks imported from Anki are kept whole beside the pairs made of them - notes, cards with
+ * Anki's own schedule, the review history - for what the app cannot show yet. Additive.
+ */
+val MIGRATION_7_8 = object : Migration(7, 8) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `anki_note_table` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `guid` TEXT NOT NULL,
+                `ankiNoteId` INTEGER NOT NULL,
+                `noteType` TEXT NOT NULL,
+                `noteTypeKind` INTEGER NOT NULL,
+                `fieldNames` TEXT NOT NULL,
+                `fields` TEXT NOT NULL,
+                `tags` TEXT NOT NULL,
+                `deckName` TEXT NOT NULL,
+                `wordPairId` INTEGER,
+                `importedAt` INTEGER NOT NULL
+            )
+            """.trimIndent()
+        )
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_anki_note_table_guid` ON `anki_note_table` (`guid`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_anki_note_table_wordPairId` ON `anki_note_table` (`wordPairId`)")
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `anki_card_table` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `ankiCardId` INTEGER NOT NULL,
+                `noteGuid` TEXT NOT NULL,
+                `ord` INTEGER NOT NULL,
+                `deckName` TEXT NOT NULL,
+                `type` INTEGER NOT NULL,
+                `queue` INTEGER NOT NULL,
+                `due` INTEGER NOT NULL,
+                `ivl` INTEGER NOT NULL,
+                `factor` INTEGER NOT NULL,
+                `reps` INTEGER NOT NULL,
+                `lapses` INTEGER NOT NULL,
+                `originalDue` INTEGER NOT NULL,
+                `originalDeckId` INTEGER NOT NULL,
+                `data` TEXT,
+                `collectionCreated` INTEGER NOT NULL,
+                `sideId` INTEGER
+            )
+            """.trimIndent()
+        )
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_anki_card_table_ankiCardId` ON `anki_card_table` (`ankiCardId`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_anki_card_table_noteGuid` ON `anki_card_table` (`noteGuid`)")
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `anki_revlog_table` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `ankiCardId` INTEGER NOT NULL,
+                `reviewedAt` INTEGER NOT NULL,
+                `ease` INTEGER NOT NULL,
+                `ivl` INTEGER NOT NULL,
+                `lastIvl` INTEGER NOT NULL,
+                `factor` INTEGER NOT NULL,
+                `timeMs` INTEGER NOT NULL,
+                `type` INTEGER NOT NULL
+            )
+            """.trimIndent()
+        )
+        db.execSQL(
+            "CREATE UNIQUE INDEX IF NOT EXISTS `index_anki_revlog_table_ankiCardId_reviewedAt` " +
+                "ON `anki_revlog_table` (`ankiCardId`, `reviewedAt`)"
+        )
+    }
+}
+
+/**
+ * A stack can choose its own Practice sides; null - every stack so far - follows the library's
+ * setting, as all of them did. Additive.
+ */
+val MIGRATION_8_9 = object : Migration(8, 9) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `stack_entity_table` ADD COLUMN `practiceSides` TEXT")
     }
 }
 

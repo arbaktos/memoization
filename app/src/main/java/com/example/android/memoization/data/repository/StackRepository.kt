@@ -20,6 +20,11 @@ class StackRepository @Inject constructor(private val memoDao: MemoDao){
         memoDao.updateStack(stackEntity)
     }
 
+    /** Deleting hides the stack and notes when; restoring brings it back as it was. */
+    suspend fun setStackDeleted(stackId: Long, deleted: Boolean) {
+        memoDao.setStackDeleted(stackId, if (deleted) System.currentTimeMillis() else null)
+    }
+
     /** The learner stopped a session with this stack after [answers] answers; see Stamina. */
     suspend fun recordStoppedAt(stackId: Long, answers: Int) {
         memoDao.recordStoppedAt(stackId, answers)

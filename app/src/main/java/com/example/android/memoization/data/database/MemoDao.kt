@@ -36,6 +36,13 @@ interface MemoDao {
     @Update
     suspend fun updateStack(stackEntity: StackEntity)
 
+    /**
+     * Deleting a stack hides it and notes when; its words stay, so it can always come back.
+     * A null [deletedAt] restores it.
+     */
+    @Query("UPDATE stack_entity_table SET isVisible = (:deletedAt IS NULL), deletedAt = :deletedAt WHERE stackId = :stackId")
+    suspend fun setStackDeleted(stackId: Long, deletedAt: Long?)
+
     /** One more "Enough for today" on this stack, in place: no snapshot of the row to go stale. */
     @Query(
         "UPDATE stack_entity_table SET tiredSessions = tiredSessions + 1, " +
@@ -64,9 +71,19 @@ interface MemoDao {
     @Update
     suspend fun updateWordPair(wordPairEntity: WordPairEntity)
 
-    /** Deleting a pair only hides it; nothing in the learning database is ever thrown away. */
-    @Query("UPDATE wordpair_entity_table SET isVisible = :visible WHERE wordPairId = :wordPairId")
-    suspend fun setWordPairVisible(wordPairId: Long, visible: Boolean)
+    /** Hides pairs without deleting them: what a duplicates merge does to the copies it folds away. */
+    @Query("UPDATE wordpair_entity_table SET isVisible = :visible WHERE wordPairId IN (:wordPairIds)")
+    suspend fun setWordPairsVisible(wordPairIds: Collection<Long>, visible: Boolean)
+
+    /**
+     * Deleting pairs hides them and notes when, for the Deleted section; nothing in the learning
+     * database is ever thrown away. A null [deletedAt] restores them.
+     */
+    @Query(
+        "UPDATE wordpair_entity_table SET isVisible = (:deletedAt IS NULL), deletedAt = :deletedAt " +
+            "WHERE wordPairId IN (:wordPairIds)"
+    )
+    suspend fun setWordPairsDeleted(wordPairIds: Collection<Long>, deletedAt: Long?)
 
     @Query("SELECT * FROM wordpair_entity_table WHERE wordPairId LIKE :wpId")
     fun getWordPairByIdFlow(wpId: Long): Flow<WordPairEntity>
@@ -75,8 +92,38 @@ interface MemoDao {
     @Insert
     suspend fun insertSides(sides: List<SideEntity>)
 
+    @Insert
+    suspend fun insertSide(side: SideEntity): Long
+
     @Update
     suspend fun updateSide(side: SideEntity)
+
+    @Update
+    suspend fun updateSides(sides: List<SideEntity>)
+
+    @Query(
+        "SELECT * FROM side_entity_table WHERE wordPairId IN " +
+            "(SELECT wordPairId FROM wordpair_entity_table WHERE parentStackId = :stackId)"
+    )
+    suspend fun getSidesOfStack(stackId: Long): List<SideEntity>
+
+    @Query(
+        "UPDATE side_entity_table SET state = 0, stability = NULL, difficulty = NULL, due = NULL, " +
+            "lastReview = NULL, reps = 0, lapses = 0 WHERE wordPairId IN " +
+            "(SELECT wordPairId FROM wordpair_entity_table WHERE parentStackId = :stackId)"
+    )
+    suspend fun setStackSidesNew(stackId: Long)
+
+    /**
+     * Every side of the stack - deleted pairs' too, so a restore does not bring old progress
+     * back - starts over as New. Returns the sides as they were, for an undo.
+     */
+    @Transaction
+    suspend fun resetStackSides(stackId: Long): List<SideEntity> {
+        val before = getSidesOfStack(stackId)
+        setStackSidesNew(stackId)
+        return before
+    }
 
     @Query("SELECT * FROM side_entity_table WHERE wordPairId = :wordPairId ORDER BY shown")
     suspend fun getSidesForPair(wordPairId: Long): List<SideEntity>
@@ -121,7 +168,7 @@ interface MemoDao {
             setWordPairWords(plan.keepPairId, plan.word1, plan.word2)
             plan.sides.forEach { updateSide(SideEntity.from(it)) }
             plan.moveReviews.forEach { (from, to) -> moveReviews(from, to) }
-            plan.hidePairIds.forEach { setWordPairVisible(it, visible = false) }
+            setWordPairsVisible(plan.hidePairIds, visible = false)
         }
     }
 

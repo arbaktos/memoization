@@ -19,9 +19,7 @@ import androidx.datastore.preferences.core.Preferences
 import com.example.android.memoization.MainActivity
 import com.example.android.memoization.R
 import com.example.android.memoization.domain.usecases.HasWordsToRepeatUseCase
-import com.example.android.memoization.notifications.NotificationReceiver.NotificationChannel.REMINDER_CHANNEL_DESCRIPTION
 import com.example.android.memoization.notifications.NotificationReceiver.NotificationChannel.REMINDER_CHANNEL_ID
-import com.example.android.memoization.notifications.NotificationReceiver.NotificationChannel.REMINDER_CHANNEL_NAME
 import com.example.android.memoization.utils.NotifConstants.NOTIFICATION_ID
 import com.example.android.memoization.utils.NotifConstants.NOTIFICATION_ID_LABEL
 import dagger.hilt.android.AndroidEntryPoint
@@ -72,15 +70,13 @@ class NotificationReceiver @Inject constructor() : BroadcastReceiver() {
 
     object NotificationChannel {
         const val REMINDER_CHANNEL_ID = "reminder_channel"
-        const val REMINDER_CHANNEL_NAME = "reminder_channel_name"
-        const val REMINDER_CHANNEL_DESCRIPTION = "reminder to learn the words"
     }
 
     private fun createReminderChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val mChannel = NotificationChannel(REMINDER_CHANNEL_ID, REMINDER_CHANNEL_NAME, importance)
-            mChannel.description = REMINDER_CHANNEL_DESCRIPTION
+            val mChannel = NotificationChannel(REMINDER_CHANNEL_ID, context.getString(R.string.reminder_channel_name), importance)
+            mChannel.description = context.getString(R.string.reminder_channel_description)
             val notificationManager =
                 context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(mChannel)

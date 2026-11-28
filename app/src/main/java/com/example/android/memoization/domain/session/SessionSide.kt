@@ -3,6 +3,7 @@ package com.example.android.memoization.domain.session
 import com.example.android.memoization.data.model.MemoStack
 import com.example.android.memoization.data.model.PracticeSides
 import com.example.android.memoization.data.model.Side
+import com.example.android.memoization.data.model.WordPair
 import com.example.android.memoization.domain.scheduler.Fsrs
 import java.util.TimeZone
 import kotlin.random.Random
@@ -39,9 +40,30 @@ fun MemoStack.dueSessionSides(
     zone: TimeZone = TimeZone.getDefault(),
     random: Random = Random.Default,
     scheduler: Fsrs = Fsrs(zone = zone),
+): List<SessionSide> = sessionSides(now, random, scheduler) { it.dueSides(practice, now, zone) }
+
+/**
+ * "Study anyway", when nothing is due: every practised side, due or not, the most forgotten
+ * first - the same order as [dueSessionSides]. FSRS takes an early answer for what it is: a
+ * recall at high retrievability grows stability only a little, and a Forgot is a lapse like any
+ * other, so studying ahead never pushes a word further out than it has earned.
+ */
+fun MemoStack.aheadSessionSides(
+    practice: PracticeSides,
+    now: Long = System.currentTimeMillis(),
+    zone: TimeZone = TimeZone.getDefault(),
+    random: Random = Random.Default,
+    scheduler: Fsrs = Fsrs(zone = zone),
+): List<SessionSide> = sessionSides(now, random, scheduler) { it.activeSides(practice, now, zone) }
+
+private fun MemoStack.sessionSides(
+    now: Long,
+    random: Random,
+    scheduler: Fsrs,
+    sidesOf: (WordPair) -> List<Side>,
 ): List<SessionSide> =
     words.flatMap { pair ->
-        pair.dueSides(practice, now, zone).map { side ->
+        sidesOf(pair).map { side ->
             SessionSide(side = side, front = pair.front(side.shown), back = pair.back(side.shown))
         }
     }

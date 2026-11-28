@@ -13,7 +13,19 @@ data class MemoStack(
     override var pinnedTime: Long? = null,
     override val tiredSessions: Int = 0,
     override val tiredAnswersSum: Int = 0,
+    override val deletedAt: Long? = null,
+    override val practiceSides: String? = null,
 ) : BaseStack, DismissableItem {
+
+    /** The stack's own choice, if it has made one; a name no longer known counts as none. */
+    val ownPractice: PracticeSides? get() = PracticeSides.entries.firstOrNull { it.name == practiceSides }
+
+    /** The sides this stack practises: its own choice, else the library's [library]. */
+    fun practice(library: PracticeSides): PracticeSides = ownPractice ?: library
+
+
+    /** The pairs the learner deleted, the latest first: the stack screen's Deleted section. */
+    var deletedWords: List<WordPair> = emptyList()
 
     var words: MutableList<WordPair> = mutableListOf()
         set(value) {
