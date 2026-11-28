@@ -152,4 +152,16 @@
     <string name="deleted_count">Deleted · %d</string>
     <string name="restore">Restore</string>
     <string name="restored">“%s” restored</string>
+    <string name="import_from_anki">Import from Anki</string>
+    <string name="anki_importing">Importing from Anki…</string>
+    <plurals name="anki_imported_words">
+        <item quantity="one">%d word added</item>
+        <item quantity="other">%d words added</item>
+    </plurals>
+    <string name="anki_already_imported">Already imported: %d words updated</string>
+    <string name="anki_updated_words">updated: %d</string>
+    <string name="anki_kept_for_later">not shown yet: %d</string>
+    <string name="anki_import_nothing">No words found in the file</string>
+    <string name="anki_import_not_anki">This isn\'t an Anki deck file</string>
+    <string name="anki_import_failed">Couldn\'t import the deck</string>
 </resources>

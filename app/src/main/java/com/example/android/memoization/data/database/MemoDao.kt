@@ -92,6 +92,9 @@ interface MemoDao {
     @Insert
     suspend fun insertSides(sides: List<SideEntity>)
 
+    @Insert
+    suspend fun insertSide(side: SideEntity): Long
+
     @Update
     suspend fun updateSide(side: SideEntity)
 

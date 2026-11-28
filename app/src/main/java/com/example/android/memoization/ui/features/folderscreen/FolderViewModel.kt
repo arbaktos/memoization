@@ -1,6 +1,14 @@
 package com.example.android.memoization.ui.features.folderscreen
 
+import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.LiveData
+import com.example.android.memoization.data.anki.AnkiImportResult
+import com.example.android.memoization.data.anki.AnkiImporter
+import com.example.android.memoization.data.anki.NotAnAnkiPackageException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withContext
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
@@ -36,6 +44,7 @@ class FolderViewModel @Inject constructor(
     val getStacksWithWordsUseCase: GetStacksWithWordsUseCase,
     val updateStackUseCase: UpdateStackUseCase,
     learningSettings: LearningSettingsRepository,
+    private val ankiImporter: AnkiImporter,
 ) : BaseViewModel<LoadingState<List<MemoStack>>>() {
 
     val practiceSides = learningSettings.practiceSides.stateIn(
@@ -55,6 +64,30 @@ class FolderViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             updateStackUseCase(stack)
         }
+    }
+
+    private val _ankiImport = MutableStateFlow<AnkiImportState>(AnkiImportState.Idle)
+    val ankiImport: StateFlow<AnkiImportState> = _ankiImport.asStateFlow()
+
+    /** Imports the Anki package the learner picked; the screen shows the outcome once. */
+    fun importAnki(uri: Uri) {
+        if (_ankiImport.value == AnkiImportState.Running) return
+        _ankiImport.value = AnkiImportState.Running
+        viewModelScope.launch {
+            _ankiImport.value = try {
+                AnkiImportState.Done(withContext(Dispatchers.IO) { ankiImporter.import(uri) })
+            } catch (e: NotAnAnkiPackageException) {
+                Log.w(TAG, "Not an Anki package", e)
+                AnkiImportState.NotAnki
+            } catch (e: Exception) {
+                Log.e(TAG, "Anki import failed", e)
+                AnkiImportState.Failed
+            }
+        }
+    }
+
+    fun onAnkiImportReported() {
+        if (_ankiImport.value != AnkiImportState.Running) _ankiImport.value = AnkiImportState.Idle
     }
 
     fun showAddStackDialog(toShow: Boolean) {
@@ -114,6 +147,7 @@ class FolderViewModel @Inject constructor(
     }
 
     companion object {
+        private const val TAG = "FolderViewModel"
         private const val STOP_COLLECTING_AFTER_MS = 5_000L
         /** Keys in the stack list's saved state, set by the stack screen as it closes. */
         const val HIDDEN_STACK_ID = "hiddenStackId"
@@ -124,4 +158,12 @@ class FolderViewModel @Inject constructor(
         if (stack.pinnedTime == null) updateStack(stack.copy(pinnedTime = System.currentTimeMillis()))
         else updateStack(stack.copy(pinnedTime = null))
     }
+}
+
+sealed interface AnkiImportState {
+    object Idle : AnkiImportState
+    object Running : AnkiImportState
+    data class Done(val result: AnkiImportResult) : AnkiImportState
+    object NotAnki : AnkiImportState
+    object Failed : AnkiImportState
 }

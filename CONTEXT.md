@@ -164,6 +164,20 @@ merge is Hidden but not Deleted, so it never shows there. Whatever was Hidden be
 of the database counts as Deleted, merge copies included: the learner chose to see them too.
 _Avoid_: removed, trashed
 
+**Imported note**:
+A note from an Anki package (.apkg/.colpkg), kept whole whether or not it became a word pair:
+every field as Anki stored it with its name, the note type, tags, deck, its cards with Anki's
+own schedule, and Anki's review history; its media is copied into the app. A note whose type
+is a plain one and whose first two fields have text becomes a **Word pair** - the first field
+the word, the second the meaning, formatting and media left out - in a **Stack** per Anki deck
+("Испанский::Глаголы" reads "Испанский · Глаголы"). Card 1 becomes the word side, card 2 the
+meaning side, each carrying on from where Anki had it: FSRS stability and difficulty as they
+are, or with only SM-2 the interval as stability and the ease as difficulty; a card on its
+learning steps with no FSRS memory starts **New**. Cloze notes, and notes without two fields of
+text, are kept but not shown. Anki's note id (guid) makes a second import of the same deck
+update the words of the pairs it made, never their progress, and add only what is new.
+_Avoid_: deck (for a stack), card (for a side)
+
 **Copy**:
 A word pair added again to the same stack exactly as before - word and meaning the same up to
 case and spacing. Copies are removed all at once: the oldest pair stays, the others are
@@ -273,9 +287,10 @@ _Avoid_: include scheduling, preserve state
 
 ## Open questions
 
-- Anki interoperability (`.apkg`) is deferred, not rejected. Both apps now schedule with
-  stability and difficulty per side, so the mapping that ADR 0001 called lossy is no longer
-  lossy by construction. A plain two-column Anki text export already imports.
+- Anki import is one way: nothing goes back to Anki, and Anki's review history is kept (see
+  **Imported note**) but not turned into **Review log** rows, so the statistics start from the
+  first answer given here. What the kept notes could become - more fields on a card, media,
+  cloze - is open.
 - Desired retention is fixed at 0.9 (ADR 0003). A setting is possible later, as are FSRS
   parameters fitted to this learner's own review history.
 - A **Session** lives in memory. If the process dies mid-session the queue is rebuilt from the

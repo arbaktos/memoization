@@ -124,7 +124,7 @@ class MigrationTest {
             )
         }
 
-        val db = helper.runMigrationsAndValidate(testDb, 7, true, *MemoDatabase.MIGRATIONS)
+        val db = helper.runMigrationsAndValidate(testDb, 8, true, *MemoDatabase.MIGRATIONS)
 
         db.query("SELECT stability FROM side_entity_table WHERE wordPairId = 1 AND shown = 0").use {
             it.moveToFirst()
@@ -329,6 +329,23 @@ class MigrationTest {
             it.moveToFirst(); assertEquals("sada", it.getString(0)); assertEquals(1, it.getInt(1)); assertTrue(it.isNull(2))
             it.moveToNext(); assertEquals("kuca", it.getString(0)); assertEquals(0, it.getInt(1)); assertTrue(it.getLong(2) >= before)
         }
+    }
+
+    @Test
+    fun migration7To8_addsTheAnkiTablesEmptyAndTouchesNothingElse() {
+        helper.createDatabase(testDb, 7).use { db ->
+            db.execSQL(
+                "INSERT INTO wordpair_entity_table (parentStackId, word1, word2, wordPairId, isVisible) " +
+                    "VALUES (1, 'sada', 'сейчас', 1, 1)"
+            )
+        }
+
+        val db = helper.runMigrationsAndValidate(testDb, 8, true, MIGRATION_7_8)
+
+        for (table in listOf("anki_note_table", "anki_card_table", "anki_revlog_table")) {
+            db.query("SELECT COUNT(*) FROM $table").use { it.moveToFirst(); assertEquals(0, it.getInt(0)) }
+        }
+        db.query("SELECT word1 FROM wordpair_entity_table").use { it.moveToFirst(); assertEquals("sada", it.getString(0)) }
     }
 
     @Test

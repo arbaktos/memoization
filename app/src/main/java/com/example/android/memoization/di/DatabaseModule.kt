@@ -3,6 +3,7 @@ package com.example.android.memoization.di
 import android.content.Context
 import androidx.room.Room
 import com.example.android.memoization.data.database.MemoDao
+import com.example.android.memoization.data.database.ankidb.AnkiDao
 import com.example.android.memoization.data.database.MemoDatabase
 import dagger.Module
 import dagger.Provides
@@ -20,6 +21,10 @@ class DatabaseModule {
     fun provideChannelDao(appDatabase: MemoDatabase): MemoDao {
         return appDatabase.memoDao
     }
+
+    @Provides
+    @Singleton
+    fun provideAnkiDao(appDatabase: MemoDatabase): AnkiDao = appDatabase.ankiDao
 
     @Provides
     @Singleton

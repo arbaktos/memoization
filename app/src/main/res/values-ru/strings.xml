@@ -164,4 +164,18 @@
     <string name="deleted_count">Удалённые · %d</string>
     <string name="restore">Восстановить</string>
     <string name="restored">«%s» восстановлено</string>
+    <string name="import_from_anki">Импортировать из Anki</string>
+    <string name="anki_importing">Импорт из Anki…</string>
+    <plurals name="anki_imported_words">
+        <item quantity="one">Добавлено %d слово</item>
+        <item quantity="few">Добавлено %d слова</item>
+        <item quantity="many">Добавлено %d слов</item>
+        <item quantity="other">Добавлено %d слова</item>
+    </plurals>
+    <string name="anki_already_imported">Колода уже была импортирована, обновлено слов: %d</string>
+    <string name="anki_updated_words">обновлено: %d</string>
+    <string name="anki_kept_for_later">пока не показываются: %d</string>
+    <string name="anki_import_nothing">В файле не нашлось слов</string>
+    <string name="anki_import_not_anki">Это не файл колоды Anki</string>
+    <string name="anki_import_failed">Не удалось импортировать колоду</string>
 </resources>

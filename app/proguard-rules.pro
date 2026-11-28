@@ -21,3 +21,5 @@
 #-renamesourcefileattribute SourceFile
 -keepnames class androidx.navigation.fragment.NavHostFragment
 -keep class * extends androidx.fragment.app.Fragment{}
+# zstd-jni finds its Java classes from native code by name.
+-keep class com.github.luben.zstd.** { *; }

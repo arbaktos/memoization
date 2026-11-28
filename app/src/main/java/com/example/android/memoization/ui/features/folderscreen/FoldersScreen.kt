@@ -1,5 +1,10 @@
 package com.example.android.memoization.ui.features.folderscreen
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.res.pluralStringResource
 import com.example.android.memoization.ui.composables.components.deletedSection
 import com.example.android.memoization.ui.composables.components.DeletedRow
@@ -93,6 +98,17 @@ fun FoldersScreen(
     val context = LocalContext.current
     val hiddenFromStackScreen by viewModel.hiddenFromStackScreen.collectAsState()
     val deletedStacks by viewModel.deletedStacks.collectAsState()
+    val ankiImport by viewModel.ankiImport.collectAsState()
+    val pickAnkiFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let(viewModel::importAnki)
+    }
+    LaunchedEffect(ankiImport) {
+        val message = ankiImportMessage(ankiImport, context) ?: return@LaunchedEffect
+        // Reported only once shown: resetting the state first would restart this effect and
+        // cancel the snackbar with it.
+        scaffoldState.snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Long)
+        viewModel.onAnkiImportReported()
+    }
     LaunchedEffect(hiddenFromStackScreen) {
         val stackId = hiddenFromStackScreen ?: return@LaunchedEffect
         val name = viewModel.hiddenStackName()
@@ -128,9 +144,16 @@ fun FoldersScreen(
             if (toShowDialog.value) {
                 AddStackDialog(
                     onDismiss = { viewModel.showAddStackDialog(false) },
-                    onStackAdded = { viewModel.addStackAndOpenIt(it, navController) }
+                    onStackAdded = { viewModel.addStackAndOpenIt(it, navController) },
+                    onImportFromAnki = {
+                        viewModel.showAddStackDialog(false)
+                        // .apkg has no registered type: most pickers call it octet-stream or
+                        // nothing, so every file is offered and the reader says if it is not one.
+                        pickAnkiFile.launch(arrayOf("*/*"))
+                    },
                 )
             }
+            if (ankiImport == AnkiImportState.Running) AnkiImportProgress()
         }
 }
 
@@ -362,6 +385,43 @@ private fun NewStackFab(colors: StackListColors, onClick: () -> Unit) {
     }
 }
 
+
+/** Nothing to tap or dismiss: the import is one transaction and short. */
+@Composable
+private fun AnkiImportProgress() {
+    Dialog(
+        onDismissRequest = {},
+        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
+    ) {
+        Card(shape = RoundedCornerShape(4.dp), elevation = 4.dp) {
+            Row(
+                modifier = Modifier.padding(24.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 3.dp)
+                Text(stringResource(R.string.anki_importing))
+            }
+        }
+    }
+}
+
+/** "Добавлено 805 слов · пока не показываются: 2", or why nothing was; null with nothing to say. */
+private fun ankiImportMessage(state: AnkiImportState, context: Context): String? = when (state) {
+    is AnkiImportState.Done -> {
+        val r = state.result
+        if (r.added == 0 && r.updated == 0) context.getString(R.string.anki_import_nothing)
+        else if (r.added == 0) context.getString(R.string.anki_already_imported, r.updated)
+        else listOfNotNull(
+            context.resources.getQuantityString(R.plurals.anki_imported_words, r.added, r.added),
+            r.updated.takeIf { it > 0 }?.let { context.getString(R.string.anki_updated_words, it) },
+            r.keptForLater.takeIf { it > 0 }?.let { context.getString(R.string.anki_kept_for_later, it) },
+        ).joinToString(" · ")
+    }
+    AnkiImportState.NotAnki -> context.getString(R.string.anki_import_not_anki)
+    AnkiImportState.Failed -> context.getString(R.string.anki_import_failed)
+    AnkiImportState.Idle, AnkiImportState.Running -> null
+}
 
 suspend fun SnackbarHostState.showOnStackDeleteSnackBar(stack: MemoStack, context: Context): SnackbarResult =
     showOnStackDeleteSnackBar(stack.name, context)

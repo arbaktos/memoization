@@ -37,12 +37,14 @@ fun AddStackDialog(
     onStackAdded: (stack: MemoStack) -> Unit,
     stack: MemoStack? = null,
     onDismiss: () -> Unit,
+    onImportFromAnki: (() -> Unit)? = null,
 ) {
     ModifyStackDialog(
         onDismiss = onDismiss,
         stack = stack,
         onConfirm = onStackAdded,
-        modifier = modifier
+        modifier = modifier,
+        onImportFromAnki = onImportFromAnki,
     )
 }
 
@@ -70,6 +72,7 @@ fun ModifyStackDialog(
     onConfirm: (stack: MemoStack) -> Unit,
     stack: MemoStack? = null,
     modifier: Modifier = Modifier,
+    onImportFromAnki: (() -> Unit)? = null,
     languagesViewModel: LanguagesViewModel = hiltViewModel(),
 ) {
     var text by rememberSaveable { mutableStateOf(stack?.name ?: "") }
@@ -130,6 +133,18 @@ fun ModifyStackDialog(
             value = nameOf(toLanguage),
             onClick = { pickerFor = LanguageSlot.To }
         )
+
+        // A new stack can also come whole, from a deck made in Anki.
+        if (onImportFromAnki != null) {
+            Text(
+                text = stringResource(R.string.import_from_anki),
+                color = MaterialTheme.colors.primary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onImportFromAnki)
+                    .padding(vertical = 12.dp)
+            )
+        }
     }
 
     pickerFor?.let { slot ->
