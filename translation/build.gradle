@@ -26,12 +26,16 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        // Rules the app's R8 applies to this module's code, since only the app shrinks.
+        consumerProguardFiles 'consumer-rules.pro'
         buildConfigField 'String', 'LINGVANEX_API_KEY', "\"${lingvanexApiKey}\""
     }
 
     buildTypes {
         release {
-            minifyEnabled true
+            // A library shrinking itself has no one using its classes, so R8 here dropped them
+            // all and the app's release build could not find them. The app shrinks it instead.
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }

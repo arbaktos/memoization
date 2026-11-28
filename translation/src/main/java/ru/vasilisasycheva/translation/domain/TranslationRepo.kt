@@ -1,5 +1,6 @@
 package ru.vasilisasycheva.translation.domain
 
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -78,6 +79,11 @@ class TranslationRepo @Inject constructor(private val retrofit: Retrofit) {
     private inline fun request(call: () -> TranslationState): TranslationState = try {
         call()
     } catch (e: Exception) {
+        Log.w(TAG, "Translation service request failed", e)
         TranslationState.Error(e.message ?: "Could not reach the translation service")
+    }
+
+    private companion object {
+        const val TAG = "TranslationRepo"
     }
 }
