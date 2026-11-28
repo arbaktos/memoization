@@ -98,6 +98,33 @@ interface MemoDao {
     @Update
     suspend fun updateSide(side: SideEntity)
 
+    @Update
+    suspend fun updateSides(sides: List<SideEntity>)
+
+    @Query(
+        "SELECT * FROM side_entity_table WHERE wordPairId IN " +
+            "(SELECT wordPairId FROM wordpair_entity_table WHERE parentStackId = :stackId)"
+    )
+    suspend fun getSidesOfStack(stackId: Long): List<SideEntity>
+
+    @Query(
+        "UPDATE side_entity_table SET state = 0, stability = NULL, difficulty = NULL, due = NULL, " +
+            "lastReview = NULL, reps = 0, lapses = 0 WHERE wordPairId IN " +
+            "(SELECT wordPairId FROM wordpair_entity_table WHERE parentStackId = :stackId)"
+    )
+    suspend fun setStackSidesNew(stackId: Long)
+
+    /**
+     * Every side of the stack - deleted pairs' too, so a restore does not bring old progress
+     * back - starts over as New. Returns the sides as they were, for an undo.
+     */
+    @Transaction
+    suspend fun resetStackSides(stackId: Long): List<SideEntity> {
+        val before = getSidesOfStack(stackId)
+        setStackSidesNew(stackId)
+        return before
+    }
+
     @Query("SELECT * FROM side_entity_table WHERE wordPairId = :wordPairId ORDER BY shown")
     suspend fun getSidesForPair(wordPairId: Long): List<SideEntity>
 

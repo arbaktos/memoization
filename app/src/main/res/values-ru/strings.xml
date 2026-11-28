@@ -178,4 +178,13 @@
     <string name="anki_import_nothing">В файле не нашлось слов</string>
     <string name="anki_import_not_anki">Это не файл колоды Anki</string>
     <string name="anki_import_failed">Не удалось импортировать колоду</string>
+    <string name="practice_section_stack">Показывать стороны</string>
+    <string name="practice_as_in_settings">Как в настройках · %s</string>
+    <string name="practice_library_caption">Для стеков, у которых не выбран свой режим</string>
+    <string name="anki_reset_progress">Сбросить прогресс обучения</string>
+    <string name="reset_progress">Сбросить прогресс</string>
+    <string name="reset_progress_title">Сбросить прогресс «%s»?</string>
+    <string name="reset_progress_text">Все слова стека снова станут новыми и будут учиться с нуля. История ответов сохранится. Отменить сброс можно сразу после него.</string>
+    <string name="reset">Сбросить</string>
+    <string name="progress_reset">Прогресс сброшен</string>
 </resources>

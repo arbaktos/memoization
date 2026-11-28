@@ -241,4 +241,11 @@ class MemoStackTest {
 
         assertEquals(StackLevels(new = 1, learning = 1, known = 1, learned = 1), levels)
     }
+
+    @Test
+    fun practice_isTheStacksOwnChoiceElseTheLibrarys() {
+        assertEquals(PracticeSides.WORD_TO_MEANING, MemoStack(name = "a").practice(PracticeSides.WORD_TO_MEANING))
+        assertEquals(PracticeSides.BOTH, MemoStack(name = "a", practiceSides = "BOTH").practice(PracticeSides.WORD_TO_MEANING))
+        assertEquals(PracticeSides.BOTH, MemoStack(name = "a", practiceSides = "GONE").practice(PracticeSides.BOTH))
+    }
 }

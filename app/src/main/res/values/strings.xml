@@ -164,4 +164,13 @@
     <string name="anki_import_nothing">No words found in the file</string>
     <string name="anki_import_not_anki">This isn\'t an Anki deck file</string>
     <string name="anki_import_failed">Couldn\'t import the deck</string>
+    <string name="practice_section_stack">Practise sides</string>
+    <string name="practice_as_in_settings">As in settings · %s</string>
+    <string name="practice_library_caption">For stacks that have no choice of their own</string>
+    <string name="anki_reset_progress">Reset learning progress</string>
+    <string name="reset_progress">Reset progress</string>
+    <string name="reset_progress_title">Reset progress of “%s”?</string>
+    <string name="reset_progress_text">Every word in the stack becomes new and is learned from scratch. The answer history stays. You can undo the reset right after it.</string>
+    <string name="reset">Reset</string>
+    <string name="progress_reset">Progress reset</string>
 </resources>

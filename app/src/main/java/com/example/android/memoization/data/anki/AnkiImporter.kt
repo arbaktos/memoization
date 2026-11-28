@@ -43,10 +43,24 @@ class AnkiImporter @Inject constructor(
     private val ankiDao: AnkiDao,
 ) {
 
-    suspend fun import(uri: Uri, now: Long = System.currentTimeMillis()): AnkiImportResult =
-        import(reader.read(uri), now)
+    /**
+     * [practiceSides] goes to the stacks this import makes (null: they follow the library).
+     * With [resetProgress] the pairs it adds start New, as if never studied; Anki's progress is
+     * still kept with the imported cards. Pairs from an earlier import keep what they have.
+     */
+    suspend fun import(
+        uri: Uri,
+        practiceSides: String? = null,
+        resetProgress: Boolean = false,
+        now: Long = System.currentTimeMillis(),
+    ): AnkiImportResult = import(reader.read(uri), practiceSides, resetProgress, now)
 
-    suspend fun import(collection: AnkiCollection, now: Long = System.currentTimeMillis()): AnkiImportResult {
+    suspend fun import(
+        collection: AnkiCollection,
+        practiceSides: String? = null,
+        resetProgress: Boolean = false,
+        now: Long = System.currentTimeMillis(),
+    ): AnkiImportResult {
         val cardsByNote = collection.cards.groupBy { it.noteId }
         val lastReview = collection.reviews.groupBy { it.cardId }.mapValues { (_, r) -> r.maxOf { it.id } }
         val stringList = ListSerializer(String.serializer())
@@ -80,7 +94,11 @@ class AnkiImporter @Inject constructor(
                     pair != null -> {
                         val stackId = stackOfDeck.getOrPut(deckName) {
                             ankiDao.stackOfDeck(deckName) ?: memoDao.insertStack(
-                                StackEntity(name = AnkiFormat.stackName(deckName), hasWords = true)
+                                StackEntity(
+                                    name = AnkiFormat.stackName(deckName),
+                                    hasWords = true,
+                                    practiceSides = practiceSides,
+                                )
                             )
                         }
                         val id = memoDao.insertWordPair(
@@ -89,7 +107,7 @@ class AnkiImporter @Inject constructor(
                         pairId = id
                         for (shown in Shown.entries) {
                             val card = cards.firstOrNull { AnkiSchedule.shownOf(it.ord) == shown }
-                            val side = card?.let {
+                            val side = card?.takeUnless { resetProgress }?.let {
                                 AnkiSchedule.side(it, id, shown, collection.createdSeconds, lastReview[it.id], now)
                             } ?: Side(wordPairId = id, shown = shown)
                             val sideId = memoDao.insertSide(SideEntity.from(side))

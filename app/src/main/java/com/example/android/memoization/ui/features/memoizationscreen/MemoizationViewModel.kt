@@ -94,7 +94,7 @@ class MemoizationViewModel @Inject constructor(
                 .filterIsInstance<LoadingState.Collected<MemoStack>>()
                 .first()
                 .content
-            val practice = learningSettings.practiceSides.first()
+            val practice = stack.practice(learningSettings.practiceSides.first())
             val batch = if (ahead) stack.aheadSessionSides(practice) else stack.dueSessionSides(practice)
             val now = System.currentTimeMillis()
             // The session row is written before the first side is shown, so every answer has

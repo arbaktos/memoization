@@ -124,7 +124,7 @@ class MigrationTest {
             )
         }
 
-        val db = helper.runMigrationsAndValidate(testDb, 8, true, *MemoDatabase.MIGRATIONS)
+        val db = helper.runMigrationsAndValidate(testDb, 9, true, *MemoDatabase.MIGRATIONS)
 
         db.query("SELECT stability FROM side_entity_table WHERE wordPairId = 1 AND shown = 0").use {
             it.moveToFirst()
@@ -346,6 +346,22 @@ class MigrationTest {
             db.query("SELECT COUNT(*) FROM $table").use { it.moveToFirst(); assertEquals(0, it.getInt(0)) }
         }
         db.query("SELECT word1 FROM wordpair_entity_table").use { it.moveToFirst(); assertEquals("sada", it.getString(0)) }
+    }
+
+    @Test
+    fun migration8To9_leavesEveryStackFollowingTheLibrary() {
+        helper.createDatabase(testDb, 8).use { db ->
+            db.insert("stack_entity_table", 0, ContentValues().apply {
+                put("name", "Serbian"); put("numRep", 0); put("stackId", 1L); put("hasWords", 1); put("isVisible", 1)
+                put("tiredSessions", 0); put("tiredAnswersSum", 0)
+            })
+        }
+
+        val db = helper.runMigrationsAndValidate(testDb, 9, true, MIGRATION_8_9)
+
+        db.query("SELECT name, practiceSides FROM stack_entity_table").use {
+            it.moveToFirst(); assertEquals("Serbian", it.getString(0)); assertTrue(it.isNull(1))
+        }
     }
 
     @Test

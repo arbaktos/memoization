@@ -28,6 +28,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.example.android.memoization.data.model.Side
+import com.example.android.memoization.data.repository.SideRepository
 
 @HiltViewModel
 class StackViewModel @Inject constructor(
@@ -37,6 +39,7 @@ class StackViewModel @Inject constructor(
     private val hideWordPairUseCase: HideWordPairUseCase,
     private val duplicatesRepository: DuplicatesRepository,
     private val stackRepository: StackRepository,
+    private val sideRepository: SideRepository,
     learningSettings: LearningSettingsRepository,
 ) : BaseViewModel<LoadingState<MemoStack>>() {
 
@@ -64,13 +67,19 @@ class StackViewModel @Inject constructor(
         searchQuery.value = query
     }
 
-    val practiceSides = learningSettings.practiceSides.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(STOP_COLLECTING_AFTER_MS), PracticeSides.DEFAULT
-    )
-
     // Built once: collectAsStateWithLifecycle keys on the flow instance, so a new
     // one per recomposition would restart collection and recompose forever.
     private val stackWithWords: Flow<LoadingState<MemoStack>> by lazy { getStackUseCase(stackId) }
+
+    /** The library's setting, for the edit dialog's "As in settings". */
+    val libraryPractice = learningSettings.practiceSides.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(STOP_COLLECTING_AFTER_MS), PracticeSides.DEFAULT
+    )
+
+    /** The sides this stack practises: its own choice, else the library's. */
+    val practiceSides = combine(libraryPractice, stackWithWords) { library, state ->
+        (state as? LoadingState.Collected)?.content?.practice(library) ?: library
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_COLLECTING_AFTER_MS), PracticeSides.DEFAULT)
 
     fun updateStackInDb(stack: MemoStack) {
         viewModelScope.launch {
@@ -80,6 +89,18 @@ class StackViewModel @Inject constructor(
 
     fun togglePin(stack: MemoStack) =
         updateStackInDb(stack.copy(pinnedTime = if (stack.pinnedTime == null) System.currentTimeMillis() else null))
+
+    /**
+     * Every side of the stack's pairs back to New. The answers given stay in the review log;
+     * [onReset] gets the sides as they were, for the undo.
+     */
+    fun resetProgress(onReset: (List<Side>) -> Unit) {
+        viewModelScope.launch { onReset(sideRepository.resetStack(stackId)) }
+    }
+
+    fun undoResetProgress(before: List<Side>) {
+        viewModelScope.launch { sideRepository.restore(before) }
+    }
 
     /** Delete from the menu: hidden, never deleted - the stack list offers the undo. */
     fun hideStack(onHidden: () -> Unit) {

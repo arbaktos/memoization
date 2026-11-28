@@ -5,6 +5,7 @@ import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.android.memoization.data.database.MemoDatabase
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
@@ -93,7 +94,7 @@ class AnkiImportTest {
         val collection = read("anki/modern.apkg")
         assertEquals(2, collection.mediaFiles)
 
-        val result = importer.import(collection, now)
+        val result = importer.import(collection, now = now)
 
         assertEquals(5, result.added)
         assertEquals(0, result.updated)
@@ -114,7 +115,7 @@ class AnkiImportTest {
 
     @Test
     fun currentFormat_carriesTheProgressOver() = runBlocking {
-        importer.import(read("anki/modern.apkg"), now)
+        importer.import(read("anki/modern.apkg"), now = now)
 
         // FSRS memory taken as it is; the last review from Anki's log.
         val hablar = side("hablar", 0)
@@ -149,7 +150,7 @@ class AnkiImportTest {
 
     @Test
     fun currentFormat_keepsEverythingWholeAndCopiesTheMedia() = runBlocking {
-        importer.import(read("anki/modern.apkg"), now)
+        importer.import(read("anki/modern.apkg"), now = now)
 
         assertEquals(7L, long("SELECT COUNT(*) FROM anki_note_table"))
         assertEquals(10L, long("SELECT COUNT(*) FROM anki_card_table"))
@@ -169,12 +170,12 @@ class AnkiImportTest {
 
     @Test
     fun importingAgain_updatesInsteadOfAddingAndKeepsOurProgress() = runBlocking {
-        importer.import(read("anki/modern.apkg"), now)
+        importer.import(read("anki/modern.apkg"), now = now)
         db.openHelper.writableDatabase.execSQL(
             "UPDATE side_entity_table SET stability = 99 WHERE wordPairId = (SELECT wordPairId FROM wordpair_entity_table WHERE word1 = 'hablar') AND shown = 0"
         )
 
-        val again = importer.import(read("anki/modern.apkg"), now + dayMillis)
+        val again = importer.import(read("anki/modern.apkg"), now = now + dayMillis)
 
         assertEquals(0, again.added)
         assertEquals(5, again.updated)
@@ -191,7 +192,7 @@ class AnkiImportTest {
         val collection = read("anki/legacy.apkg")
         assertEquals(2, collection.mediaFiles)
 
-        val result = importer.import(collection, now)
+        val result = importer.import(collection, now = now)
 
         assertEquals(5, result.added)
         assertEquals(2, result.keptForLater)
@@ -199,6 +200,49 @@ class AnkiImportTest {
         assertEquals(1, side("hablar", 0).state)
         assertEquals(30.0, side("comer", 0).stability!!, 1e-9)
         assertTrue(File(reader.mediaDir, "gato.png").exists())
+    }
+
+    @Test
+    fun choices_giveTheNewStacksTheirSidesAndStartTheWordsNew() = runBlocking {
+        val result = importer.import(read("anki/modern.apkg"), practiceSides = "BOTH", resetProgress = true, now = now)
+
+        assertEquals(5, result.added)
+        assertEquals(listOf("BOTH", "BOTH"), strings("SELECT practiceSides FROM stack_entity_table"))
+        assertEquals(0L, long("SELECT COUNT(*) FROM side_entity_table WHERE state != 0 OR stability IS NOT NULL"))
+        // Anki's own progress is still kept with the cards.
+        assertTrue(strings("SELECT data FROM anki_card_table").any { it.contains("14.25") })
+    }
+
+    @Test
+    fun resettingAStack_makesEverySideNewAndUndoBringsItBack() = runBlocking {
+        importer.import(read("anki/modern.apkg"), now = now)
+        val stackId = long("SELECT stackId FROM stack_entity_table WHERE name = 'Испанский · Глаголы'")
+        val reviewedBefore = long("SELECT COUNT(*) FROM side_entity_table WHERE state = 1")
+
+        val before = db.memoDao.resetStackSides(stackId)
+
+        assertEquals(6, before.size)
+        assertEquals(0L, long("SELECT COUNT(*) FROM side_entity_table WHERE state = 1"))
+        db.memoDao.updateSides(before)
+        assertEquals(reviewedBefore, long("SELECT COUNT(*) FROM side_entity_table WHERE state = 1"))
+        assertEquals(14.25, side("hablar", 0).stability!!, 1e-9)
+    }
+
+    @Test
+    fun resettingAStack_reachesWhoeverWatchesIt() = runBlocking {
+        importer.import(read("anki/modern.apkg"), now = now)
+        val stackId = long("SELECT stackId FROM stack_entity_table WHERE name = 'Испанский · Глаголы'")
+        val emissions = mutableListOf<Int>()
+        val job = launch(kotlinx.coroutines.Dispatchers.IO) {
+            db.memoDao.getStackWithWordsById(stackId).collect { s ->
+                synchronized(emissions) { emissions += s.words.flatMap { it.sides }.count { it.state == 1 } }
+            }
+        }
+        kotlinx.coroutines.delay(500)
+        db.memoDao.resetStackSides(stackId)
+        kotlinx.coroutines.delay(1500)
+        job.cancel()
+        assertEquals(0, synchronized(emissions) { emissions.last() })
     }
 
     @Test(expected = NotAnAnkiPackageException::class)

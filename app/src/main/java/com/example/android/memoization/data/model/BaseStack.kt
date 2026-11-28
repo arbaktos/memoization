@@ -16,4 +16,9 @@ interface BaseStack {
     val tiredSessions: Int
     /** Answers given in those sessions, summed. */
     val tiredAnswersSum: Int
+    /**
+     * The stack's own Practice sides, by enum name; null follows the library's setting.
+     * See PracticeSides.fromName and MemoStack.practice.
+     */
+    val practiceSides: String?
 }

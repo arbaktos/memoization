@@ -160,6 +160,8 @@ fun StackScreen(
         onDelete = { confirmDelete = true },
     )
     val pickedCount = selected?.size ?: 0
+    // The stack whose progress the learner asked to reset, while the question is open.
+    var resetting by remember { mutableStateOf<MemoStack?>(null) }
     if (confirmDelete && pickedCount > 0) {
         DeleteWordsDialog(
             count = pickedCount,
@@ -245,7 +247,28 @@ fun StackScreen(
         onSearchQueryChange = viewModel::onSearchQueryChange,
         duplicatesToReview = duplicates.toReview,
         onReviewDuplicates = viewModel::startDuplicatesReview,
+        onResetProgress = { resetting = it },
     )
+
+    resetting?.let { stack ->
+        ConfirmDialog(
+            title = stringResource(R.string.reset_progress_title, stack.name),
+            text = stringResource(R.string.reset_progress_text),
+            confirm = stringResource(R.string.reset),
+            colors = stackListColors(),
+            onCancel = { resetting = null },
+            onConfirm = {
+                resetting = null
+                viewModel.resetProgress { before ->
+                    scope.launch {
+                        if (snackbarHostState.showUndo(context.getString(R.string.progress_reset), context.getString(R.string.undo))) {
+                            viewModel.undoResetProgress(before)
+                        }
+                    }
+                }
+            },
+        )
+    }
 }
 
 
@@ -275,6 +298,7 @@ fun DisplayStackState(
     restored: Set<Long> = emptySet(),
     onRestoredShown: () -> Unit = {},
     onRestorePair: (WordPair) -> Unit = {},
+    onResetProgress: (MemoStack) -> Unit = {},
 ) {
 
     when (state) {
@@ -292,6 +316,7 @@ fun DisplayStackState(
             snackbarHostState = snackbarHostState,
             onPinStack = onPinStack,
             onDeleteStack = onDeleteStack,
+            onResetProgress = onResetProgress,
             searchQuery = searchQuery,
             onOpenSearch = onOpenSearch,
             onCloseSearch = onCloseSearch,
@@ -329,6 +354,7 @@ fun StackAppBar(
     onEdit: (() -> Unit)? = null,
     onPin: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
+    onResetProgress: (() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier
@@ -379,6 +405,7 @@ fun StackAppBar(
                     }
                     item(R.string.edit_stack_desc, colors.text, onEdit)
                     item(if (pinned) R.string.unpin_stack else R.string.pin_stack, colors.text, onPin)
+                    if (onResetProgress != null) item(R.string.reset_progress, colors.text, onResetProgress)
                     item(R.string.delete_stack, colors.danger, onDelete)
                 }
             }
@@ -476,6 +503,7 @@ fun DisplayStack(
     restored: Set<Long> = emptySet(),
     onRestoredShown: () -> Unit = {},
     onRestorePair: (WordPair) -> Unit = {},
+    onResetProgress: (MemoStack) -> Unit = {},
 ) {
     val lazyListState = rememberLazyListState()
     // Newest first: ids grow with insertion, so this is "last added on top".
@@ -528,6 +556,7 @@ fun DisplayStack(
                     onEdit = onEditStack,
                     onPin = { onPinStack(currentStack) },
                     onDelete = { onDeleteStack(currentStack) },
+                    onResetProgress = { onResetProgress(currentStack) },
                 )
             }
         },

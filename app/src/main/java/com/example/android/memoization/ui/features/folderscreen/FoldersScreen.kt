@@ -145,8 +145,9 @@ fun FoldersScreen(
                 AddStackDialog(
                     onDismiss = { viewModel.showAddStackDialog(false) },
                     onStackAdded = { viewModel.addStackAndOpenIt(it, navController) },
-                    onImportFromAnki = {
+                    onImportFromAnki = { options ->
                         viewModel.showAddStackDialog(false)
+                        viewModel.setAnkiImportOptions(options)
                         // .apkg has no registered type: most pickers call it octet-stream or
                         // nothing, so every file is offered and the reader says if it is not one.
                         pickAnkiFile.launch(arrayOf("*/*"))
@@ -323,7 +324,7 @@ fun ShowStack(
 ) {
     StackListItem(
         stack = stack,
-        practice = practice,
+        libraryPractice = practice,
         colors = colors,
         modifier = modifier,
         onPlay = onPlayWords,

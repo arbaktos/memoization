@@ -113,7 +113,26 @@ fun SelectCircle(selected: Boolean, colors: StackListColors) {
 
 /** Asked before deleting the selection (10d); one word or many, the undo still follows. */
 @Composable
-fun DeleteWordsDialog(count: Int, colors: StackListColors, onCancel: () -> Unit, onDelete: () -> Unit) {
+fun DeleteWordsDialog(count: Int, colors: StackListColors, onCancel: () -> Unit, onDelete: () -> Unit) =
+    ConfirmDialog(
+        title = pluralStringResource(R.plurals.delete_words_title, count, count),
+        text = stringResource(R.string.delete_words_text),
+        confirm = stringResource(R.string.delete),
+        colors = colors,
+        onCancel = onCancel,
+        onConfirm = onDelete,
+    )
+
+/** A question with Cancel and a red action, in the delete dialog's look (10b). */
+@Composable
+fun ConfirmDialog(
+    title: String,
+    text: String,
+    confirm: String,
+    colors: StackListColors,
+    onCancel: () -> Unit,
+    onConfirm: () -> Unit,
+) {
     Dialog(onDismissRequest = onCancel, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         val window = (LocalView.current.parent as? DialogWindowProvider)?.window
         SideEffect { window?.setDimAmount(colors.scrim) }
@@ -126,13 +145,13 @@ fun DeleteWordsDialog(count: Int, colors: StackListColors, onCancel: () -> Unit,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                text = pluralStringResource(R.plurals.delete_words_title, count, count),
+                text = title,
                 color = colors.text,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
             )
             Text(
-                text = stringResource(R.string.delete_words_text),
+                text = text,
                 color = colors.secondaryText,
                 fontSize = 15.sp,
                 lineHeight = 22.5.sp,
@@ -142,7 +161,7 @@ fun DeleteWordsDialog(count: Int, colors: StackListColors, onCancel: () -> Unit,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 DialogButton(stringResource(R.string.cancel), colors.cancelFill, colors.text, onCancel, Modifier.weight(1f))
-                DialogButton(stringResource(R.string.delete), colors.deleteFill, colors.onDeleteFill, onDelete, Modifier.weight(1f))
+                DialogButton(confirm, colors.deleteFill, colors.onDeleteFill, onConfirm, Modifier.weight(1f))
             }
         }
     }

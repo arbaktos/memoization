@@ -52,7 +52,8 @@ import com.example.android.memoization.ui.features.folderscreen.study
 @Composable
 fun StackListItem(
     stack: MemoStack,
-    practice: PracticeSides,
+    /** The library's setting; the stack may have its own. */
+    libraryPractice: PracticeSides,
     colors: StackListColors,
     modifier: Modifier = Modifier,
     onPin: () -> Unit = {},
@@ -62,6 +63,7 @@ fun StackListItem(
 ) {
     // Not remembered: MemoStack.words sits outside the data-class constructor, so no key would
     // ever change, and a remembered value would freeze at first composition.
+    val practice = stack.practice(libraryPractice)
     val hasDue = stack.hasDue(practice)
     val levels = stack.levels(practice)
     val (studyFill, studyText) = colors.study(if (hasDue) stack.reviewUrgency(practice) else 0f)

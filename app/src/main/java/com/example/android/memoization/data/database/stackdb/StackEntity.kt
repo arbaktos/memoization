@@ -22,6 +22,7 @@ data class StackEntity(
     @ColumnInfo(defaultValue = "0")
     override val tiredAnswersSum: Int = 0,
     override val deletedAt: Long? = null,
+    override val practiceSides: String? = null,
 ) : BaseStack {
 
     companion object {
@@ -38,6 +39,7 @@ data class StackEntity(
                 tiredSessions = stack.tiredSessions,
                 tiredAnswersSum = stack.tiredAnswersSum,
                 deletedAt = stack.deletedAt,
+                practiceSides = stack.practiceSides,
             )
         }
     }

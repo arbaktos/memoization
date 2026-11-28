@@ -32,6 +32,7 @@ fun StackWithWords.toMemoStack(): MemoStack {
         tiredSessions = this.stack.tiredSessions,
         tiredAnswersSum = this.stack.tiredAnswersSum,
         deletedAt = this.stack.deletedAt,
+        practiceSides = this.stack.practiceSides,
     ).apply {
         words = visibleWords.map { it.toWordPair() }.toMutableList()
         // Deleted, not merely hidden: a copy folded away by a merge has no deletedAt.

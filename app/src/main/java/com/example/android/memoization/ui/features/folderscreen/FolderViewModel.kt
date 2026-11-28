@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import com.example.android.memoization.data.anki.AnkiImportResult
 import com.example.android.memoization.data.anki.AnkiImporter
 import com.example.android.memoization.data.anki.NotAnAnkiPackageException
+import com.example.android.memoization.ui.composables.dialog.AnkiImportOptions
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
@@ -69,13 +70,21 @@ class FolderViewModel @Inject constructor(
     private val _ankiImport = MutableStateFlow<AnkiImportState>(AnkiImportState.Idle)
     val ankiImport: StateFlow<AnkiImportState> = _ankiImport.asStateFlow()
 
+    /** Chosen in the dialog before the file picker opens; kept across the trip to it. */
+    fun setAnkiImportOptions(options: AnkiImportOptions) {
+        handle[ANKI_PRACTICE] = options.practiceSides
+        handle[ANKI_RESET] = options.resetProgress
+    }
+
     /** Imports the Anki package the learner picked; the screen shows the outcome once. */
     fun importAnki(uri: Uri) {
+        val practiceSides = handle.get<String>(ANKI_PRACTICE)
+        val resetProgress = handle.get<Boolean>(ANKI_RESET) ?: false
         if (_ankiImport.value == AnkiImportState.Running) return
         _ankiImport.value = AnkiImportState.Running
         viewModelScope.launch {
             _ankiImport.value = try {
-                AnkiImportState.Done(withContext(Dispatchers.IO) { ankiImporter.import(uri) })
+                AnkiImportState.Done(withContext(Dispatchers.IO) { ankiImporter.import(uri, practiceSides, resetProgress) })
             } catch (e: NotAnAnkiPackageException) {
                 Log.w(TAG, "Not an Anki package", e)
                 AnkiImportState.NotAnki
@@ -152,6 +161,8 @@ class FolderViewModel @Inject constructor(
         /** Keys in the stack list's saved state, set by the stack screen as it closes. */
         const val HIDDEN_STACK_ID = "hiddenStackId"
         const val HIDDEN_STACK_NAME = "hiddenStackName"
+        private const val ANKI_PRACTICE = "ankiPractice"
+        private const val ANKI_RESET = "ankiReset"
     }
 
     fun onPin(stack: MemoStack) {

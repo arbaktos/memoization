@@ -19,9 +19,10 @@ carrying its own stability, difficulty and due date.
 _Avoid_: card, direction, face
 
 **Practice sides**:
-The learner's choice, for the whole library, of which sides to practise: **Smart switch** (the
-default), word to meaning, meaning to word, or both. A pair always has both sides; this decides
-which are scheduled.
+The learner's choice of which sides to practise: **Smart switch** (the default), word to
+meaning, meaning to word, or both. Set for the whole library in the settings; a **Stack** can
+choose its own when it is created or edited, and otherwise follows the library's ("As in
+settings"). A pair always has both sides; this decides which are scheduled.
 _Avoid_: mode, direction setting
 
 **Smart switch**:
@@ -176,7 +177,16 @@ are, or with only SM-2 the interval as stability and the ease as difficulty; a c
 learning steps with no FSRS memory starts **New**. Cloze notes, and notes without two fields of
 text, are kept but not shown. Anki's note id (guid) makes a second import of the same deck
 update the words of the pairs it made, never their progress, and add only what is new.
+In the New stack dialog the learner chooses the imported stacks' **Practice sides** and whether
+to reset learning progress: with it, the new pairs start **New**, Anki's progress kept only on
+the imported cards.
 _Avoid_: deck (for a stack), card (for a side)
+
+**Reset progress**:
+Every side of every pair in a **Stack** - deleted pairs included, so a restore does not bring the
+old schedule back - starts over as **New**. The **Review log** keeps every answer given; an
+Undo right after puts the sides back as they were.
+_Avoid_: clear, wipe, start over
 
 **Copy**:
 A word pair added again to the same stack exactly as before - word and meaning the same up to
